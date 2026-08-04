@@ -1,0 +1,412 @@
+{
+  "O1_vertikalitaet": {
+    "phase": "offensiv",
+    "phase_label": "Offensiv",
+    "gewicht_in_phase": 0.35,
+    "orientierung": 1,
+    "form": "band",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -1.9351,
+      "a50": -0.7009,
+      "a100": -0.1404
+    },
+    "einheiten_2bl_2526": {
+      "score0": [
+        0.24273,
+        0.40484
+      ],
+      "score50": [
+        0.29443,
+        0.35315
+      ],
+      "score100": [
+        0.31791,
+        0.32967
+      ],
+      "liga_mittel": 0.31687,
+      "liga_sd": 0.04189,
+      "kohorte_mitte": 0.32379
+    },
+    "kohorte_n": 264
+  },
+  "O2_boxzugang": {
+    "phase": "offensiv",
+    "phase_label": "Offensiv",
+    "gewicht_in_phase": 0.35,
+    "orientierung": 1,
+    "form": "up",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -1.5747,
+      "a50": -0.0155,
+      "a100": 1.4221
+    },
+    "einheiten_2bl_2526": {
+      "score0": 0.14212,
+      "score50": 0.2579,
+      "score100": 0.36465,
+      "liga_mittel": 0.25905,
+      "liga_sd": 0.07426,
+      "kohorte_mitte": null
+    },
+    "kohorte_n": 264
+  },
+  "O3_fluegel_boxzuspiel": {
+    "phase": "offensiv",
+    "phase_label": "Offensiv",
+    "gewicht_in_phase": 0.3,
+    "orientierung": 1,
+    "form": "up",
+    "quelle_korridor": "NORMATIV: 100 = Liga-P90, 50 = Liga-Median, 0 = Liga-P5. Die Referenzkohorte traegt diesen KPI nicht.",
+    "anker_guete": {
+      "a0": -1.3792,
+      "a50": -0.1397,
+      "a100": 1.3221
+    },
+    "einheiten_2bl_2526": {
+      "score0": 0.0102,
+      "score50": 0.04432,
+      "score100": 0.08456,
+      "liga_mittel": 0.04817,
+      "liga_sd": 0.02753,
+      "kohorte_mitte": null
+    },
+    "kohorte_n": 264
+  },
+  "OT1_konterrate": {
+    "phase": "off_umschalten",
+    "phase_label": "Offensives Umschalten",
+    "gewicht_in_phase": 0.3,
+    "orientierung": 1,
+    "form": "band",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -2.1784,
+      "a50": -0.578,
+      "a100": -0.1415
+    },
+    "einheiten_2bl_2526": {
+      "score0": [
+        -0.01823,
+        0.03379
+      ],
+      "score50": [
+        0.00088,
+        0.01468
+      ],
+      "score100": [
+        0.00609,
+        0.00947
+      ],
+      "liga_mittel": 0.00964,
+      "liga_sd": 0.01194,
+      "kohorte_mitte": 0.00778
+    },
+    "kohorte_n": 264
+  },
+  "OT2_tiefenertrag": {
+    "phase": "off_umschalten",
+    "phase_label": "Offensives Umschalten",
+    "gewicht_in_phase": 0.35,
+    "orientierung": 1,
+    "form": "up",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -1.3322,
+      "a50": -0.1676,
+      "a100": 1.3159
+    },
+    "einheiten_2bl_2526": {
+      "score0": 0.02599,
+      "score50": 0.08477,
+      "score100": 0.15964,
+      "liga_mittel": 0.09323,
+      "liga_sd": 0.05047,
+      "kohorte_mitte": null
+    },
+    "kohorte_n": 264
+  },
+  "OT3_ballgewinnqualitaet": {
+    "phase": "off_umschalten",
+    "phase_label": "Offensives Umschalten",
+    "gewicht_in_phase": 0.35,
+    "orientierung": 1,
+    "form": "up",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -1.3461,
+      "a50": -0.1167,
+      "a100": 1.6034
+    },
+    "einheiten_2bl_2526": {
+      "score0": 0.00603,
+      "score50": 0.04455,
+      "score100": 0.09845,
+      "liga_mittel": 0.04821,
+      "liga_sd": 0.03133,
+      "kohorte_mitte": null
+    },
+    "kohorte_n": 264
+  },
+  "D1_pressingdruck": {
+    "phase": "defensiv",
+    "phase_label": "Defensiv",
+    "gewicht_in_phase": 0.35,
+    "orientierung": -1,
+    "form": "band",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -2.3282,
+      "a50": -0.4971,
+      "a100": -0.0742
+    },
+    "einheiten_2bl_2526": {
+      "score0": [
+        19.70098,
+        -0.64841
+      ],
+      "score50": [
+        11.69865,
+        7.35392
+      ],
+      "score100": [
+        9.85054,
+        9.20203
+      ],
+      "liga_mittel": 11.5618,
+      "liga_sd": 4.37023,
+      "kohorte_mitte": 9.52628
+    },
+    "kohorte_n": 264
+  },
+  "D2_ballgewinnhoehe": {
+    "phase": "defensiv",
+    "phase_label": "Defensiv",
+    "gewicht_in_phase": 0.35,
+    "orientierung": 1,
+    "form": "up",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -1.4609,
+      "a50": -0.0959,
+      "a100": 1.8507
+    },
+    "einheiten_2bl_2526": {
+      "score0": 0.09555,
+      "score50": 0.24323,
+      "score100": 0.45383,
+      "liga_mittel": 0.2536,
+      "liga_sd": 0.10819,
+      "kohorte_mitte": null
+    },
+    "kohorte_n": 264
+  },
+  "D3_gegner_progression": {
+    "phase": "defensiv",
+    "phase_label": "Defensiv",
+    "gewicht_in_phase": 0.3,
+    "orientierung": -1,
+    "form": "up",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -1.7895,
+      "a50": 0.107,
+      "a100": 1.3127
+    },
+    "einheiten_2bl_2526": {
+      "score0": 0.71233,
+      "score50": 0.47622,
+      "score100": 0.3261,
+      "liga_mittel": 0.48954,
+      "liga_sd": 0.1245,
+      "kohorte_mitte": null
+    },
+    "kohorte_n": 264
+  },
+  "DT1_gegenpressing": {
+    "phase": "def_umschalten",
+    "phase_label": "Defensives Umschalten",
+    "gewicht_in_phase": 0.4,
+    "orientierung": 1,
+    "form": "up",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -1.5637,
+      "a50": -0.037,
+      "a100": 1.5039
+    },
+    "einheiten_2bl_2526": {
+      "score0": 0.24143,
+      "score50": 0.33858,
+      "score100": 0.43664,
+      "liga_mittel": 0.34094,
+      "liga_sd": 0.06364,
+      "kohorte_mitte": null
+    },
+    "kohorte_n": 264
+  },
+  "DT2_gefaehrl_verluste": {
+    "phase": "def_umschalten",
+    "phase_label": "Defensives Umschalten",
+    "gewicht_in_phase": 0.3,
+    "orientierung": -1,
+    "form": "up",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -1.824,
+      "a50": 0.1307,
+      "a100": 1.2899
+    },
+    "einheiten_2bl_2526": {
+      "score0": 0.10825,
+      "score50": 0.05,
+      "score100": 0.01546,
+      "liga_mittel": 0.0539,
+      "liga_sd": 0.0298,
+      "kohorte_mitte": null
+    },
+    "kohorte_n": 264
+  },
+  "DT3_hohe_verluste": {
+    "phase": "def_umschalten",
+    "phase_label": "Defensives Umschalten",
+    "gewicht_in_phase": 0.3,
+    "orientierung": 1,
+    "form": "up",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -1.5989,
+      "a50": -0.0344,
+      "a100": 1.5499
+    },
+    "einheiten_2bl_2526": {
+      "score0": 0.29004,
+      "score50": 0.44052,
+      "score100": 0.59291,
+      "liga_mittel": 0.44383,
+      "liga_sd": 0.09618,
+      "kohorte_mitte": null
+    },
+    "kohorte_n": 264
+  },
+  "P1_laufvolumen_hi": {
+    "phase": "physisch",
+    "phase_label": "Physisch",
+    "gewicht_in_phase": 0.4,
+    "orientierung": 1,
+    "form": "band",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -2.4708,
+      "a50": -1.0366,
+      "a100": -0.126
+    },
+    "einheiten_2bl_2526": {
+      "score0": [
+        114.60802,
+        254.97172
+      ],
+      "score50": [
+        155.34517,
+        214.23457
+      ],
+      "score100": [
+        181.21231,
+        188.36742
+      ],
+      "liga_mittel": 158.55161,
+      "liga_sd": 28.40454,
+      "kohorte_mitte": 184.78987
+    },
+    "kohorte_n": 135
+  },
+  "P2_explosivitaet": {
+    "phase": "physisch",
+    "phase_label": "Physisch",
+    "gewicht_in_phase": 0.35,
+    "orientierung": 1,
+    "form": "band",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -1.8953,
+      "a50": -0.746,
+      "a100": -0.1368
+    },
+    "einheiten_2bl_2526": {
+      "score0": [
+        3.13917,
+        7.05065
+      ],
+      "score50": [
+        4.32513,
+        5.86469
+      ],
+      "score100": [
+        4.9538,
+        5.23602
+      ],
+      "liga_mittel": 4.85155,
+      "liga_sd": 1.03187,
+      "kohorte_mitte": 5.09491
+    },
+    "kohorte_n": 135
+  },
+  "P3_endgeschwindigkeit": {
+    "phase": "physisch",
+    "phase_label": "Physisch",
+    "gewicht_in_phase": 0.25,
+    "orientierung": 1,
+    "form": "up",
+    "quelle_korridor": "Drei-Punkt-Ankerung: 100 = P90 der Referenzkohorte, 50 = Liga-Median, 0 = Liga-P5",
+    "anker_guete": {
+      "a0": -1.67,
+      "a50": 0.0242,
+      "a100": 1.5451
+    },
+    "einheiten_2bl_2526": {
+      "score0": 31.80789,
+      "score50": 32.99551,
+      "score100": 34.06156,
+      "liga_mittel": 32.97851,
+      "liga_sd": 0.70095,
+      "kohorte_mitte": null
+    },
+    "kohorte_n": 135
+  },
+  "_meta": {
+    "konsistenz_schwelle_cliffs_delta": 0.15,
+    "kohorte": {
+      "RB Leipzig / Werner": {
+        "gewicht": 1.0,
+        "saisons": [
+          191661
+        ]
+      },
+      "Sturm Graz / Ilzer": {
+        "gewicht": 1.0,
+        "saisons": [
+          186237,
+          187523,
+          188062,
+          188980,
+          189980
+        ]
+      },
+      "TSG Hoffenheim / Ilzer": {
+        "gewicht": 1.0,
+        "saisons": [
+          189970,
+          191661
+        ]
+      },
+      "Schalke 04 / Muslic": {
+        "gewicht": 0.5,
+        "saisons": [
+          191651
+        ]
+      }
+    },
+    "hinweis": "Korridore leben im z-Raum je Liga-Saison. Die Werte unter 'einheiten_2bl_2526' sind fuer die Darstellung in die Skala der 2. Bundesliga 2025/26 zurueckgerechnet."
+  }
+}

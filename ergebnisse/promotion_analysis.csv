@@ -1,0 +1,11 @@
+kpi,spalte,familie,orientierung,aufsteiger_mittel,nicht_aufsteiger_mittel,aufsteiger_median,nicht_aufsteiger_median,aufsteiger_sd,nicht_aufsteiger_sd,cliffs_delta,delta_ci_lo,delta_ci_hi,hedges_g,g_ci_lo,g_ci_hi,delta_top3,rho_ppg,rho_xpoints,rho_platz,saisonstabilitaet
+xpoints,xpoints,Gesamtleistung,1,1.681,1.3482,1.6717,1.3314,0.1577,0.2088,0.792,0.678,0.89,1.606,1.24,2.063,0.853,0.78,0.998,-0.8,1.0
+npxg_differenz,npxg_diff,Chance Creation kombiniert,1,0.434,-0.0545,0.3608,-0.0495,0.2429,0.3205,0.77,0.645,0.881,1.551,1.18,1.988,0.802,0.727,0.969,-0.746,1.0
+npxg,CC1_npxg,Chance Creation offensiv,1,1.6712,1.3678,1.6432,1.3651,0.1946,0.2134,0.734,0.595,0.85,1.449,1.031,1.917,0.708,0.713,0.867,-0.738,1.0
+schuesse,wy_totals_general_shots,Volumen offensiv,1,14.1275,12.2791,13.7059,12.2647,1.2718,1.261,0.706,0.542,0.853,1.492,1.067,1.955,0.669,0.665,0.795,-0.69,1.0
+box_zugriffsrate,CC2_box_zugriffsrate,Prozesskette offensiv,1,0.1438,0.123,0.1429,0.1224,0.0231,0.021,0.646,0.461,0.806,1.263,0.853,1.757,0.646,0.676,0.815,-0.691,1.0
+schuesse_gegen,schuesse_gegen,Volumen defensiv,-1,11.0049,12.6717,10.8971,12.7353,1.448,1.1958,0.636,0.408,0.838,1.386,0.85,1.971,0.65,0.487,0.735,-0.512,1.0
+box_zugriff_gegen,CC2d_box_zugriffsrate_gegen,Prozesskette defensiv,-1,0.1114,0.1271,0.1074,0.1277,0.0158,0.0191,0.558,0.238,0.811,1.151,0.548,1.78,0.53,0.458,0.706,-0.468,1.0
+npxg_gegen,CC1d_npxg_gegen,Chance Creation defensiv,-1,1.2372,1.4224,1.2016,1.4193,0.156,0.1862,0.548,0.302,0.779,1.023,0.56,1.525,0.627,0.494,0.753,-0.489,1.0
+abschlussqualitaet,CC3_abschlussqualitaet,Abschlussqualitaet offensiv,1,0.1279,0.12,0.1279,0.1197,0.0097,0.0126,0.404,0.19,0.612,0.68,0.299,1.092,0.498,0.532,0.611,-0.526,1.0
+abschlussqual_gegen,CC3d_abschlussqualitaet_gegen,Abschlussqualitaet defensiv,-1,0.1188,0.1212,0.1162,0.1208,0.01,0.0105,0.146,-0.142,0.434,0.29,-0.174,0.789,0.332,0.275,0.341,-0.249,0.889

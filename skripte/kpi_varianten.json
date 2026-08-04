@@ -1,0 +1,544 @@
+{
+  "_hinweis": "Aktives KPI-Set und geprüfte Alternativen. Ein Tausch heißt: 'aktiv' ändern oder einen Slot in einem Set umschreiben, danach die Pipeline neu laufen lassen (kpis.py -> korridore.py -> gegnermodell.py -> scoring.py). verify.py prüft das aktive Set automatisch auf Redundanz und Trennschärfe.",
+  "_quellen": {
+    "team": "Spalte der eigenen Zeile in wyscout_match_team_stats_sync",
+    "gegner": "dieselbe Spalte aus der Gegnerzeile desselben Spiels",
+    "aggregat": "aus wyscout_match_player_stats_sync auf Teamebene summiert",
+    "eff_min": "effektive Spielzeit = (Gesamtzeit − tote Zeit) / 60",
+    "direkt": "Spalte wird unverändert als KPI-Wert verwendet (kein Quotient)"
+  },
+  "aktiv": "rev3",
+  "sets": {
+    "rev3": {
+      "O1_vertikalitaet": {
+        "kandidat": "v_fwd_share",
+        "phase": "offensiv",
+        "gewicht": 0.35,
+        "orient": 1,
+        "form": "band",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "team",
+          "spalte": "wy_totals_passes_forward_passes_successful"
+        },
+        "nenner": {
+          "quelle": "team",
+          "spalte": "wy_totals_passes_passes_successful"
+        },
+        "ereignisse": {
+          "quelle": "team",
+          "spalte": "wy_totals_passes_passes_successful"
+        }
+      },
+      "O2_boxzugang": {
+        "kandidat": "p_boxreach_per_half",
+        "phase": "offensiv",
+        "gewicht": 0.35,
+        "orient": 1,
+        "form": "up",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "team",
+          "spalte": "wy_totals_possession_reaching_opponent_box"
+        },
+        "nenner": {
+          "quelle": "team",
+          "spalte": "wy_totals_possession_reaching_opponent_half"
+        },
+        "ereignisse": {
+          "quelle": "team",
+          "spalte": "wy_totals_possession_reaching_opponent_box"
+        }
+      },
+      "O3_fluegel_boxzuspiel": {
+        "kandidat": "f_crosses_succ_per_poss",
+        "phase": "offensiv",
+        "gewicht": 0.3,
+        "orient": 1,
+        "form": "up",
+        "shrink": null,
+        "normativ": true,
+        "zaehler": {
+          "quelle": "team",
+          "spalte": "wy_totals_passes_crosses_successful"
+        },
+        "nenner": {
+          "quelle": "team",
+          "spalte": "wy_totals_possession_possession_number"
+        },
+        "ereignisse": {
+          "quelle": "team",
+          "spalte": "wy_totals_passes_crosses_successful"
+        }
+      },
+      "OT1_konterrate": {
+        "kandidat": "u_konter_per_rec",
+        "phase": "off_umschalten",
+        "gewicht": 0.3,
+        "orient": 1,
+        "form": "band",
+        "shrink": 12,
+        "zaehler": {
+          "quelle": "team",
+          "spalte": "wy_totals_attacks_counter_attacks"
+        },
+        "nenner": {
+          "quelle": "team",
+          "spalte": "wy_totals_transitions_recoveries_total"
+        },
+        "ereignisse": {
+          "quelle": "team",
+          "spalte": "wy_totals_attacks_counter_attacks"
+        }
+      },
+      "OT2_tiefenertrag": {
+        "kandidat": "u_deep_per_rec",
+        "phase": "off_umschalten",
+        "gewicht": 0.35,
+        "orient": 1,
+        "form": "up",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "team",
+          "spalte": "wy_totals_passes_deep_completed_passes_successful"
+        },
+        "nenner": {
+          "quelle": "team",
+          "spalte": "wy_totals_transitions_recoveries_total"
+        },
+        "ereignisse": {
+          "quelle": "team",
+          "spalte": "wy_totals_passes_deep_completed_passes_successful"
+        }
+      },
+      "OT3_ballgewinnqualitaet": {
+        "kandidat": "u_dangrec_share",
+        "phase": "off_umschalten",
+        "gewicht": 0.35,
+        "orient": 1,
+        "form": "up",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "aggregat",
+          "spalte": "sum_dang_opp_rec"
+        },
+        "nenner": {
+          "quelle": "team",
+          "spalte": "wy_totals_transitions_recoveries_total"
+        },
+        "ereignisse": {
+          "quelle": "aggregat",
+          "spalte": "sum_dang_opp_rec"
+        }
+      },
+      "D1_pressingdruck": {
+        "kandidat": "d_pdda",
+        "phase": "defensiv",
+        "gewicht": 0.35,
+        "orient": -1,
+        "form": "band",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "direkt",
+          "spalte": "wy_totals_defence_pdda"
+        },
+        "nenner": null,
+        "ereignisse": {
+          "quelle": "team",
+          "spalte": "wy_totals_transitions_recoveries_total"
+        }
+      },
+      "D2_ballgewinnhoehe": {
+        "kandidat": "d_rec_high_per_min",
+        "phase": "defensiv",
+        "gewicht": 0.35,
+        "orient": 1,
+        "form": "up",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "team",
+          "spalte": "wy_totals_transitions_recoveries_high"
+        },
+        "nenner": {
+          "quelle": "eff_min"
+        },
+        "ereignisse": {
+          "quelle": "team",
+          "spalte": "wy_totals_transitions_recoveries_high"
+        }
+      },
+      "D3_gegner_progression": {
+        "kandidat": "s_opp_prog_zugel",
+        "phase": "defensiv",
+        "gewicht": 0.3,
+        "orient": -1,
+        "form": "up",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "gegner",
+          "spalte": "wy_totals_passes_progressive_passes_successful"
+        },
+        "nenner": {
+          "quelle": "gegner",
+          "spalte": "wy_totals_possession_possession_number"
+        },
+        "ereignisse": {
+          "quelle": "gegner",
+          "spalte": "wy_totals_passes_progressive_passes_successful"
+        }
+      },
+      "DT1_gegenpressing": {
+        "kandidat": "g_counterpress_per_loss",
+        "phase": "def_umschalten",
+        "gewicht": 0.4,
+        "orient": 1,
+        "form": "up",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "aggregat",
+          "spalte": "sum_counterpress"
+        },
+        "nenner": {
+          "quelle": "team",
+          "spalte": "wy_totals_transitions_losses_total"
+        },
+        "ereignisse": {
+          "quelle": "aggregat",
+          "spalte": "sum_counterpress"
+        }
+      },
+      "DT2_gefaehrl_verluste": {
+        "kandidat": "g_dangloss_share",
+        "phase": "def_umschalten",
+        "gewicht": 0.3,
+        "orient": -1,
+        "form": "up",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "aggregat",
+          "spalte": "sum_dang_loss"
+        },
+        "nenner": {
+          "quelle": "team",
+          "spalte": "wy_totals_transitions_losses_total"
+        },
+        "ereignisse": {
+          "quelle": "team",
+          "spalte": "wy_totals_transitions_losses_total"
+        }
+      },
+      "DT3_hohe_verluste": {
+        "kandidat": "g_highloss_share",
+        "phase": "def_umschalten",
+        "gewicht": 0.3,
+        "orient": 1,
+        "form": "up",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "team",
+          "spalte": "wy_totals_transitions_losses_high"
+        },
+        "nenner": {
+          "quelle": "team",
+          "spalte": "wy_totals_transitions_losses_total"
+        },
+        "ereignisse": {
+          "quelle": "team",
+          "spalte": "wy_totals_transitions_losses_total"
+        }
+      },
+      "P1_laufvolumen_hi": {
+        "kandidat": "y_hidist_per_min",
+        "phase": "physisch",
+        "gewicht": 0.4,
+        "orient": 1,
+        "form": "band",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "aggregat",
+          "spalte": "sum_hi_dist"
+        },
+        "nenner": {
+          "quelle": "eff_min"
+        },
+        "ereignisse": {
+          "quelle": "aggregat",
+          "spalte": "field_minutes"
+        }
+      },
+      "P2_explosivitaet": {
+        "kandidat": "y_acc_per_min",
+        "phase": "physisch",
+        "gewicht": 0.35,
+        "orient": 1,
+        "form": "band",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "aggregat",
+          "spalte": "sum_acc"
+        },
+        "nenner": {
+          "quelle": "eff_min"
+        },
+        "ereignisse": {
+          "quelle": "aggregat",
+          "spalte": "field_minutes"
+        }
+      },
+      "P3_endgeschwindigkeit": {
+        "kandidat": "y_maxspeed_top5",
+        "phase": "physisch",
+        "gewicht": 0.25,
+        "orient": 1,
+        "form": "up",
+        "shrink": null,
+        "zaehler": {
+          "quelle": "direkt",
+          "spalte": "max_speed_top5"
+        },
+        "nenner": null,
+        "ereignisse": {
+          "quelle": "aggregat",
+          "spalte": "field_minutes"
+        }
+      }
+    }
+  },
+  "alternativen": {
+    "_hinweis": "Aus dem Screening von 58 Kandidaten (ergebnisse/kandidaten_screening.csv). delta = Cliff's δ Referenzkohorte gegen Ligarest, konsistenz = wie viele der vier Referenzteams δ > 0,15 erreichen. 'blockiert_durch' listet aktive KPIs, mit denen der Kandidat |r| > 0,60 hätte.",
+    "O1_vertikalitaet": [
+      {
+        "kandidat": "v_poss_dauer",
+        "delta": 0.182,
+        "konsistenz": "2/4",
+        "blockiert_durch": []
+      },
+      {
+        "kandidat": "v_back_share",
+        "delta": 0.171,
+        "konsistenz": "2/4",
+        "blockiert_durch": []
+      },
+      {
+        "kandidat": "v_fwd_attempt_share",
+        "delta": 0.162,
+        "konsistenz": "2/4",
+        "blockiert_durch": [
+          "O1_vertikalitaet"
+        ]
+      }
+    ],
+    "O3_fluegel_boxzuspiel": [
+      {
+        "kandidat": "f_cutback_share",
+        "delta": 0.055,
+        "konsistenz": "1/4",
+        "blockiert_durch": []
+      },
+      {
+        "kandidat": "f_touchbox_per_boxreach",
+        "delta": 0.054,
+        "konsistenz": "1/4",
+        "blockiert_durch": []
+      },
+      {
+        "kandidat": "f_boxpass_per_poss",
+        "delta": 0.026,
+        "konsistenz": "1/4",
+        "blockiert_durch": []
+      }
+    ],
+    "OT1_konterrate": [
+      {
+        "kandidat": "u_deep_per_rec",
+        "delta": 0.098,
+        "konsistenz": "1/4",
+        "blockiert_durch": [
+          "O2_tiefenprogression"
+        ]
+      },
+      {
+        "kandidat": "u_konter_share_att",
+        "delta": 0.003,
+        "konsistenz": "0/4",
+        "blockiert_durch": []
+      }
+    ],
+    "D1_pressingdruck": [
+      {
+        "kandidat": "d_challenge_int",
+        "delta": 0.155,
+        "konsistenz": "1/4",
+        "blockiert_durch": []
+      }
+    ],
+    "D2_ballgewinnhoehe": [
+      {
+        "kandidat": "d_opp_ownhalf_loss_share",
+        "delta": 0.295,
+        "konsistenz": "3/4",
+        "blockiert_durch": [
+          "DT3_hohe_verluste"
+        ]
+      },
+      {
+        "kandidat": "d_opphalf_rec_share",
+        "delta": 0.258,
+        "konsistenz": "3/4",
+        "blockiert_durch": [
+          "D2_ballgewinnhoehe"
+        ]
+      },
+      {
+        "kandidat": "d_rec_high_share",
+        "delta": 0.176,
+        "konsistenz": "2/4",
+        "blockiert_durch": []
+      }
+    ],
+    "D3_gegner_progression": [
+      {
+        "kandidat": "s_halfreach_zugel",
+        "delta": 0.269,
+        "konsistenz": "3/4",
+        "blockiert_durch": [
+          "DT3_hohe_verluste"
+        ]
+      },
+      {
+        "kandidat": "s_opp_deep_zugel",
+        "delta": 0.176,
+        "konsistenz": "2/4",
+        "blockiert_durch": []
+      },
+      {
+        "kandidat": "s_box_zugriff_zugel",
+        "delta": 0.131,
+        "konsistenz": "2/4",
+        "blockiert_durch": []
+      }
+    ],
+    "DT3_hohe_verluste": [
+      {
+        "kandidat": "g_opp_konter_per_loss",
+        "delta": 0.038,
+        "konsistenz": "0/4",
+        "blockiert_durch": [],
+        "bemerkung": "war DT3 in Rev. 2 — CI schließt null ein, 29 % Nullzähler"
+      }
+    ],
+    "P1_laufvolumen_hi": [
+      {
+        "kandidat": "y_sprint_per_min",
+        "delta": 0.41,
+        "konsistenz": "4/4",
+        "blockiert_durch": [
+          "P1_laufvolumen_hi",
+          "P2_explosivitaet"
+        ],
+        "bemerkung": "höchste Konsistenz im gesamten Screening, aber r = 0,90 zu P1 und r = 0,67 zu P2"
+      },
+      {
+        "kandidat": "y_counthi_per_min",
+        "delta": 0.467,
+        "konsistenz": "3/4",
+        "blockiert_durch": [
+          "P1_laufvolumen_hi"
+        ]
+      },
+      {
+        "kandidat": "y_dist_per_min",
+        "delta": 0.361,
+        "konsistenz": "3/4",
+        "blockiert_durch": [
+          "P1_laufvolumen_hi"
+        ]
+      }
+    ],
+    "P2_explosivitaet": [
+      {
+        "kandidat": "y_accdec_per_min",
+        "delta": 0.217,
+        "konsistenz": "2/4",
+        "blockiert_durch": [
+          "P2_explosivitaet"
+        ]
+      },
+      {
+        "kandidat": "y_dec_per_min",
+        "delta": 0.206,
+        "konsistenz": "2/4",
+        "blockiert_durch": [
+          "P2_explosivitaet"
+        ]
+      }
+    ],
+    "O2_boxzugang": [
+      {
+        "kandidat": "p_deep_per_poss",
+        "delta": 0.116,
+        "konsistenz": "2/4",
+        "blockiert_durch": [
+          "OT2_tiefenertrag"
+        ],
+        "bemerkung": "war O2 in Rev. 2 - r = 0,97 zum neuen OT2"
+      },
+      {
+        "kandidat": "p_halfreach_rate",
+        "delta": 0.114,
+        "konsistenz": "0/4",
+        "blockiert_durch": []
+      },
+      {
+        "kandidat": "p_boxreach_per_half",
+        "delta": 0.09,
+        "konsistenz": "1/4",
+        "blockiert_durch": []
+      }
+    ],
+    "OT2_tiefenertrag": [
+      {
+        "kandidat": "u_attacks_per_rec",
+        "delta": 0.09,
+        "konsistenz": "1/4",
+        "blockiert_durch": [
+          "DT3_hohe_verluste"
+        ],
+        "bemerkung": "war OT2 in Rev. 2 - r = 0,65 zum neuen DT3"
+      },
+      {
+        "kandidat": "u_runs_per_rec",
+        "delta": -0.104,
+        "konsistenz": "1/4",
+        "blockiert_durch": [],
+        "bemerkung": "frei, aber negatives delta - misst bei 3 von 4 Referenzen das Gegenteil"
+      }
+    ]
+  },
+  "aenderungen_rev3": [
+    {
+      "slot": "DT3",
+      "von": "g_opp_konter_per_loss (0/4, δ 0,04, 29 % Nullzähler)",
+      "nach": "g_highloss_share (3/4, δ 0,27, nie 0)",
+      "grund": "Der bisherige KPI trennte die Referenzteams nicht und war zählerlimitiert."
+    },
+    {
+      "slot": "D3",
+      "von": "s_halfreach_zugel (3/4, δ 0,27)",
+      "nach": "s_opp_prog_zugel (2/4, δ 0,21)",
+      "grund": "Erzwungen: der neue DT3 korreliert mit dem alten D3 zu r = 0,70."
+    },
+    {
+      "slot": "O2",
+      "von": "p_deep_per_poss (2/4, δ 0,12)",
+      "nach": "p_boxreach_per_half (1/4, δ 0,09)",
+      "grund": "Erzwungen: der neue OT2 korreliert mit dem alten O2 zu r = 0,97."
+    },
+    {
+      "slot": "OT2",
+      "von": "u_attacks_per_rec (1/4, δ 0,09)",
+      "nach": "u_deep_per_rec (1/4, δ 0,10)",
+      "grund": "Erzwungen: der alte OT2 korreliert mit dem neuen DT3 zu r = 0,65."
+    }
+  ]
+}

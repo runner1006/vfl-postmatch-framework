@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VfL Bochum — Quantitatives Post-Match-Framework</title>
+<style>
+/* Farben und Typografie aus dashboard.html uebernommen, damit beide Seiten
+   als eine Sache lesbar sind. Hell und Dunkel folgen der Systemeinstellung. */
+:root{
+  --plane:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --border:rgba(11,11,11,.10); --grid:#e1e0d9;
+  --s1:#2a78d6;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --plane:#12120f; --surface:#1a1a16;
+    --ink:#f4f3ee; --ink-2:#b8b6ad; --muted:#8b8981;
+    --border:rgba(244,243,238,.13); --grid:#2b2a25;
+    --s1:#3987e5;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--plane); color:var(--ink);
+  font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:720px;margin:0 auto;padding:64px 20px 72px}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:-.015em}
+.sub{color:var(--ink-2);font-size:14px;margin:0 0 30px}
+p{margin:0 0 16px}
+.lead{font-size:16.5px}
+table{border-collapse:collapse;width:100%;margin:24px 0;font-size:14px}
+th,td{text-align:left;padding:9px 12px 9px 0;border-bottom:1px solid var(--border);
+  vertical-align:top}
+th{font-weight:600;white-space:nowrap;padding-right:18px}
+.cta{display:inline-block;margin:14px 0 26px;padding:12px 22px;border-radius:9px;
+  background:var(--s1);color:#fff;text-decoration:none;font-weight:600;font-size:15px}
+.cta:hover{filter:brightness(1.08)}
+.links{border-top:1px solid var(--border);padding-top:22px;margin-top:34px;
+  font-size:14px;color:var(--ink-2)}
+.links a{color:var(--s1)}
+.links li{margin-bottom:7px}
+ul{margin:0;padding-left:20px}
+.note{color:var(--muted);font-size:13px;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Quantitatives Post-Match-Framework</h1>
+  <p class="sub">VfL Bochum · Rev. 4 · 4.343 Spiele aus 16 Liga-Saisons</p>
+
+  <p class="lead">Ein Bewertungsrahmen für einzelne Spiele, gebaut auf Wyscout-Daten aus
+  drei Ligen. Er beantwortet drei Fragen und hält sie strikt auseinander, statt sie zu
+  einer undurchsichtigen Note zu verrechnen.</p>
+
+  <table>
+    <tr><th>Spielstiltreue</th>
+        <td>Wie nah kam das Spiel der Bochumer Spielidee? 15 KPIs in fünf Spielphasen.
+            Das misst <em>Identität</em>, nicht Qualität.</td></tr>
+    <tr><th>Aufstiegsperformance</th>
+        <td>Hätte diese Leistung — gegen diesen Gegner — für den Aufstieg gereicht?
+            Gemessen an 18 historischen Aufsteigern der 2. Bundesliga.</td></tr>
+    <tr><th>Outcome Alignment</th>
+        <td>Passt das Ergebnis zur gezeigten Leistung?</td></tr>
+  </table>
+
+  <a class="cta" href="dashboard.html">Dashboard öffnen</a>
+
+  <p>Das Dashboard zeigt den Spielbericht für ein einzelnes Spiel, den Verlauf über eine
+  Saison und die Validierung gegen vier Referenzmannschaften: RB Leipzig unter Werner,
+  Sturm Graz und TSG Hoffenheim unter Ilzer sowie Schalke 04 unter Muslic.</p>
+
+  <div class="links">
+    <ul>
+      <li><a href="framework_spec.md">framework_spec.md</a> — Methodik, Validierung und
+        die ausgewiesenen Grenzen des Ansatzes</li>
+      <li><a href="ergebnisse/SCHEMA.md">SCHEMA.md</a> — Spaltendokumentation der
+        Ergebnisdateien</li>
+      <li><a href="README.md">README.md</a> — Aufbau und Reproduktion der Rechnung</li>
+    </ul>
+  </div>
+
+  <p class="note">Die Wyscout-Rohdaten sind providerlizenziert und liegen nicht in diesem
+  Repository. Alle gezeigten Werte sind gerechnet, nicht geschätzt.</p>
+
+</div>
+</body>
+</html>

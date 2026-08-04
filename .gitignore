@@ -1,0 +1,15 @@
+# Wyscout-Rohdaten (61 MB). Providerlizenziert und jederzeit ueber
+# skripte/dl_matches.py und skripte/dl_stats.py neu ziehbar.
+daten/
+
+# Reproduzierbare Zwischenstaende. Entstehen aus scoring.py bzw. outcome.py;
+# ohne sie laeuft verify.py erst nach einem Rechenlauf.
+ergebnisse/kpi_match_level.csv
+ergebnisse/outcome_alignment.csv
+
+# Zugangsdaten gehoeren in die Umgebung, nie ins Repo
+.env
+
+__pycache__/
+*.pyc
+.DS_Store

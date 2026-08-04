@@ -1,0 +1,7 @@
+featureset,n_features,auc_mittel,auc_min,brier_mittel,top3_treffer_von_27,top3_trefferquote
+CC-Set (6 KPIs),6,0.869,0.756,0.0979,14,0.519
+CC-Kern (npxG off+def),2,0.877,0.756,0.0944,13,0.481
+npxG-Diff + Box-Diff,2,0.881,0.778,0.0913,15,0.556
+npxG-Diff + Abschlussqual.,2,0.891,0.778,0.0923,16,0.593
+Baseline npxG-Differenz,1,0.899,0.8,0.0904,15,0.556
+Baseline Tordifferenz (quasi-zirkulaer),1,0.983,0.944,0.0452,22,0.815
