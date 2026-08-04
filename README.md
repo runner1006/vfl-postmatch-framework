@@ -13,7 +13,7 @@ undurchsichtigen Note zu verrechnen:
 Ebene A misst **Identität**, nicht Qualität. Ein hoher Stilwert ist keine Aussage über
 Aufstiegschancen — dafür ist Ebene B da. Diese Trennung ist der Kern des Ansatzes.
 
-**→ [Dashboard ansehen](https://philipkloeckl.github.io/vfl-postmatch-framework/dashboard.html)**
+**→ [Dashboard ansehen](https://runner1006.github.io/vfl-postmatch-framework/dashboard.html)**
 
 ## Datenbasis
 
