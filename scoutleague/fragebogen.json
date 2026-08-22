@@ -1,0 +1,60 @@
+{
+  "version": "0.1",
+  "hinweis": "Fragen und Prognosen stehen als Daten hier, nicht im Code. Aendern ohne Python anzufassen. Schluessel (key) sind stabil - wer einen key umbenennt, trennt bestehende Bewertungen von ihrer Frage.",
+
+  "bewertung": {
+    "skala": {"min": 1, "max": 5, "schritt": 1},
+    "fragen": [
+      {"key": "technik",         "label": "Technik unter Druck",
+       "anker1": "verliert den Ball bei erstem Gegnerkontakt",
+       "anker5": "löst Drucksituationen sauber und beidfüßig",
+       "gruppe": "Ist-Niveau"},
+      {"key": "spielintelligenz","label": "Spielintelligenz & Entscheidungen",
+       "anker1": "wählt regelmäßig die zweitbeste Option",
+       "anker5": "erkennt Räume vor dem Ballempfang",
+       "gruppe": "Ist-Niveau"},
+      {"key": "athletik",        "label": "Athletik & Robustheit",
+       "anker1": "fällt körperlich und im Tempo ab",
+       "anker5": "athletisch ligaüberdurchschnittlich",
+       "gruppe": "Ist-Niveau"},
+      {"key": "zweikampf",       "label": "Zweikampf & Arbeit gegen den Ball",
+       "anker1": "vermeidet Duelle, lässt Wege offen",
+       "anker5": "gewinnt Duelle und verteidigt vorausschauend",
+       "gruppe": "Ist-Niveau"},
+      {"key": "offensivwirkung", "label": "Offensivwirkung (Torgefahr / Kreation)",
+       "anker1": "ohne messbaren Anteil an Chancen",
+       "anker5": "erzeugt Chancen eigenständig und wiederholbar",
+       "gruppe": "Ist-Niveau"},
+      {"key": "mentalitaet",     "label": "Mentalität & Körpersprache",
+       "anker1": "bricht nach Fehlern ein",
+       "anker5": "trägt das Spiel auch gegen den Verlauf",
+       "gruppe": "Ist-Niveau"},
+      {"key": "gesamt",          "label": "Gesamteinschätzung heute",
+       "anker1": "unter Ligadurchschnitt",
+       "anker5": "sofort eine Liga höher einsetzbar",
+       "gruppe": "Zusammenfassung", "leitfrage": true},
+      {"key": "potenzial",       "label": "Erwartetes Niveau in drei Jahren",
+       "anker1": "bleibt unter dem heutigen Niveau",
+       "anker5": "Top-5-Liga-Stammspieler",
+       "gruppe": "Zusammenfassung"}
+    ]
+  },
+
+  "prognosen": [
+    {"key": "top5_12m",
+     "label": "Wechsel in eine Top-5-Liga binnen 12 Monaten",
+     "erlaeuterung": "Vereinswechsel mit Registrierung in ENG/ESP/GER/ITA/FRA, erste oder zweite Liga.",
+     "horizont_monate": 12},
+    {"key": "marktwert_ueber",
+     "label": "Marktwert in 12 Monaten über Schwelle",
+     "erlaeuterung": "Schwelle steht je Fall im Case Pack.",
+     "horizont_monate": 12,
+     "parameter": "marktwert_schwelle"},
+    {"key": "minuten_1500",
+     "label": "Mindestens 1.500 Pflichtspielminuten in der kommenden Saison",
+     "erlaeuterung": "Liga, Pokal und Europacup zusammen, Verein und Liga egal.",
+     "horizont_monate": 12}
+  ],
+
+  "notiz": {"label": "Kurznotiz (optional)", "max_zeichen": 400}
+}

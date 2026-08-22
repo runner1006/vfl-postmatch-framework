@@ -1,0 +1,159 @@
+{
+  "_hinweis": "Erfundene Spieler zum Ausprobieren der Mechanik. Keine echten Personen, keine echten Daten. Für den Pilotbetrieb durch einen echten Case Pack nach pakete/VORLAGE.json ersetzen.",
+  "slug": "demo",
+  "titel": "Demo Case Pack (Testdaten)",
+  "status": "offen",
+  "schliesst_am": null,
+  "faelle": [
+    {
+      "ext_id": "DEMO-01",
+      "name": "Demo A. Novak",
+      "position": "LV",
+      "jahrgang": 2006,
+      "verein": "Demo SV Nord",
+      "liga": "Demo-Liga 1",
+      "fuss": "links",
+      "video_url": "",
+      "indizes": {
+        "technik": 68,
+        "spielintelligenz": 55,
+        "athletik": 81,
+        "zweikampf": 74,
+        "offensivwirkung": 41,
+        "mentalitaet": 62,
+        "gesamt": 63,
+        "potenzial": 72
+      },
+      "modell": {
+        "prognose": {
+          "top5_12m": 0.12,
+          "marktwert_ueber": 0.44,
+          "minuten_1500": 0.61
+        }
+      },
+      "parameter": {
+        "marktwert_schwelle": "1,5 Mio. EUR"
+      }
+    },
+    {
+      "ext_id": "DEMO-02",
+      "name": "Demo B. Haller",
+      "position": "ZOM",
+      "jahrgang": 2005,
+      "verein": "Demo FC Ost",
+      "liga": "Demo-Liga 1",
+      "fuss": "rechts",
+      "video_url": "",
+      "indizes": {
+        "technik": 84,
+        "spielintelligenz": 79,
+        "athletik": 48,
+        "zweikampf": 37,
+        "offensivwirkung": 77,
+        "mentalitaet": 58,
+        "gesamt": 71,
+        "potenzial": 80
+      },
+      "modell": {
+        "prognose": {
+          "top5_12m": 0.31,
+          "marktwert_ueber": 0.66,
+          "minuten_1500": 0.49
+        }
+      },
+      "parameter": {
+        "marktwert_schwelle": "4,0 Mio. EUR"
+      }
+    },
+    {
+      "ext_id": "DEMO-03",
+      "name": "Demo C. Ibrahimi",
+      "position": "ST",
+      "jahrgang": 2007,
+      "verein": "Demo United",
+      "liga": "Demo-Liga 2",
+      "fuss": "rechts",
+      "video_url": "",
+      "indizes": {
+        "technik": 52,
+        "spielintelligenz": 49,
+        "athletik": 88,
+        "zweikampf": 63,
+        "offensivwirkung": 69,
+        "mentalitaet": 71,
+        "gesamt": 58,
+        "potenzial": 74
+      },
+      "modell": {
+        "prognose": {
+          "top5_12m": 0.09,
+          "marktwert_ueber": 0.28,
+          "minuten_1500": 0.34
+        }
+      },
+      "parameter": {
+        "marktwert_schwelle": "0,8 Mio. EUR"
+      }
+    },
+    {
+      "ext_id": "DEMO-04",
+      "name": "Demo D. Petrovic",
+      "position": "ZDM",
+      "jahrgang": 2004,
+      "verein": "Demo Rangers",
+      "liga": "Demo-Liga 1",
+      "fuss": "beidfüßig",
+      "video_url": "",
+      "indizes": {
+        "technik": 61,
+        "spielintelligenz": 83,
+        "athletik": 57,
+        "zweikampf": 80,
+        "offensivwirkung": 29,
+        "mentalitaet": 86,
+        "gesamt": 69,
+        "potenzial": 66
+      },
+      "modell": {
+        "prognose": {
+          "top5_12m": 0.18,
+          "marktwert_ueber": 0.52,
+          "minuten_1500": 0.78
+        }
+      },
+      "parameter": {
+        "marktwert_schwelle": "2,0 Mio. EUR"
+      }
+    },
+    {
+      "ext_id": "DEMO-05",
+      "name": "Demo E. Lindqvist",
+      "position": "RA",
+      "jahrgang": 2006,
+      "verein": "Demo IF Süd",
+      "liga": "Demo-Liga 3",
+      "fuss": "links",
+      "video_url": "",
+      "indizes": {
+        "technik": 75,
+        "spielintelligenz": 58,
+        "athletik": 72,
+        "zweikampf": 44,
+        "offensivwirkung": 81,
+        "mentalitaet": 54,
+        "gesamt": 66,
+        "potenzial": 77
+      },
+      "modell": {
+        "prognose": {
+          "top5_12m": 0.22,
+          "marktwert_ueber": 0.58,
+          "minuten_1500": 0.43
+        }
+      },
+      "parameter": {
+        "marktwert_schwelle": "2,5 Mio. EUR"
+      }
+    }
+  ]
+}

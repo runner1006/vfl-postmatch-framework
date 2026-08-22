@@ -1,0 +1,61 @@
+{
+  "_hinweis": [
+    "Vorlage fuer einen echten Case Pack. Kopieren, ausfuellen, importieren mit:",
+    "    python3 scoutleague/cli.py pack --datei scoutleague/pakete/kw35.json",
+    "",
+    "Lizenzgrenze: hier gehoeren ausschliesslich eigene, aggregierte Indizes",
+    "hinein - nie Provider-Rohdaten. 'indizes' sind NOVA-Werte auf 0-100,",
+    "die Schluessel muessen den Fragen in fragebogen.json entsprechen, damit",
+    "der Import daraus eine Modellerwartung ableiten kann.",
+    "",
+    "'modell.bewertung' ueberschreibt die Ableitung aus den Indizes, wo es",
+    "gesetzt ist. 'modell.prognose' muss von Hand kommen - ohne sie gibt es",
+    "kein Sofort-Feedback gegen das Modell (der Brier-Score gegen die",
+    "Realitaet funktioniert trotzdem).",
+    "",
+    "'video_url' zeigt auf ein Highlight-Video. Der Player wird als iframe",
+    "eingebettet; YouTube-, Vimeo- und direkte mp4-Links funktionieren."
+  ],
+
+  "slug": "kw35-2026",
+  "titel": "Case Pack KW 35",
+  "status": "offen",
+  "schliesst_am": "2026-08-31T18:00:00Z",
+
+  "faelle": [
+    {
+      "ext_id": "SL-0001",
+      "name": "Vorname Nachname",
+      "position": "RV",
+      "jahrgang": 2006,
+      "verein": "Vereinsname",
+      "liga": "Liganame",
+      "fuss": "rechts",
+      "video_url": "https://www.youtube.com/embed/VIDEO_ID",
+
+      "indizes": {
+        "technik": 0,
+        "spielintelligenz": 0,
+        "athletik": 0,
+        "zweikampf": 0,
+        "offensivwirkung": 0,
+        "mentalitaet": 0,
+        "gesamt": 0,
+        "potenzial": 0
+      },
+
+      "modell": {
+        "bewertung": {},
+        "prognose": {
+          "top5_12m": 0.0,
+          "marktwert_ueber": 0.0,
+          "minuten_1500": 0.0
+        }
+      },
+
+      "parameter": {
+        "marktwert_schwelle": "1,5 Mio. EUR"
+      }
+    }
+  ]
+}

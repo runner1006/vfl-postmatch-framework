@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Scout League · Admin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%232a78d6%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-family=%22system-ui,sans-serif%22 font-size=%2216%22 font-weight=%22700%22 fill=%22white%22 text-anchor=%22middle%22%3ESL%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/stil.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Scout League &middot; Admin</h1>
+  <p class="sub">Abgabestand, Auflösung, Export.</p>
+
+  <div class="karte" id="tokenkarte">
+    <label class="klein muted" for="token">Admin-Token</label>
+    <input type="password" id="token" style="margin:6px 0 12px"
+           autocomplete="off" spellcheck="false">
+    <button class="knopf" id="laden">Laden</button>
+    <div id="tokenfehler"></div>
+  </div>
+
+  <div id="inhalt"></div>
+</div>
+
+<script>
+"use strict";
+const el = (s) => document.getElementById(s);
+const esc = (t) => String(t == null ? "" : t).replace(/[&<>"']/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let TOKEN = sessionStorage.getItem("sl_admin") || "";
+let FRAGEN = [];      // [{key, label}] aus dem Fragebogen
+
+async function api(pfad, optionen = {}) {
+  const kopf = Object.assign({ "Content-Type": "application/json",
+                               "X-Admin-Token": TOKEN }, optionen.headers || {});
+  const r = await fetch(pfad, Object.assign({}, optionen, { headers: kopf }));
+  const text = await r.text();
+  let d = null;
+  try { d = text ? JSON.parse(text) : null; } catch (e) { d = text; }
+  if (!r.ok) throw new Error((d && d.fehler) || `Fehler ${r.status}`);
+  return d;
+}
+
+el("laden").addEventListener("click", () => {
+  TOKEN = el("token").value.trim();
+  sessionStorage.setItem("sl_admin", TOKEN);
+  laden();
+});
+
+async function laden() {
+  el("tokenfehler").innerHTML = "";
+  let u, fb;
+  try {
+    [u, fb] = await Promise.all([
+      api("/api/admin/uebersicht"),
+      fetch("/api/fragebogen").then((r) => r.ok ? r.json() : null).catch(() => null),
+    ]);
+  } catch (err) {
+    el("tokenfehler").innerHTML =
+      `<div class="meldung fehler">${esc(err.message)}</div>`;
+    return;
+  }
+  el("tokenkarte").hidden = true;
+  FRAGEN = (fb && fb.prognosen ? fb.prognosen : [])
+    .map((p) => ({ key: p.key, label: p.label }));
+
+  if (!u.pack) {
+    el("inhalt").innerHTML = `<div class="karte">Kein Case Pack vorhanden.
+      Import über <code>python3 scoutleague/cli.py pack --datei …</code></div>`;
+    return;
+  }
+
+  el("inhalt").innerHTML = `
+    <div class="karte">
+      <h2 style="margin-top:0">${esc(u.pack.titel)}
+        <span class="abzeichen ${u.pack.status === "offen" ? "offen" : "gut"}">
+          ${esc(u.pack.status)}</span></h2>
+      <div class="reihe">
+        <button class="knopf leise" id="umschalten">
+          ${u.pack.status === "offen" ? "Pack schließen" : "Pack öffnen"}</button>
+        <button class="knopf leise" id="csv">CSV exportieren</button>
+      </div>
+    </div>
+
+    <div class="karte scroll">
+      <h2 style="margin-top:0">Scouts</h2>
+      <table class="tab">
+        <tr><th>Code</th><th>Name</th><th class="zahl">abgegeben</th>
+            <th class="zahl">offen</th></tr>
+        ${u.scouts.map((s) => `<tr><td class="mono">${esc(s.code)}</td>
+          <td>${esc(s.name)}</td><td class="zahl">${s.abgegeben}</td>
+          <td class="zahl">${s.offen}</td></tr>`).join("")}
+      </table>
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">Fälle und Auflösung</h2>
+      <p class="klein muted">Auflösen heißt: die Realität hat geantwortet.
+      Jede Auflösung erzeugt Outcome-Labels für alle Scouts, die zu diesem Fall
+      abgegeben haben.</p>
+      ${u.faelle.map((f) => `
+        <div style="border-top:1px solid var(--border);padding:12px 0">
+          <div class="reihe">
+            <b>${esc(f.name)}</b>
+            <span class="muted klein">${esc(f.verein)} · Fall ${f.id}</span>
+            <span class="abzeichen">${f.abgaben} Abgaben</span>
+          </div>
+          <div style="margin-top:6px">
+            ${FRAGEN.map((q) => {
+              const a = f.aufloesungen[q.key];
+              const stil = (an, farbe) => "padding:4px 10px;margin-left:4px"
+                + (an ? `;background:var(${farbe});color:#fff;border-color:transparent` : "");
+              return `<div class="klein" style="display:flex;align-items:center;
+                        gap:6px;margin:5px 0">
+                <span style="flex:1;min-width:0">${esc(q.label)}</span>
+                <button class="knopf leise" style="${stil(a === 1, "--gut")}"
+                  data-fall="${f.id}" data-frage="${esc(q.key)}" data-erg="1">ja</button>
+                <button class="knopf leise" style="${stil(a === 0, "--schlecht")}"
+                  data-fall="${f.id}" data-frage="${esc(q.key)}" data-erg="0">nein</button>
+                <span class="muted" style="width:52px;text-align:right">${
+                  a === undefined ? "offen" : "gelöst"}</span>
+              </div>`;
+            }).join("")}
+          </div>
+        </div>`).join("")}
+    </div>`;
+
+  el("umschalten").addEventListener("click", async () => {
+    await api("/api/admin/pack_status", {
+      method: "POST",
+      body: JSON.stringify({ slug: u.pack.slug,
+        status: u.pack.status === "offen" ? "geschlossen" : "offen" }),
+    });
+    laden();
+  });
+
+  el("csv").addEventListener("click", async () => {
+    const r = await fetch("/api/admin/export.csv", {
+      headers: { "X-Admin-Token": TOKEN } });
+    const blob = await r.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "scoutleague.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.querySelectorAll("[data-frage]").forEach((b) => {
+    b.addEventListener("click", async () => {
+      await api("/api/admin/aufloesen", {
+        method: "POST",
+        body: JSON.stringify({ fall_id: Number(b.dataset.fall),
+          frage: b.dataset.frage, ergebnis: Number(b.dataset.erg),
+          quelle: "admin-ui" }),
+      });
+      laden();
+    });
+  });
+}
+
+if (TOKEN) { el("token").value = TOKEN; laden(); }
+</script>
+</body>
+</html>
