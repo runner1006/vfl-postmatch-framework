@@ -1563,17 +1563,18 @@ if (TOKEN) { el("token").value = TOKEN; laden(); }
 </script>
 
 <script>
-/* Umschalter. Beide Ansichten sind bereits gezeichnet; hier wird nur
-   sichtbar gemacht, was gerade gefragt ist. */
+
+/* Umschalter. Beide Ansichten sind bereits gezeichnet; hier wird nur sichtbar
+   gemacht, was gerade gefragt ist. */
 (function () {
   const TEXTE = {
-    scout: "<b>Das sieht ein Scout.</b> Vier Fälle sind offen und ausfüllbar, "
-      + "zwei sind abgegeben und zeigen die Sofort-Rückmeldung. Die Daten "
-      + "stammen aus einem echten Lauf mit zehn Testscouts auf erfundenen "
-      + "Spielern.",
-    admin: "<b>Das sieht die Redaktion.</b> Abgabestand und Auflösung unter "
-      + "<i>Übersicht</i>, die fünf Diagnosen aus dem Scout Rating Audit unter "
-      + "<i>Kalibrier-Report</i>.",
+    scout: "<b>Das sieht ein Scout.</b> Vier Fälle sind offen und "
+      + "ausfüllbar, zwei sind abgegeben und zeigen die "
+      + "Sofort-Rückmeldung. Die Daten stammen aus einem echten Lauf mit "
+      + "zehn Testscouts auf erfundenen Spielern.",
+    admin: "<b>Das sieht die Redaktion.</b> Abgabestand und Auflösung "
+      + "unter <i>Übersicht</i>, die fünf Diagnosen aus dem Scout "
+      + "Rating Audit unter <i>Kalibrier-Report</i>.",
   };
   const HINWEIS = " Kennzahlen in Profil, Liga und Report sind ein Standbild: "
     + "sie rechnen im Betrieb live mit, in dieser Vorschau nicht. Der volle "
@@ -1595,6 +1596,37 @@ if (TOKEN) { el("token").value = TOKEN; laden(); }
   document.querySelectorAll("[data-ansicht-wahl]").forEach((b) => {
     b.addEventListener("click", () => waehle(b.dataset.ansichtWahl));
   });
+
+  /* Der Export laedt im Betrieb eine Datei herunter. In einer eingebetteten
+     Vorschau ist Herunterladen gesperrt, und ein toter Knopf waere schlechter
+     als gar keiner - also hier zeigen statt liefern. Abgefangen wird in der
+     Erfassungsphase, damit der eigentliche Handler nicht mehr laeuft. */
+  document.getElementById("app-admin").addEventListener("click", (e) => {
+    const knopf = e.target.closest("#csv");
+    if (!knopf) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const offen = document.getElementById("csv-vorschau");
+    if (offen) { offen.remove(); return; }
+    const zeilen = String(window.__SL_DATEN.csv || "").trim().split("\n");
+    const schutz = (t) => t.replace(/[&<>]/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    const kasten = document.createElement("div");
+    kasten.id = "csv-vorschau";
+    kasten.className = "karte flach";
+    kasten.style.marginTop = "12px";
+    kasten.innerHTML =
+      '<p class="klein muted" style="margin:0 0 8px">Im Betrieb lädt dieser '
+      + 'Knopf eine CSV herunter — eine Zeile je Scout × Fall × '
+      + 'Prognose, mit Outcome-Label. Hier stehen die ersten Zeilen von '
+      + '<b>' + (zeilen.length - 1) + '</b>.</p>'
+      + '<div class="scroll"><pre style="margin:0;font-size:11px;line-height:1.5">'
+      + zeilen.slice(0, 6).map(schutz).join("\n")
+      + (zeilen.length > 6 ? "\n…" : "") + '</pre></div>';
+    knopf.closest(".karte").appendChild(kasten);
+  }, true);
+
   waehle("scout");
 })();
+
 </script>
