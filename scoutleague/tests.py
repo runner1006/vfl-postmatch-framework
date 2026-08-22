@@ -19,6 +19,7 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HIER)
 
 import metriken  # noqa: E402
+import modell    # noqa: E402
 
 FEHLER = []
 GEPRUEFT = [0]
@@ -204,6 +205,156 @@ class Klient:
                 return e.code, json.loads(text)
             except ValueError:
                 return e.code, text
+
+
+def test_modell():
+    """Die Ableitung aus dem Export. Geprueft wird vor allem, wo sie sich
+    weigert - eine erfundene Modellerwartung ist schlimmer als eine leere."""
+    print("\nModellableitung")
+
+    # Robustes Einlesen
+    pruefe(modell.zahl("61,40") == 61.4, "deutsche Kommazahl")
+    pruefe(modell.zahl("1.234,5") == 1234.5, "Tausenderpunkt und Komma")
+    pruefe(modell.zahl("72%") == 72.0, "Prozentzeichen")
+    pruefe(modell.zahl("") is None and modell.zahl("-") is None,
+           "leere Zellen ergeben None, nicht 0")
+
+    # Spalten finden, egal wie sie geschrieben sind
+    kopf = ["Player", "Position", "Team", "Competition", "Season",
+            "Minutes played", "Birthday", "Default Index", "xG Assist",
+            "Smart passes per 90"]
+    sp, fehlt = modell.spalten_finden(kopf)
+    pruefe(sp["spieler"] == "Player" and sp["minuten"] == "Minutes played",
+           "Spalten werden ueber Schreibweisen hinweg gefunden")
+    pruefe(sp["index"] == "Default Index", "Default Index wird als Index erkannt")
+    pruefe("alter" in fehlt, "fehlende Spalten werden gemeldet, nicht geraten")
+    sp2, _ = modell.spalten_finden(["spieler", "minuten_gespielt", "wettbewerb"])
+    pruefe(sp2.get("spieler") == "spieler" and sp2.get("liga") == "wettbewerb",
+           "auch deutsche Spaltennamen")
+
+    # Perzentil
+    pool = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    pruefe(nah(modell.perzentil(10, pool), 95.0), "hoechster Wert -> Perzentil 95")
+    pruefe(nah(modell.perzentil(1, pool), 5.0), "niedrigster Wert -> Perzentil 5")
+    pruefe(modell.perzentil(5, [3]) is None, "Perzentil braucht mehr als einen Wert")
+    pruefe(nah(modell.perzentil(5, [5, 5, 5, 5]), 50.0),
+           "bei lauter gleichen Werten liegt jeder in der Mitte")
+
+    # Perzentil -> Note, mit Spreizung an den Raendern
+    noten = [modell.perzentil_zu_note(p) for p in (2, 20, 50, 80, 97)]
+    pruefe(noten == [1, 2, 3, 4, 5], f"Perzentilbaender treffen 1-5 (hat {noten})")
+    pruefe(modell.perzentil_zu_note(None) is None, "ohne Perzentil keine Note")
+
+    # Liga-Register
+    name, stufe, _e = modell.liga_aufloesen("Germany. 2. Bundesliga")
+    pruefe(name == "2. Bundesliga" and stufe == 7, "Alias trifft die Audit-Stufe")
+    name, stufe, eintrag = modell.liga_aufloesen("Primera RFEF")
+    pruefe(name == "Primera Federación" and stufe is None,
+           "nicht eingeordnete Liga liefert None statt einer geratenen Zahl")
+    pruefe(eintrag and eintrag.get("offen"),
+           "und nennt, was zur Einordnung fehlt")
+    _n, stufe, _e = modell.liga_aufloesen("Gibt Es Nicht FC Liga")
+    pruefe(stufe is None, "unbekannte Liga bricht nicht, sie bleibt leer")
+
+    # Level heute
+    pruefe(modell.level_heute(7, 95) == 8.0,
+           "Spitzenperzentil hebt um eine Stufe")
+    pruefe(modell.level_heute(7, 55) == 7.0, "Mittelfeld laesst die Stufe stehen")
+    pruefe(modell.level_heute(None, 95) is None,
+           "ohne Liga-Niveau kein Level - das ist der Kern")
+
+    # Ceiling
+    pruefe(modell.ceiling(6, 18) > modell.ceiling(6, 28),
+           "junger Spieler bekommt mehr Spielraum als ein alter")
+    pruefe(modell.ceiling(6, 32) < 6, "jenseits der Peakjahre kippt es")
+    pruefe(modell.ceiling(6, 20, trend=0.2) > modell.ceiling(6, 20, trend=-0.2),
+           "steigender Verlauf hebt, fallender senkt")
+    pruefe(modell.ceiling(10, 18) == 10.0, "das Ceiling bleibt in der Skala")
+    pruefe(modell.ceiling(4, 17, trend=0.9) - 4 <= modell.MAX_ZUWACHS,
+           "der Zuwachs ist gedeckelt - ein optimistisches Modell liesse das "
+           "ganze Feld pessimistisch aussehen")
+    pruefe(modell.ceiling(6, 24) == 6.0,
+           "im Peakalter ohne Verlauf bleibt das Ceiling auf dem Niveau")
+    pruefe(modell.ceiling(None, 20) is None and modell.ceiling(6, None) is None,
+           "ohne Level oder ohne Alter kein Ceiling")
+
+    # Poolpruefung: der wichtigste Teil - wann verweigert sie?
+    def pool_zeilen(n, minuten=900, liga="Germany. 3. Liga"):
+        return [{"Player": f"S{i}", "Minutes played": str(minuten),
+                 "Competition": liga, "Default Index": str(0.5 + i / 100)}
+                for i in range(n)]
+    sp, _ = modell.spalten_finden(["Player", "Minutes played", "Competition",
+                                   "Default Index"])
+
+    gut = modell.pool_pruefen(pool_zeilen(60), sp)
+    pruefe(gut["brauchbar"] and gut["zeilen_im_pool"] == 60,
+           "voller Ligapool gilt als brauchbar")
+
+    klein = modell.pool_pruefen(pool_zeilen(8), sp)
+    pruefe(not klein["brauchbar"], "acht Zeilen sind kein Pool")
+
+    kuratiert = modell.pool_pruefen(
+        pool_zeilen(40) + pool_zeilen(3, minuten=25), sp)
+    pruefe(not kuratiert["brauchbar"]
+           and any("handverlesen" in g for g in kuratiert["gruende"]),
+           "Zeilen unter 60 Minuten verraten einen handverlesenen Export")
+
+    gemischt = modell.pool_pruefen(
+        sum([pool_zeilen(12, liga=f"Liga {i}") for i in range(4)], []), sp)
+    pruefe(any("Wettbewerbe" in g for g in gemischt["gruende"]),
+           "Perzentil ueber vier Ligen hinweg wird abgelehnt")
+
+    ohne_minuten, _ = modell.spalten_finden(["Player", "Competition"])
+    blind = modell.pool_pruefen(pool_zeilen(60), ohne_minuten)
+    pruefe(any("Minutenspalte" in g for g in blind["gruende"]),
+           "ohne Minutenspalte greift der 400-Minuten-Filter nicht, und das "
+           "wird gesagt")
+
+    # Spielermodell: Attribute ohne Datenzuordnung bleiben leer
+    pool_werte = {"xG Assist": [0.1 * i for i in range(20)]}
+    m = modell.spieler_modell(
+        [{"xG Assist": "1.5"}], pool_werte, 7,
+        {"letzter_pass": "xG Assist", "mentalitaet": "Gibt Es Nicht"},
+        gesamt_perzentil=92.0, alter=20)
+    # 1.5 liegt im Pool 0.0-1.9 auf Perzentil 77.5, also im Band 65-90 -> 4
+    pruefe(m["bewertung"].get("letzter_pass") == 4,
+           f"Attribut mit Daten bekommt eine Note "
+           f"(hat {m['bewertung'].get('letzter_pass')}, "
+           f"P{m['attribut_perzentile'].get('letzter_pass')})")
+    pruefe("mentalitaet" not in m["bewertung"]
+           and "mentalitaet" in m["attribute_ohne_daten"],
+           "Attribut ohne Kennzahl bleibt leer und wird als Luecke gefuehrt")
+    pruefe(m["level_heute"] == 8.0 and m["level_ceiling"] == 9.0,
+           f"spieler_modell liefert Level und Ceiling "
+           f"(hat {m['level_heute']}/{m['level_ceiling']})")
+    ohne_p = modell.spieler_modell([{"xG Assist": "1.5"}], pool_werte, 7,
+                                   {"letzter_pass": "xG Assist"})
+    pruefe(ohne_p["level_heute"] is None,
+           "ohne Gesamtperzentil kein Level - nicht aus einem Attribut geraten")
+
+    # Ganzer Export von Platte
+    tmp = tempfile.mkdtemp(prefix="scoutleague-export-")
+    pfad = os.path.join(tmp, "export-99.csv")
+    with open(pfad, "w", encoding="utf-8-sig", newline="") as f:
+        f.write("Player;Position;Competition;Minutes played;Default Index\n")
+        for i in range(40):
+            f.write(f"Spieler {i};CF;Germany. 2. Bundesliga;{900 + i};"
+                    f"{0.40 + i / 200:.3f}\n")
+    gelesen = modell.export_lesen(pfad)
+    pruefe(len(gelesen) == 40 and gelesen[0]["Player"] == "Spieler 0",
+           "semikolongetrennter utf-8-sig-Export wird korrekt gelesen")
+    sp3, _ = modell.spalten_finden(list(gelesen[0]))
+    werte = [modell.zahl(z[sp3["index"]]) for z in gelesen]
+    p_letzter = modell.perzentil(werte[-1], werte)
+    pruefe(p_letzter > 95, "der beste Spieler des Pools liegt oben")
+    pruefe(modell.level_heute(7, p_letzter) == 8.0,
+           "und landet damit eine Stufe ueber dem Liganiveau")
+
+    # Methodenblatt
+    text = modell.bericht(klein, {"MLS"}, {"mentalitaet"}, {"top5_12m"})
+    for pflicht in ("Pool nicht belastbar", "Liga-Niveau", "Ceiling",
+                    "MLS", "mentalitaet", "top5_12m"):
+        pruefe(pflicht in text, f"Methodenblatt nennt {pflicht}")
 
 
 def test_kleine_stichprobe():
@@ -564,6 +715,7 @@ def test_ende_zu_ende():
 
 if __name__ == "__main__":
     test_metriken()
+    test_modell()
     test_ende_zu_ende()
     test_kleine_stichprobe()
     print(f"\n{GEPRUEFT[0]} Pruefungen, {len(FEHLER)} Fehler")

@@ -118,6 +118,40 @@ er bewusst nichts und sagt das auch: wer einen Spieler bewertet hat, hat per
 Konstruktion 100 % auf einer Stufe, und das als Zentraltendenz zu melden wäre
 Rauschen als Befund verkauft.
 
+## Woher die Modellerwartung kommt
+
+Der Case Pack braucht je Spieler ein Level 1–10, eine Erwartung je Attribut und
+Prognosewahrscheinlichkeiten. Die kamen anfangs von Hand. `modell.py` leitet
+sie aus einem NOVA-Export ab — so weit die Daten reichen, und keinen Schritt
+weiter:
+
+| Größe | Herkunft |
+|---|---|
+| Perzentil im Positionspool | gerechnet, gegen den vollen Ligapool ab 400 Minuten |
+| Level heute | gerechnet, sobald das Liga-Niveau bekannt ist: Liga-Stufe, um höchstens eine Stufe durch das Perzentil verschoben |
+| **Liga-Niveau** | **nicht rechenbar.** Ein Perzentil misst den Rang *in* der Liga, nie die Liga. Steht in `liga_level.json` |
+| Attributnote 1–5 | gerechnet aus dem Poolperzentil der zugeordneten Kennzahl — wo keine Kennzahl zeigt, bleibt das Feld leer |
+| Ceiling | Heuristik aus Alter und Indexverlauf, offen deklariert. Es gibt keine Outcome-Historie, auf die man fitten könnte |
+| Prognosen | brauchen Basisraten aus aufgelösten Fällen; ohne die bleibt das Feld leer |
+
+Ein erster Blick auf einen unbekannten Export:
+
+```bash
+python3 scoutleague/modell.py --export export-51.csv
+```
+
+Zeigt erkannte Spalten, Indexspalten, Poolqualität und ob die Liga im Register
+steht. `pool_pruefen()` verweigert handverlesene Exporte: Zeilen unter 60
+Minuten, zu kleine Pools und Perzentile über Ligagrenzen hinweg werden benannt
+statt stillschweigend verrechnet.
+
+Die Urteilsschicht darüber ist der Agent `.claude/agents/modell-analyse.md` —
+er entscheidet, welche Kennzahl auf welches Attribut zeigt, ordnet neue Ligen
+ein und schreibt das Methodenblatt dazu. Der Grundsatz durchgehend: **eine
+Lücke ausweisen ist billiger als eine Zahl erfinden.** Ein leeres Feld kostet
+ein Stück Sofort-Feedback; eine erfundene Modellerwartung vergiftet
+Trennschärfe, Konfliktliste und Sofort-Rückmeldung, ohne dass es auffällt.
+
 ## Was gemessen wird
 
 Zwei Blöcke, die bewusst getrennt bleiben statt zu einer Note zu verschmelzen —
@@ -156,10 +190,12 @@ metriken.py        die Rechnung: Brier, Kalibrierung, Spreizung, Spearman
 db.py              SQLite-Schema, idempotent bei jedem Start
 export.py          Admin-Übersicht, Auflösung, CSV
 cli.py             Betriebswerkzeug (scouts, pack, status, aufloesen, export, stand)
-tests.py           133 Prüfungen: Metrik-Mathematik + End-to-End gegen echten Server
+tests.py           179 Prüfungen: Metrik-Mathematik + End-to-End gegen echten Server
 vorschau.html      die App als eine Datei, ohne Server — Doppelklick genügt
 vorschau_bauen.py  baut vorschau.html aus static/ plus aufgezeichneten Antworten
 vorschau_daten.py  zeichnet die Antworten eines laufenden Servers auf
+modell.py          Modellerwartung aus einem NOVA-Export ableiten
+liga_level.json    welche Liga auf welcher Stufe des Level Ratings steht
 fragebogen.json    Level-Skala, Attribut-Sets je Position, Prognosen und
                    Schwellenwerte als Daten, nicht im Code
 pakete/            Case Packs (VORLAGE.json, demo.json)
@@ -198,8 +234,8 @@ beliebiger kleiner Server; TLS gehört davor, nicht hier hinein.
 
 Prüfen: `python3 scoutleague/tests.py` — startet einen echten Server auf einer
 Wegwerf-Datenbank und geht den kompletten Ablauf durch, von der Anmeldung über
-24 Abgaben und 18 Auflösungen bis zum CSV, inklusive Kalibrier-Report und dem
-Verhalten bei zu dünner Datenlage.
+24 Abgaben und 18 Auflösungen bis zum CSV, inklusive Kalibrier-Report, der
+Modellableitung aus einem Export und dem Verhalten bei zu dünner Datenlage.
 
 ## Grenzen — bewusst offen ausgewiesen
 
