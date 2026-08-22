@@ -35,7 +35,11 @@ const el = (s) => document.getElementById(s);
 const esc = (t) => String(t == null ? "" : t).replace(/[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-let TOKEN = sessionStorage.getItem("sl_admin") || "";
+/* Sitzungsspeicher kann werfen, nicht nur leer sein. */
+const merke = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} };
+const hole = (k) => { try { return sessionStorage.getItem(k) || ""; } catch (e) { return ""; } };
+
+let TOKEN = hole("sl_admin");
 let FRAGEN = [];      // [{key, label}] aus dem Fragebogen
 let ANSICHT = "uebersicht";
 
@@ -55,7 +59,7 @@ async function api(pfad, optionen = {}) {
 
 el("laden").addEventListener("click", () => {
   TOKEN = el("token").value.trim();
-  sessionStorage.setItem("sl_admin", TOKEN);
+  merke("sl_admin", TOKEN);
   laden();
 });
 

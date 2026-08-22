@@ -1,0 +1,1600 @@
+<title>Scout League Vorschau</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+/* Farbtoken und Typografie bewusst aus dem bestehenden Framework-Frontend
+   uebernommen, damit Scout League und Post-Match-Dashboard als eine Sache
+   lesbar sind. Hell und Dunkel folgen der Systemeinstellung. */
+:root{
+  --plane:#f9f9f7; --surface:#fcfcfb; --surface-2:#f2f1ed;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --border:rgba(11,11,11,.10); --grid:#e1e0d9;
+  --s1:#2a78d6; --gut:#2f8f5b; --warn:#b8791f; --schlecht:#c0392b;
+  --radius:10px;
+}
+/* Drei Zustaende, nicht zwei: die meisten Betrachter haben gar keine
+   ausdrueckliche Wahl getroffen, dann entscheidet allein die
+   Systemeinstellung. Wo eine Umgebung data-theme setzt, gewinnt die Wahl -
+   in beide Richtungen. Nur Token werden umdefiniert, nie Komponenten. */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --plane:#12120f; --surface:#1a1a16; --surface-2:#22221d;
+    --ink:#f4f3ee; --ink-2:#b8b6ad; --muted:#8b8981;
+    --border:rgba(244,243,238,.13); --grid:#2b2a25;
+    --s1:#3987e5; --gut:#4bb37b; --warn:#d69a3c; --schlecht:#e06455;
+  }
+}
+:root[data-theme="dark"]{
+  --plane:#12120f; --surface:#1a1a16; --surface-2:#22221d;
+  --ink:#f4f3ee; --ink-2:#b8b6ad; --muted:#8b8981;
+  --border:rgba(244,243,238,.13); --grid:#2b2a25;
+  --s1:#3987e5; --gut:#4bb37b; --warn:#d69a3c; --schlecht:#e06455;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--plane); color:var(--ink);
+  font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 80px}
+h1{font-size:22px;margin:0 0 2px;letter-spacing:-.015em}
+h2{font-size:17px;margin:26px 0 10px;letter-spacing:-.01em}
+h3{font-size:15px;margin:18px 0 8px}
+p{margin:0 0 12px}
+a{color:var(--s1)}
+.sub{color:var(--ink-2);font-size:13.5px;margin:0 0 18px}
+.muted{color:var(--muted)}
+.klein{font-size:13px}
+.mono{font-variant-numeric:tabular-nums}
+
+/* ------------------------------------------------------------------ Kopf */
+header.kopf{
+  position:sticky;top:0;z-index:20;background:var(--plane);
+  border-bottom:1px solid var(--border);
+}
+.kopf .inner{max-width:760px;margin:0 auto;padding:10px 16px;
+  display:flex;align-items:center;gap:12px}
+.marke{font-weight:650;letter-spacing:-.01em;font-size:15px}
+.marke span{color:var(--muted);font-weight:400}
+.kopf nav{margin-left:auto;display:flex;gap:2px}
+.kopf nav button{
+  background:none;border:none;color:var(--ink-2);font:inherit;font-size:13.5px;
+  padding:6px 10px;border-radius:7px;cursor:pointer
+}
+.kopf nav button[aria-current="true"]{background:var(--surface-2);color:var(--ink);
+  font-weight:600}
+
+/* ---------------------------------------------------------------- Bausteine */
+.karte{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin:0 0 12px
+}
+.karte.flach{padding:12px 14px}
+button.knopf{
+  background:var(--s1);color:#fff;border:none;border-radius:9px;
+  padding:11px 20px;font:inherit;font-weight:600;cursor:pointer
+}
+button.knopf:disabled{opacity:.45;cursor:not-allowed}
+button.knopf.leise{background:transparent;color:var(--s1);
+  border:1px solid var(--border);font-weight:500}
+input[type=text],input[type=password]{
+  background:var(--surface);border:1px solid var(--border);border-radius:9px;
+  padding:11px 13px;font:inherit;color:var(--ink);width:100%
+}
+textarea{
+  background:var(--surface);border:1px solid var(--border);border-radius:9px;
+  padding:10px 12px;font:inherit;color:var(--ink);width:100%;resize:vertical;
+  min-height:64px
+}
+.reihe{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.abzeichen{
+  display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.02em;
+  padding:2px 8px;border-radius:99px;background:var(--surface-2);color:var(--ink-2)
+}
+.abzeichen.gut{background:color-mix(in srgb,var(--gut) 16%,transparent);color:var(--gut)}
+.abzeichen.offen{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.meldung{border-radius:9px;padding:10px 13px;margin:0 0 12px;font-size:14px}
+.meldung.fehler{background:color-mix(in srgb,var(--schlecht) 13%,transparent);
+  color:var(--schlecht)}
+.meldung.ok{background:color-mix(in srgb,var(--gut) 13%,transparent);color:var(--gut)}
+
+/* -------------------------------------------------------------- Falliste */
+.fallzeile{
+  display:flex;gap:12px;align-items:center;width:100%;text-align:left;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:13px 15px;margin-bottom:8px;cursor:pointer;font:inherit;color:var(--ink)
+}
+.fallzeile:hover{border-color:var(--s1)}
+.fallzeile .nr{color:var(--muted);font-size:13px;width:18px;flex:none}
+.fallzeile .txt{flex:1;min-width:0}
+.fallzeile .name{font-weight:600}
+.fallzeile .meta{color:var(--muted);font-size:12.5px}
+
+/* ----------------------------------------------------------------- Fall */
+.steckbrief{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));
+  gap:10px;margin:12px 0 4px}
+.steckbrief div{background:var(--surface-2);border-radius:8px;padding:8px 10px}
+.steckbrief dt{font-size:11.5px;color:var(--muted);margin:0}
+.steckbrief dd{margin:1px 0 0;font-weight:600;font-size:14px;
+  hyphens:auto}
+
+.indizes{display:grid;grid-template-columns:1fr;gap:6px;margin:10px 0 0}
+.indexzeile{display:grid;grid-template-columns:150px 1fr 34px;gap:10px;
+  align-items:center;font-size:13px}
+.balken{height:7px;background:var(--grid);border-radius:99px;overflow:hidden}
+.balken i{display:block;height:100%;background:var(--s1);border-radius:99px}
+
+.video{position:relative;padding-top:56.25%;background:var(--surface-2);
+  border-radius:9px;overflow:hidden;margin:12px 0}
+.video iframe,.video video{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+/* ------------------------------------------------------------- Fragebogen */
+.frage{padding:14px 0;border-bottom:1px solid var(--border)}
+.frage:last-child{border-bottom:none}
+.frage .label{font-weight:600;margin-bottom:2px}
+.frage .anker{display:flex;justify-content:space-between;gap:14px;
+  color:var(--muted);font-size:12px;margin:6px 2px 7px}
+.frage .anker span{max-width:46%}
+.frage .anker span:last-child{text-align:right}
+.skala{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.skala button{
+  background:var(--surface-2);border:1px solid transparent;border-radius:9px;
+  padding:12px 0;font:inherit;font-weight:600;font-size:16px;color:var(--ink-2);
+  cursor:pointer
+}
+.skala button:hover{border-color:var(--border)}
+.skala button[aria-pressed="true"]{background:var(--s1);color:#fff}
+.skala button:disabled{cursor:default;opacity:.75}
+
+.prognose{padding:14px 0;border-bottom:1px solid var(--border)}
+.prognose:last-child{border-bottom:none}
+.prognose .kopfzeile{display:flex;gap:12px;align-items:baseline}
+.prognose .wert{margin-left:auto;font-weight:700;font-size:17px;
+  font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+input[type=range]{width:100%;margin:10px 0 0;accent-color:var(--s1)}
+
+/* ------------------------------------------------------------ Rueckmeldung */
+.vergleich{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+.vergleich th,.vergleich td{padding:7px 8px 7px 0;border-bottom:1px solid var(--border);
+  text-align:left}
+.vergleich td.zahl,.vergleich th.zahl{text-align:right;font-variant-numeric:tabular-nums;
+  padding-right:0;width:64px}
+.kennzahl{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.kennzahl > div{background:var(--surface-2);border-radius:9px;padding:11px 12px}
+.kennzahl .k{font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+.kennzahl .v{font-size:21px;font-weight:650;font-variant-numeric:tabular-nums;
+  letter-spacing:-.02em;margin-top:1px}
+.kennzahl .n{font-size:11.5px;color:var(--muted)}
+
+/* -------------------------------------------------------------- Tabellen */
+.tab{width:100%;border-collapse:collapse;font-size:13.5px}
+.tab th,.tab td{padding:9px 10px 9px 0;border-bottom:1px solid var(--border);
+  text-align:left;white-space:nowrap}
+.tab th{font-weight:600;color:var(--ink-2);font-size:12.5px}
+.tab td.zahl,.tab th.zahl{text-align:right;font-variant-numeric:tabular-nums}
+.tab tr.ich{background:color-mix(in srgb,var(--s1) 8%,transparent)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+.verteilung{display:flex;gap:5px;align-items:flex-end;height:64px;margin:10px 0 4px}
+.verteilung div{flex:1;background:var(--s1);border-radius:4px 4px 0 0;min-height:2px;
+  position:relative}
+.verteilung div b{position:absolute;top:-17px;left:0;right:0;text-align:center;
+  font-size:11px;font-weight:600;color:var(--ink-2)}
+.verteilung + .achse{display:flex;gap:5px;font-size:11.5px;color:var(--muted)}
+.verteilung + .achse span{flex:1;text-align:center}
+
+.fusszeile{margin-top:34px;padding-top:16px;border-top:1px solid var(--border);
+  color:var(--muted);font-size:12.5px}
+
+/* ------------------------------------------------------------ Level Rating */
+/* Zehn Stufen muessen auf ein Telefon passen, ohne dass die Anker verschwinden:
+   Knopfraster oben, gewaehlte Stufe im Klartext darunter, volle Tabelle einen
+   Klick daneben. */
+.levelfrage{padding:16px 0;border-bottom:1px solid var(--border)}
+.levelfrage:last-child{border-bottom:none}
+.levelskala{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+@media (max-width:560px){.levelskala{grid-template-columns:repeat(5,1fr)}}
+.levelskala button{
+  background:var(--surface-2);border:1px solid transparent;border-radius:8px;
+  padding:11px 0;font:inherit;font-weight:600;font-size:15px;color:var(--ink-2);
+  cursor:pointer
+}
+.levelskala button:hover{border-color:var(--border)}
+.levelskala button[aria-pressed="true"]{background:var(--s1);color:#fff}
+.levelskala button:disabled{cursor:default;opacity:.75}
+.levelanker{
+  margin-top:9px;padding:9px 11px;background:var(--surface-2);border-radius:8px;
+  font-size:13px;line-height:1.45
+}
+.levelanker b{display:block;font-size:13.5px}
+.leveltabelle{margin-top:8px}
+.leveltabelle summary{cursor:pointer;color:var(--s1);padding:3px 0}
+.leveltabelle table{margin-top:4px}
+
+.meldung.warn{background:color-mix(in srgb,var(--warn) 15%,transparent);
+  color:var(--warn)}
+.warnton{color:var(--warn)}
+
+/* --------------------------------------------------------- Kalibrier-Report */
+.matrix{width:100%;border-collapse:collapse;font-size:13px}
+.matrix th,.matrix td{padding:6px 8px;border-bottom:1px solid var(--border);
+  text-align:right;white-space:nowrap}
+.matrix th:first-child,.matrix td:first-child{text-align:left}
+.matrix th{font-weight:600;color:var(--ink-2);font-size:12px}
+.zelle-tot{color:var(--schlecht);font-weight:600}
+.zelle-gut{color:var(--gut)}
+
+
+/* --------------------------------------------------------------- Rahmen
+   Die Vorschau selbst tritt zurueck: eine Leiste, die sagt was man sieht und
+   zwischen den beiden Ansichten umschaltet. Alles darunter ist die App mit
+   ihren eigenen Token. */
+/* Die Buehne liegt eine Stufe tiefer als die App, damit der Geraeterahmen
+   darauf aufsitzt. Kein body-Tag in dieser Datei - die Umgebung erzeugt es -
+   deshalb greift die Regel am Element, nicht an einer Klasse. */
+body{background:var(--surface-2)}
+.rahmen{
+  position:sticky;top:0;z-index:60;background:var(--plane);
+  border-bottom:1px solid var(--border)
+}
+.rahmen .zeile{
+  max-width:1180px;margin:0 auto;padding:11px 18px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap
+}
+.rahmen .titel{font-weight:650;font-size:14.5px;letter-spacing:-.01em}
+.rahmen .titel small{
+  display:block;font-weight:400;font-size:11.5px;color:var(--muted);
+  letter-spacing:.04em;text-transform:uppercase;margin-top:1px
+}
+.schalter{display:flex;gap:3px;margin-left:auto;background:var(--surface-2);
+  padding:3px;border-radius:9px}
+.schalter button{
+  background:none;border:none;font:inherit;font-size:13.5px;color:var(--ink-2);
+  padding:6px 14px;border-radius:7px;cursor:pointer
+}
+.schalter button[aria-pressed="true"]{background:var(--surface);color:var(--ink);
+  font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.schalter button:focus-visible,.rahmen a:focus-visible{outline:2px solid var(--s1);
+  outline-offset:2px}
+
+.notiz{
+  max-width:1180px;margin:0 auto;padding:10px 18px 0;
+  font-size:12.5px;line-height:1.55;color:var(--muted)
+}
+.notiz b{color:var(--ink-2);font-weight:600}
+.notiz code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+  background:var(--surface);border:1px solid var(--border);border-radius:4px;
+  padding:1px 5px
+}
+
+.buehne{max-width:1180px;margin:0 auto;padding:14px 18px 60px}
+/* Die Scout-Ansicht ist fuers Telefon gebaut - also auch so zeigen. */
+.buehne.eng{max-width:472px;padding-left:0;padding-right:0}
+.geraet{
+  background:var(--plane);border:1px solid var(--border);border-radius:16px;
+  overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05),0 12px 32px rgba(0,0,0,.06)
+}
+.geraet > .wrap{padding-top:14px}
+/* Die App-Kopfzeile klebt im Betrieb am Fensterrand. Im Geraeterahmen der
+   Vorschau waere das der falsche Bezugspunkt - sie wuerde ueber die
+   Rahmenleiste wandern. */
+.geraet header.kopf{position:static;border-radius:16px 16px 0 0}
+@media (prefers-reduced-motion:no-preference){
+  .buehne{animation:auf .22s ease-out}
+  @keyframes auf{from{opacity:0;transform:translateY(3px)}to{opacity:1}}
+}
+
+</style>
+
+<header class="rahmen">
+  <div class="zeile">
+    <div class="titel">Scout League
+      <small>Vorschau &middot; Rev. 0.2 &middot; Testdaten</small></div>
+    <div class="schalter" role="group" aria-label="Ansicht wählen">
+      <button type="button" data-ansicht-wahl="scout" aria-pressed="true">Scout</button>
+      <button type="button" data-ansicht-wahl="admin" aria-pressed="false">Admin</button>
+    </div>
+  </div>
+</header>
+
+<p class="notiz" id="notiz"></p>
+
+<div class="buehne eng" id="buehne-scout">
+  <div class="geraet" id="app-scout">
+<header class="kopf" id="kopf" hidden>
+  <div class="inner">
+    <div class="marke">Scout League <span id="wer"></span></div>
+    <nav>
+      <button data-tab="pack" aria-current="true">Case Pack</button>
+      <button data-tab="profil">Mein Profil</button>
+      <button data-tab="liga">Liga</button>
+      <button data-tab="abmelden">Abmelden</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ------------------------------------------------------------ Anmeldung -->
+  <section id="anmeldung">
+    <h1>Scout League</h1>
+    <p class="sub">Closed Beta &middot; Stufe 0 &middot; intern</p>
+    <div class="karte">
+      <p>Du bewertest fünf Talente auf unseren Skalen und gibst zu jedem drei
+      Prognosen ab. Die Bewertung wird sofort gegen unser Modell gespiegelt,
+      die Prognosen später gegen die Realität.</p>
+      <p class="klein muted">Rechne mit etwa 15 Minuten für das ganze Pack.
+      Zwischenstände werden gespeichert, du kannst jederzeit aufhören.</p>
+      <form id="anmeldeform" autocomplete="off">
+        <label class="klein muted" for="code">Dein persönlicher Scout-Code</label>
+        <input type="text" id="code" name="code" placeholder="z. B. K7M2QP"
+               maxlength="12" autocapitalize="characters" spellcheck="false"
+               style="margin:6px 0 12px;letter-spacing:.12em;font-weight:600">
+        <button class="knopf" type="submit">Anmelden</button>
+      </form>
+      <div id="anmeldefehler"></div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------ Case Pack -->
+  <section id="tab-pack" hidden>
+    <h1 id="packtitel">Case Pack</h1>
+    <p class="sub" id="packsub"></p>
+    <div id="packmeldung"></div>
+    <div id="falliste"></div>
+    <div class="fusszeile klein">
+      Angezeigt werden ausschließlich eigene, aggregierte Indizes &mdash; keine
+      Rohdaten des Datenlieferanten.
+    </div>
+  </section>
+
+  <!-- ----------------------------------------------------------- Ein Fall -->
+  <section id="tab-fall" hidden>
+    <button class="knopf leise" id="zurueck" style="margin-bottom:14px">&larr; Zum Pack</button>
+    <div id="fallinhalt"></div>
+  </section>
+
+  <!-- -------------------------------------------------------------- Profil -->
+  <section id="tab-profil" hidden>
+    <h1>Mein Profil</h1>
+    <p class="sub">Wie du bewertest &mdash; und ob du recht behältst.</p>
+    <div id="profilinhalt"></div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- Liga -->
+  <section id="tab-liga" hidden>
+    <h1>Liga</h1>
+    <p class="sub" id="ligasub"></p>
+    <div id="ligainhalt"></div>
+  </section>
+
+</div>
+  </div>
+</div>
+
+<div class="buehne" id="buehne-admin" hidden>
+  <div id="app-admin">
+<div class="wrap">
+  <h1>Scout League &middot; Admin</h1>
+  <p class="sub">Abgabestand, Auflösung, Export.</p>
+
+  <div class="karte" id="tokenkarte">
+    <label class="klein muted" for="token">Admin-Token</label>
+    <input type="password" id="token" style="margin:6px 0 12px"
+           autocomplete="off" spellcheck="false">
+    <button class="knopf" id="laden">Laden</button>
+    <div id="tokenfehler"></div>
+  </div>
+
+  <div id="reiter" hidden style="margin:0 0 14px">
+    <button class="knopf leise" data-ansicht="uebersicht">Übersicht</button>
+    <button class="knopf leise" data-ansicht="kalibrierung">Kalibrier-Report</button>
+  </div>
+
+  <div id="inhalt"></div>
+</div>
+  </div>
+</div>
+
+<script>
+window.__SL_DATEN = {"anmelden": {"name": "Testscout 1", "code": "62TGK4", "rolle": "scout"}, "pack": {"pack": {"slug": "demo", "titel": "Demo Case Pack (Testdaten)", "status": "offen", "schliesst_am": null}, "faelle": [{"id": 1, "ext_id": "DEMO-01", "name": "Demo A. Novak", "position": "LV", "jahrgang": 2006, "verein": "Demo SV Nord", "liga": "Demo-Liga 1", "fuss": "links", "video_url": "", "indizes": {"technik": 68, "spielintelligenz": 55, "athletik": 81, "mentalitaet": 62, "vorstoss": 74, "flanke": 58, "eins_gegen_eins_def": 66, "wiederholungslauf": 83, "profile_percentile": 71}, "parameter": {"marktwert_schwelle": "1,5 Mio. EUR"}, "modell": {"bewertung": {"spielintelligenz": 3.25, "athletik": 4.55, "mentalitaet": 3.6, "flanke": 3.4, "vorstoss": 4.2, "eins_gegen_eins_def": 3.8, "technik": 3.9, "wiederholungslauf": 4.65}, "prognose": {"top5_12m": 0.12, "marktwert_ueber": 0.44, "minuten_1500": 0.61}, "level": {"level_heute": 6.5}}, "positionsgruppe": "WB", "positionsgruppe_label": "Außenverteidiger", "attribute": [{"key": "technik", "label": "Technik unter Druck", "anker1": "verliert den Ball bei erstem Gegnerkontakt", "anker5": "löst Drucksituationen sauber und beidfüßig"}, {"key": "spielintelligenz", "label": "Spielintelligenz & Entscheidungen", "anker1": "wählt regelmäßig die zweitbeste Option", "anker5": "erkennt Räume vor dem Ballempfang"}, {"key": "athletik", "label": "Athletik & Robustheit", "anker1": "fällt körperlich und im Tempo ab", "anker5": "athletisch ligaüberdurchschnittlich"}, {"key": "mentalitaet", "label": "Mentalität & Körpersprache", "anker1": "bricht nach Fehlern ein", "anker5": "trägt das Spiel auch gegen den Verlauf"}, {"key": "vorstoss", "label": "Vorstoßbereitschaft", "anker1": "bleibt auch bei Ballbesitz tief", "anker5": "schiebt konsequent und richtig getimt auf"}, {"key": "flanke", "label": "Hereingabe & letzter Pass von außen", "anker1": "Hereingaben ohne Adressat", "anker5": "findet den Adressaten aus verschiedenen Höhen"}, {"key": "eins_gegen_eins_def", "label": "Eins-gegen-eins defensiv", "anker1": "wird auf der Außenbahn regelmäßig überlaufen", "anker5": "verteidigt die Außenbahn allein"}, {"key": "wiederholungslauf", "label": "Wiederholte Läufe über die Bahn", "anker1": "bricht nach der ersten Halbzeit ein", "anker5": "wiederholt Läufe bis zum Schluss"}], "eigene_bewertung": {"level": {"level_heute": 7, "level_ceiling": 8}, "antworten": {"technik": 3, "spielintelligenz": 3, "athletik": 3, "mentalitaet": 3, "vorstoss": 4, "flanke": 3, "eins_gegen_eins_def": 4, "wiederholungslauf": 4}, "prognosen": {"top5_12m": 0.95, "marktwert_ueber": 0.81, "minuten_1500": 0.74}, "notiz": "", "abgegeben": true, "geaendert_am": "2026-08-22T19:08:22+00:00"}, "rueckmeldung": {"modell_naehe": 85.2, "prognose_naehe": 55.7, "level_abstand": 0.5, "konflikt": null, "attribut_mittel": 3.38, "kohorte": {"n": 10, "mittel": {"technik": 3.4, "spielintelligenz": 2.4, "athletik": 3.8, "mentalitaet": 3.1, "vorstoss": 3.6, "flanke": 3.4, "eins_gegen_eins_def": 3.6, "wiederholungslauf": 4.0, "level_heute": 5.4, "level_ceiling": 6.2}, "mittel_bereinigt": 5.0, "n_bereinigt": 8}}}, {"id": 2, "ext_id": "DEMO-02", "name": "Demo B. Haller", "position": "ZOM", "jahrgang": 2005, "verein": "Demo FC Ost", "liga": "Demo-Liga 1", "fuss": "rechts", "video_url": "", "indizes": {"technik": 84, "spielintelligenz": 79, "athletik": 48, "mentalitaet": 58, "zwischenraeume": 81, "letzter_pass": 77, "abschluss": 63, "gegenpressing": 41, "profile_percentile": 88}, "parameter": {"marktwert_schwelle": "4,0 Mio. EUR"}, "positionsgruppe": "AM", "positionsgruppe_label": "Offensives Mittelfeld", "attribute": [{"key": "technik", "label": "Technik unter Druck", "anker1": "verliert den Ball bei erstem Gegnerkontakt", "anker5": "löst Drucksituationen sauber und beidfüßig"}, {"key": "spielintelligenz", "label": "Spielintelligenz & Entscheidungen", "anker1": "wählt regelmäßig die zweitbeste Option", "anker5": "erkennt Räume vor dem Ballempfang"}, {"key": "athletik", "label": "Athletik & Robustheit", "anker1": "fällt körperlich und im Tempo ab", "anker5": "athletisch ligaüberdurchschnittlich"}, {"key": "mentalitaet", "label": "Mentalität & Körpersprache", "anker1": "bricht nach Fehlern ein", "anker5": "trägt das Spiel auch gegen den Verlauf"}, {"key": "zwischenraeume", "label": "Bewegung zwischen den Linien", "anker1": "wird von der gegnerischen Kette gedeckt gehalten", "anker5": "findet den Zwischenraum immer wieder"}, {"key": "letzter_pass", "label": "Letzter Pass", "anker1": "sucht den einfachen Pass statt den entscheidenden", "anker5": "erzeugt Chancen mit dem letzten Pass"}, {"key": "abschluss", "label": "Abschluss", "anker1": "vergibt aus aussichtsreichen Lagen", "anker5": "verwertet Chancen überdurchschnittlich"}, {"key": "gegenpressing", "label": "Gegenpressing nach Ballverlust", "anker1": "geht nach Ballverlust nicht nach", "anker5": "erobert Bälle unmittelbar zurück"}], "eigene_bewertung": {"level": {}, "antworten": {}, "prognosen": {}, "notiz": "", "abgegeben": false, "geaendert_am": null}}, {"id": 3, "ext_id": "DEMO-03", "name": "Demo C. Ibrahimi", "position": "ST", "jahrgang": 2007, "verein": "Demo United", "liga": "Demo-Liga 2", "fuss": "rechts", "video_url": "", "indizes": {"technik": 52, "spielintelligenz": 49, "athletik": 88, "mentalitaet": 71, "abschluss": 69, "strafraumbewegung": 57, "wandspiel": 74, "pressingauslösung": 66, "profile_percentile": 62}, "parameter": {"marktwert_schwelle": "0,8 Mio. EUR"}, "positionsgruppe": "CF", "positionsgruppe_label": "Mittelstürmer", "attribute": [{"key": "technik", "label": "Technik unter Druck", "anker1": "verliert den Ball bei erstem Gegnerkontakt", "anker5": "löst Drucksituationen sauber und beidfüßig"}, {"key": "spielintelligenz", "label": "Spielintelligenz & Entscheidungen", "anker1": "wählt regelmäßig die zweitbeste Option", "anker5": "erkennt Räume vor dem Ballempfang"}, {"key": "athletik", "label": "Athletik & Robustheit", "anker1": "fällt körperlich und im Tempo ab", "anker5": "athletisch ligaüberdurchschnittlich"}, {"key": "mentalitaet", "label": "Mentalität & Körpersprache", "anker1": "bricht nach Fehlern ein", "anker5": "trägt das Spiel auch gegen den Verlauf"}, {"key": "abschluss", "label": "Abschluss", "anker1": "vergibt aus aussichtsreichen Lagen", "anker5": "verwertet Chancen überdurchschnittlich"}, {"key": "strafraumbewegung", "label": "Bewegung im Strafraum", "anker1": "steht dort, wo der Ball nicht hinkommt", "anker5": "löst sich wiederholt in die richtige Zone"}, {"key": "wandspiel", "label": "Wandspiel & Ballhalten", "anker1": "verliert Bälle mit dem Rücken zum Tor", "anker5": "behauptet Bälle und bindet Mitspieler ein"}, {"key": "pressingauslösung", "label": "Anlaufen & Pressingauslösung", "anker1": "läuft ziellos oder gar nicht an", "anker5": "steuert das gegnerische Aufbauspiel"}], "eigene_bewertung": {"level": {}, "antworten": {}, "prognosen": {}, "notiz": "", "abgegeben": false, "geaendert_am": null}}, {"id": 4, "ext_id": "DEMO-04", "name": "Demo D. Petrovic", "position": "ZDM", "jahrgang": 2004, "verein": "Demo Rangers", "liga": "Demo-Liga 1", "fuss": "beidfüßig", "video_url": "", "indizes": {"technik": 61, "spielintelligenz": 83, "athletik": 57, "mentalitaet": 86, "ballzirkulation": 72, "pressingresistenz": 68, "vertikalpass": 54, "arbeit_gegen_ball": 80, "profile_percentile": 79}, "parameter": {"marktwert_schwelle": "2,0 Mio. EUR"}, "modell": {"bewertung": {"pressingresistenz": 3.9, "vertikalpass": 3.2, "spielintelligenz": 4.65, "athletik": 3.35, "mentalitaet": 4.8, "arbeit_gegen_ball": 4.5, "technik": 3.55, "ballzirkulation": 4.1}, "prognose": {"top5_12m": 0.18, "marktwert_ueber": 0.52, "minuten_1500": 0.78}, "level": {"level_heute": 6.5}}, "positionsgruppe": "CM", "positionsgruppe_label": "Zentrales Mittelfeld", "attribute": [{"key": "technik", "label": "Technik unter Druck", "anker1": "verliert den Ball bei erstem Gegnerkontakt", "anker5": "löst Drucksituationen sauber und beidfüßig"}, {"key": "spielintelligenz", "label": "Spielintelligenz & Entscheidungen", "anker1": "wählt regelmäßig die zweitbeste Option", "anker5": "erkennt Räume vor dem Ballempfang"}, {"key": "athletik", "label": "Athletik & Robustheit", "anker1": "fällt körperlich und im Tempo ab", "anker5": "athletisch ligaüberdurchschnittlich"}, {"key": "mentalitaet", "label": "Mentalität & Körpersprache", "anker1": "bricht nach Fehlern ein", "anker5": "trägt das Spiel auch gegen den Verlauf"}, {"key": "ballzirkulation", "label": "Ballzirkulation & Rhythmus", "anker1": "verlangsamt das Spiel bei jedem Kontakt", "anker5": "gibt dem Spiel Takt und Richtung"}, {"key": "pressingresistenz", "label": "Pressingresistenz", "anker1": "verliert den Ball im Aufdrehen", "anker5": "dreht unter Druck auf und löst die Situation"}, {"key": "vertikalpass", "label": "Raumgewinn durch Pässe", "anker1": "spielt fast nur quer und zurück", "anker5": "findet regelmäßig den Pass hinter die Linie"}, {"key": "arbeit_gegen_ball", "label": "Arbeit gegen den Ball", "anker1": "lässt Wege und Räume offen", "anker5": "verteidigt das Zentrum aktiv und vorausschauend"}], "eigene_bewertung": {"level": {"level_heute": 5, "level_ceiling": 6}, "antworten": {"technik": 3, "spielintelligenz": 4, "athletik": 3, "mentalitaet": 3, "ballzirkulation": 4, "pressingresistenz": 3, "vertikalpass": 2, "arbeit_gegen_ball": 5}, "prognosen": {"top5_12m": 0.37, "marktwert_ueber": 0.17, "minuten_1500": 0.43}, "notiz": "", "abgegeben": true, "geaendert_am": "2026-08-22T19:08:22+00:00"}, "rueckmeldung": {"modell_naehe": 81.1, "prognose_naehe": 70.3, "level_abstand": -1.5, "konflikt": null, "attribut_mittel": 3.38, "kohorte": {"n": 10, "mittel": {"technik": 2.7, "spielintelligenz": 4.3, "athletik": 2.5, "mentalitaet": 4.0, "ballzirkulation": 3.3, "pressingresistenz": 3.6, "vertikalpass": 2.4, "arbeit_gegen_ball": 4.0, "level_heute": 6.2, "level_ceiling": 6.1}, "mittel_bereinigt": 6.56, "n_bereinigt": 8}}}, {"id": 5, "ext_id": "DEMO-05", "name": "Demo E. Lindqvist", "position": "RA", "jahrgang": 2006, "verein": "Demo IF Süd", "liga": "Demo-Liga 3", "fuss": "links", "video_url": "", "indizes": {"technik": 75, "spielintelligenz": 58, "athletik": 72, "mentalitaet": 54, "eins_gegen_eins_off": 83, "tiefenlauf": 66, "hereingabe": 61, "abschluss": 49, "profile_percentile": 74}, "parameter": {"marktwert_schwelle": "2,5 Mio. EUR"}, "positionsgruppe": "WF", "positionsgruppe_label": "Flügelspieler", "attribute": [{"key": "technik", "label": "Technik unter Druck", "anker1": "verliert den Ball bei erstem Gegnerkontakt", "anker5": "löst Drucksituationen sauber und beidfüßig"}, {"key": "spielintelligenz", "label": "Spielintelligenz & Entscheidungen", "anker1": "wählt regelmäßig die zweitbeste Option", "anker5": "erkennt Räume vor dem Ballempfang"}, {"key": "athletik", "label": "Athletik & Robustheit", "anker1": "fällt körperlich und im Tempo ab", "anker5": "athletisch ligaüberdurchschnittlich"}, {"key": "mentalitaet", "label": "Mentalität & Körpersprache", "anker1": "bricht nach Fehlern ein", "anker5": "trägt das Spiel auch gegen den Verlauf"}, {"key": "eins_gegen_eins_off", "label": "Eins-gegen-eins offensiv", "anker1": "kommt am Gegenspieler nicht vorbei", "anker5": "löst das Eins-gegen-eins wiederholbar auf"}, {"key": "tiefenlauf", "label": "Tiefenläufe & Timing", "anker1": "startet zu früh oder gar nicht", "anker5": "attackiert die Tiefe wiederholt richtig getimt"}, {"key": "hereingabe", "label": "Hereingabe & letzter Pass", "anker1": "Hereingaben ohne Adressat", "anker5": "bedient den Strafraum präzise"}, {"key": "abschluss", "label": "Abschluss", "anker1": "vergibt aus aussichtsreichen Lagen", "anker5": "verwertet Chancen überdurchschnittlich"}], "eigene_bewertung": {"level": {}, "antworten": {}, "prognosen": {}, "notiz": "", "abgegeben": false, "geaendert_am": null}}, {"id": 6, "ext_id": "DEMO-06", "name": "Demo F. Okonkwo", "position": "IV", "jahrgang": 2005, "verein": "Demo SV Nord", "liga": "Demo-Liga 1", "fuss": "rechts", "video_url": "", "indizes": {"technik": 49, "spielintelligenz": 66, "athletik": 79, "mentalitaet": 73, "verteidigen_duell": 77, "kopfball": 85, "spieleroeffnung": 44, "raumverteidigung": 62, "profile_percentile": 55}, "parameter": {"marktwert_schwelle": "1,0 Mio. EUR"}, "positionsgruppe": "CB", "positionsgruppe_label": "Innenverteidiger", "attribute": [{"key": "technik", "label": "Technik unter Druck", "anker1": "verliert den Ball bei erstem Gegnerkontakt", "anker5": "löst Drucksituationen sauber und beidfüßig"}, {"key": "spielintelligenz", "label": "Spielintelligenz & Entscheidungen", "anker1": "wählt regelmäßig die zweitbeste Option", "anker5": "erkennt Räume vor dem Ballempfang"}, {"key": "athletik", "label": "Athletik & Robustheit", "anker1": "fällt körperlich und im Tempo ab", "anker5": "athletisch ligaüberdurchschnittlich"}, {"key": "mentalitaet", "label": "Mentalität & Körpersprache", "anker1": "bricht nach Fehlern ein", "anker5": "trägt das Spiel auch gegen den Verlauf"}, {"key": "verteidigen_duell", "label": "Verteidigen im Duell", "anker1": "lässt sich im Eins-gegen-eins ausspielen", "anker5": "gewinnt das Duell vorne wie hinten"}, {"key": "kopfball", "label": "Kopfball & Strafraumverteidigung", "anker1": "verliert Kopfbälle gegen Gleichgroße", "anker5": "beherrscht den eigenen Strafraum in der Luft"}, {"key": "spieleroeffnung", "label": "Spieleröffnung unter Druck", "anker1": "spielt unter Druck nur den Rückpass", "anker5": "öffnet das Spiel mit gebrochenen Linien"}, {"key": "raumverteidigung", "label": "Absicherung & Positionsspiel", "anker1": "steht wiederholt falsch zur Restverteidigung", "anker5": "verteidigt Räume, bevor sie entstehen"}], "eigene_bewertung": {"level": {}, "antworten": {}, "prognosen": {}, "notiz": "", "abgegeben": false, "geaendert_am": null}}], "fragebogen": {"version": "0.2", "skalen_richtung": "Auf allen Skalen dieses Fragebogens ist der hoehere Wert der bessere - Level 10 wie Attribut 5. Das laeuft absichtlich gleich mit dem Daten-Perzentil (100 = Spitze) und bewusst NICHT wie die Schulnote im alten internen Formular (1 = sehr gut). Die Richtungs-Umkehr war laut Audit die haeufigste Fehlerquelle; hier gibt es nur eine Richtung.", "level": {"min": 1, "max": 10, "titel": "Level Rating", "quelle": "Strykerlabs Level Rating, Skala aus dem Scout Rating Audit (Juni 2026)", "stufen": [{"wert": 10, "ligen": "Premier League", "kontext": "England, top flight", "marktwert": "€20–80m"}, {"wert": 9, "ligen": "La Liga · Bundesliga · Serie A · Ligue 1", "kontext": "Top-5-Ligen", "marktwert": "€10–40m"}, {"wert": 8, "ligen": "Championship · Eredivisie · Primeira", "kontext": "Starke 1. Ligen & ENG 2", "marktwert": "€3–15m"}, {"wert": 7, "ligen": "Belgian Pro League · 2. Bundesliga · Süper Lig", "kontext": "Starke 2. Ligen & mittlere 1. Ligen", "marktwert": "€1.5–7m"}, {"wert": 6, "ligen": "Österreich Bundesliga · starke 2. Ligen", "kontext": "Ausgewählte 1. Ligen", "marktwert": "€0.5–3m"}, {"wert": 5, "ligen": "Slowenien 1. SNL · Georgien · weitere 1. Ligen", "kontext": "Breitere europäische 1. Ligen", "marktwert": "€120–900k"}, {"wert": 4, "ligen": "Österreich 2. Liga · untere 2. Ligen", "kontext": "Untere 2. Ligen", "marktwert": "€60–300k"}, {"wert": 3, "ligen": "Regionalliga · Top-Amateur", "kontext": "Semi-pro / Top-Amateur", "marktwert": "€25–120k"}, {"wert": 2, "ligen": "Untere Amateurligen", "kontext": "Amateur", "marktwert": "€10–50k"}, {"wert": 1, "ligen": "Amateur (niedrig)", "kontext": "Low amateur", "marktwert": "< €20k"}], "fragen": [{"key": "level_heute", "label": "Bewiesenes Niveau", "frage": "Auf welchem Niveau hat er bewiesen, dass er spielt?", "erlaeuterung": "Nicht was er koennte - was er real gezeigt hat.", "leitfrage": true}, {"key": "level_ceiling", "label": "Realistisches Ceiling", "frage": "Auf welchem Niveau spielt er realistisch in zwei bis drei Jahren?", "erlaeuterung": "Eigenstaendig beantworten, nicht als Aufschlag auf das bewiesene Niveau."}]}, "prognosen": [{"key": "top5_12m", "label": "Wechsel in eine Top-5-Liga binnen 12 Monaten", "erlaeuterung": "Vereinswechsel mit Registrierung in ENG/ESP/GER/ITA/FRA, erste oder zweite Liga.", "horizont_monate": 12}, {"key": "marktwert_ueber", "label": "Marktwert in 12 Monaten über Schwelle", "erlaeuterung": "Schwelle steht je Fall im Case Pack.", "horizont_monate": 12, "parameter": "marktwert_schwelle"}, {"key": "minuten_1500", "label": "Mindestens 1.500 Pflichtspielminuten in der kommenden Saison", "erlaeuterung": "Liga, Pokal und Europacup zusammen, Verein und Liga egal.", "horizont_monate": 12}], "notiz": {"label": "Kurznotiz (optional)", "max_zeichen": 400}, "schwellen": {"zentraltendenz_max": 0.35, "tote_attribute_sigma": 0.4, "halo_warnung": 0.75, "entkopplung_warnung": 0.55, "konflikt_level_abstand": 2, "mindest_faelle_diagnose": 5}, "skala": {"min": 1, "max": 5, "schritt": 1}}}, "profil": {"n_faelle": 2, "spreizung": 1.41, "bias": 0.2, "modell_naehe": 82.2, "prognose_naehe": 63.0, "trennschaerfe": null, "n_aufgeloest": 0, "brier": null, "kalibrierungsfehler": null, "kalibrierungskurve": [{"von": 0.0, "bis": 0.2, "n": 0, "gesagt": null, "eingetreten": null}, {"von": 0.2, "bis": 0.4, "n": 0, "gesagt": null, "eingetreten": null}, {"von": 0.4, "bis": 0.6, "n": 0, "gesagt": null, "eingetreten": null}, {"von": 0.6, "bis": 0.8, "n": 0, "gesagt": null, "eingetreten": null}, {"von": 0.8, "bis": 1.0, "n": 0, "gesagt": null, "eingetreten": null}], "brier_skill": null, "halo": null, "entkopplung": null, "zentraltendenz": {"n": 2, "modalwert": 5, "anteil": 0.5, "genutzte_stufen": 2}, "name": "Testscout 1", "verteilung": {"1": 0, "2": 0, "3": 0, "4": 0, "5": 1, "6": 0, "7": 1, "8": 0, "9": 0, "10": 0}, "schwellen": {"zentraltendenz_max": 0.35, "tote_attribute_sigma": 0.4, "halo_warnung": 0.75, "entkopplung_warnung": 0.55, "konflikt_level_abstand": 2, "mindest_faelle_diagnose": 5}}, "leaderboard": {"zeilen": [{"n_faelle": 6, "spreizung": 0.89, "bias": 2.34, "modell_naehe": 75.0, "prognose_naehe": 67.2, "trennschaerfe": 0.76, "n_aufgeloest": 0, "brier": null, "kalibrierungsfehler": null, "brier_skill": null, "halo": -0.4, "entkopplung": 0.32, "zentraltendenz": {"n": 6, "modalwert": 7, "anteil": 0.333, "genutzte_stufen": 3}, "scout_id": 4, "name": "Testscout 4", "spreizungs_index": 0.64, "rang": 1}, {"n_faelle": 6, "spreizung": 0.89, "bias": -1.66, "modell_naehe": 76.1, "prognose_naehe": 70.1, "trennschaerfe": 0.76, "n_aufgeloest": 0, "brier": null, "kalibrierungsfehler": null, "brier_skill": null, "halo": -0.32, "entkopplung": -0.14, "zentraltendenz": {"n": 6, "modalwert": 3, "anteil": 0.333, "genutzte_stufen": 3}, "scout_id": 5, "name": "Testscout 5", "spreizungs_index": 0.64, "rang": 2}, {"n_faelle": 6, "spreizung": 1.86, "bias": 0.68, "modell_naehe": 76.4, "prognose_naehe": 68.0, "trennschaerfe": 0.75, "n_aufgeloest": 0, "brier": null, "kalibrierungsfehler": null, "brier_skill": null, "halo": 0.44, "entkopplung": 0.03, "zentraltendenz": {"n": 6, "modalwert": 6, "anteil": 0.333, "genutzte_stufen": 4}, "scout_id": 10, "name": "Testscout 10", "spreizungs_index": 1.34, "rang": 3}, {"n_faelle": 6, "spreizung": 2.07, "bias": -0.16, "modell_naehe": 74.1, "prognose_naehe": 76.2, "trennschaerfe": 0.31, "n_aufgeloest": 0, "brier": null, "kalibrierungsfehler": null, "brier_skill": null, "halo": -0.35, "entkopplung": 0.29, "zentraltendenz": {"n": 6, "modalwert": 5, "anteil": 0.333, "genutzte_stufen": 4}, "scout_id": 6, "name": "Testscout 6", "spreizungs_index": 1.49, "rang": 4}, {"n_faelle": 6, "spreizung": 1.37, "bias": -0.99, "modell_naehe": 78.3, "prognose_naehe": 69.6, "trennschaerfe": 0.25, "n_aufgeloest": 0, "brier": null, "kalibrierungsfehler": null, "brier_skill": null, "halo": -0.08, "entkopplung": -0.84, "zentraltendenz": {"n": 6, "modalwert": 3, "anteil": 0.333, "genutzte_stufen": 3}, "scout_id": 9, "name": "Testscout 9", "spreizungs_index": 0.99, "rang": 5}, {"n_faelle": 6, "spreizung": 1.83, "bias": 0.18, "modell_naehe": 75.7, "prognose_naehe": 83.1, "trennschaerfe": 0.09, "n_aufgeloest": 0, "brier": null, "kalibrierungsfehler": null, "brier_skill": null, "halo": -0.39, "entkopplung": -0.69, "zentraltendenz": {"n": 6, "modalwert": 5, "anteil": 0.333, "genutzte_stufen": 4}, "scout_id": 7, "name": "Testscout 7", "spreizungs_index": 1.32, "rang": 6}, {"n_faelle": 6, "spreizung": 1.03, "bias": -0.32, "modell_naehe": 76.3, "prognose_naehe": 69.8, "trennschaerfe": -0.23, "n_aufgeloest": 0, "brier": null, "kalibrierungsfehler": null, "brier_skill": null, "halo": 0.49, "entkopplung": 0.41, "zentraltendenz": {"n": 6, "modalwert": 5, "anteil": 0.5, "genutzte_stufen": 4}, "scout_id": 8, "name": "Testscout 8", "spreizungs_index": 0.74, "rang": 7}, {"n_faelle": 6, "spreizung": 1.47, "bias": 0.51, "modell_naehe": 79.9, "prognose_naehe": 73.3, "trennschaerfe": -0.74, "n_aufgeloest": 0, "brier": null, "kalibrierungsfehler": null, "brier_skill": null, "halo": 0.3, "entkopplung": 0.66, "zentraltendenz": {"n": 6, "modalwert": 7, "anteil": 0.333, "genutzte_stufen": 5}, "scout_id": 2, "name": "Testscout 2", "spreizungs_index": 1.06, "rang": 8}, {"n_faelle": 2, "spreizung": 1.41, "bias": 0.2, "modell_naehe": 82.2, "prognose_naehe": 63.0, "trennschaerfe": null, "n_aufgeloest": 0, "brier": null, "kalibrierungsfehler": null, "brier_skill": null, "halo": null, "entkopplung": null, "zentraltendenz": {"n": 2, "modalwert": 5, "anteil": 0.5, "genutzte_stufen": 2}, "scout_id": 1, "name": "Testscout 1", "spreizungs_index": 1.01, "rang": 9}, {"n_faelle": 6, "spreizung": 0.0, "bias": -0.66, "modell_naehe": 84.8, "prognose_naehe": 66.8, "trennschaerfe": null, "n_aufgeloest": 0, "brier": null, "kalibrierungsfehler": null, "brier_skill": null, "halo": null, "entkopplung": null, "zentraltendenz": {"n": 6, "modalwert": 5, "anteil": 1.0, "genutzte_stufen": 1}, "scout_id": 3, "name": "Testscout 3", "spreizungs_index": 0.0, "rang": 10}], "kohorten_spreizung": 1.39, "basisraten": {}, "aufgeloest": false, "leitfrage": "level_heute", "hinweis": "Noch keine Prognose aufgelöst — die Rangfolge ist vorläufig und sortiert nach Trennschärfe gegen das Modell."}, "uebersicht": {"pack": {"slug": "demo", "titel": "Demo Case Pack (Testdaten)", "status": "offen"}, "faelle": [{"id": 1, "name": "Demo A. Novak", "verein": "Demo SV Nord", "abgaben": 10, "aufloesungen": {}}, {"id": 2, "name": "Demo B. Haller", "verein": "Demo FC Ost", "abgaben": 9, "aufloesungen": {}}, {"id": 3, "name": "Demo C. Ibrahimi", "verein": "Demo United", "abgaben": 9, "aufloesungen": {}}, {"id": 4, "name": "Demo D. Petrovic", "verein": "Demo Rangers", "abgaben": 10, "aufloesungen": {}}, {"id": 5, "name": "Demo E. Lindqvist", "verein": "Demo IF Süd", "abgaben": 9, "aufloesungen": {}}, {"id": 6, "name": "Demo F. Okonkwo", "verein": "Demo SV Nord", "abgaben": 9, "aufloesungen": {}}], "scouts": [{"id": 1, "name": "Testscout 1", "code": "62TGK4", "abgegeben": 2, "offen": 4}, {"id": 10, "name": "Testscout 10", "code": "28PP34", "abgegeben": 6, "offen": 0}, {"id": 2, "name": "Testscout 2", "code": "R635QZ", "abgegeben": 6, "offen": 0}, {"id": 3, "name": "Testscout 3", "code": "58AJM7", "abgegeben": 6, "offen": 0}, {"id": 4, "name": "Testscout 4", "code": "EX8CTE", "abgegeben": 6, "offen": 0}, {"id": 5, "name": "Testscout 5", "code": "H8RMRJ", "abgegeben": 6, "offen": 0}, {"id": 6, "name": "Testscout 6", "code": "BRHSBD", "abgegeben": 6, "offen": 0}, {"id": 7, "name": "Testscout 7", "code": "UARJGA", "abgegeben": 6, "offen": 0}, {"id": 8, "name": "Testscout 8", "code": "MKJNY4", "abgegeben": 6, "offen": 0}, {"id": 9, "name": "Testscout 9", "code": "QUB4RT", "abgegeben": 6, "offen": 0}]}, "kalibrierung": {"n_bewertungen": 56, "n_scouts": 10, "leitfrage": "level_heute", "zentraltendenz": {"level_heute": {"n": 56, "modalwert": 5, "anteil": 0.339, "genutzte_stufen": 7, "label": "Bewiesenes Niveau", "ueber_ziel": false}, "level_ceiling": {"n": 56, "modalwert": 7, "anteil": 0.25, "genutzte_stufen": 7, "label": "Realistisches Ceiling", "ueber_ziel": false}}, "rater_strenge": {"je_scout": {"Testscout 2": 6.17, "Testscout 3": 5.0, "Testscout 4": 8.0, "Testscout 5": 4.0, "Testscout 6": 5.5, "Testscout 7": 5.83, "Testscout 8": 5.33, "Testscout 9": 4.67, "Testscout 10": 6.33, "Testscout 1": 6.0}, "spanne": 4.0, "strengster": "Testscout 5", "mildester": "Testscout 4"}, "halo": {"gesamt": 0.01, "je_scout": {"Testscout 2": 0.3, "Testscout 3": null, "Testscout 4": -0.4, "Testscout 5": -0.32, "Testscout 6": -0.35, "Testscout 7": -0.39, "Testscout 8": 0.49, "Testscout 9": -0.08, "Testscout 10": 0.44, "Testscout 1": null}}, "entkopplung": {"gesamt": 0.06, "je_scout": {"Testscout 2": 0.66, "Testscout 3": null, "Testscout 4": 0.32, "Testscout 5": -0.14, "Testscout 6": 0.29, "Testscout 7": -0.69, "Testscout 8": 0.41, "Testscout 9": -0.84, "Testscout 10": 0.03, "Testscout 1": null}}, "attribute": {"CB": {"technik": {"n": 9, "sigma": 0.6, "mittel": 2.89, "tot": false}, "spielintelligenz": {"n": 9, "sigma": 1.32, "mittel": 3.0, "tot": false}, "athletik": {"n": 9, "sigma": 0.78, "mittel": 4.11, "tot": false}, "mentalitaet": {"n": 9, "sigma": 0.71, "mittel": 3.67, "tot": false}, "verteidigen_duell": {"n": 9, "sigma": 0.71, "mittel": 3.67, "tot": false}, "kopfball": {"n": 9, "sigma": 0.53, "mittel": 4.44, "tot": false}, "spieleroeffnung": {"n": 9, "sigma": 0.71, "mittel": 2.0, "tot": false}, "raumverteidigung": {"n": 9, "sigma": 1.36, "mittel": 3.11, "tot": false}}, "WB": {"technik": {"n": 10, "sigma": 0.97, "mittel": 3.4, "tot": false}, "spielintelligenz": {"n": 10, "sigma": 0.52, "mittel": 2.4, "tot": false}, "athletik": {"n": 10, "sigma": 1.03, "mittel": 3.8, "tot": false}, "mentalitaet": {"n": 10, "sigma": 0.57, "mittel": 3.1, "tot": false}, "vorstoss": {"n": 10, "sigma": 0.7, "mittel": 3.6, "tot": false}, "flanke": {"n": 10, "sigma": 1.07, "mittel": 3.4, "tot": false}, "eins_gegen_eins_def": {"n": 10, "sigma": 0.97, "mittel": 3.6, "tot": false}, "wiederholungslauf": {"n": 10, "sigma": 0.67, "mittel": 4.0, "tot": false}}, "CM": {"technik": {"n": 10, "sigma": 0.48, "mittel": 2.7, "tot": false}, "spielintelligenz": {"n": 10, "sigma": 0.48, "mittel": 4.3, "tot": false}, "athletik": {"n": 10, "sigma": 0.85, "mittel": 2.5, "tot": false}, "mentalitaet": {"n": 10, "sigma": 0.82, "mittel": 4.0, "tot": false}, "ballzirkulation": {"n": 10, "sigma": 0.82, "mittel": 3.3, "tot": false}, "pressingresistenz": {"n": 10, "sigma": 0.7, "mittel": 3.6, "tot": false}, "vertikalpass": {"n": 10, "sigma": 0.97, "mittel": 2.4, "tot": false}, "arbeit_gegen_ball": {"n": 10, "sigma": 0.82, "mittel": 4.0, "tot": false}}, "WF": {"technik": {"n": 9, "sigma": 0.87, "mittel": 3.33, "tot": false}, "spielintelligenz": {"n": 9, "sigma": 0.78, "mittel": 3.11, "tot": false}, "athletik": {"n": 9, "sigma": 0.87, "mittel": 3.33, "tot": false}, "mentalitaet": {"n": 9, "sigma": 0.5, "mittel": 2.67, "tot": false}, "eins_gegen_eins_off": {"n": 9, "sigma": 0.73, "mittel": 4.44, "tot": false}, "tiefenlauf": {"n": 9, "sigma": 0.71, "mittel": 3.0, "tot": false}, "hereingabe": {"n": 9, "sigma": 0.71, "mittel": 2.67, "tot": false}, "abschluss": {"n": 9, "sigma": 0.87, "mittel": 2.67, "tot": false}}, "AM": {"technik": {"n": 9, "sigma": 0.53, "mittel": 3.56, "tot": false}, "spielintelligenz": {"n": 9, "sigma": 0.78, "mittel": 4.11, "tot": false}, "athletik": {"n": 9, "sigma": 1.0, "mittel": 2.67, "tot": false}, "mentalitaet": {"n": 9, "sigma": 1.13, "mittel": 3.44, "tot": false}, "zwischenraeume": {"n": 9, "sigma": 0.83, "mittel": 4.22, "tot": false}, "letzter_pass": {"n": 9, "sigma": 0.93, "mittel": 3.11, "tot": false}, "abschluss": {"n": 9, "sigma": 0.5, "mittel": 3.0, "tot": false}, "gegenpressing": {"n": 9, "sigma": 0.6, "mittel": 1.89, "tot": false}}, "CF": {"technik": {"n": 9, "sigma": 0.67, "mittel": 2.78, "tot": false}, "spielintelligenz": {"n": 9, "sigma": 0.87, "mittel": 2.0, "tot": false}, "athletik": {"n": 9, "sigma": 1.17, "mittel": 3.89, "tot": false}, "mentalitaet": {"n": 9, "sigma": 0.71, "mittel": 3.67, "tot": false}, "abschluss": {"n": 9, "sigma": 0.97, "mittel": 3.22, "tot": false}, "strafraumbewegung": {"n": 9, "sigma": 0.71, "mittel": 3.33, "tot": false}, "wandspiel": {"n": 9, "sigma": 0.71, "mittel": 4.33, "tot": false}, "pressingauslösung": {"n": 9, "sigma": 1.17, "mittel": 2.89, "tot": false}}}, "scout_vs_modell": {"gesamt": 0.14, "je_gruppe": {"AM": null, "CB": null, "CF": null, "CM": null, "WB": null, "WF": null}, "n_je_gruppe": {"AM": 9, "CB": 9, "CF": 9, "CM": 10, "WB": 10, "WF": 9}, "n_faelle_je_gruppe": {"AM": 1, "CB": 1, "CF": 1, "CM": 1, "WB": 1, "WF": 1}, "mindest_faelle": 3}, "konflikte": [{"fall_id": 3, "spieler": "Demo C. Ibrahimi", "position": "ST", "scout": "Testscout 2", "scout_level": 8, "modell_level": 4.0, "differenz": 4.0, "richtung": "scout_hoeher"}, {"fall_id": 1, "spieler": "Demo A. Novak", "position": "LV", "scout": "Testscout 9", "scout_level": 3, "modell_level": 6.5, "differenz": -3.5, "richtung": "modell_hoeher"}, {"fall_id": 3, "spieler": "Demo C. Ibrahimi", "position": "ST", "scout": "Testscout 4", "scout_level": 7, "modell_level": 4.0, "differenz": 3.0, "richtung": "scout_hoeher"}, {"fall_id": 6, "spieler": "Demo F. Okonkwo", "position": "IV", "scout": "Testscout 5", "scout_level": 3, "modell_level": 6.0, "differenz": -3.0, "richtung": "modell_hoeher"}, {"fall_id": 6, "spieler": "Demo F. Okonkwo", "position": "IV", "scout": "Testscout 6", "scout_level": 3, "modell_level": 6.0, "differenz": -3.0, "richtung": "modell_hoeher"}, {"fall_id": 6, "spieler": "Demo F. Okonkwo", "position": "IV", "scout": "Testscout 7", "scout_level": 3, "modell_level": 6.0, "differenz": -3.0, "richtung": "modell_hoeher"}, {"fall_id": 6, "spieler": "Demo F. Okonkwo", "position": "IV", "scout": "Testscout 9", "scout_level": 3, "modell_level": 6.0, "differenz": -3.0, "richtung": "modell_hoeher"}, {"fall_id": 6, "spieler": "Demo F. Okonkwo", "position": "IV", "scout": "Testscout 10", "scout_level": 3, "modell_level": 6.0, "differenz": -3.0, "richtung": "modell_hoeher"}, {"fall_id": 1, "spieler": "Demo A. Novak", "position": "LV", "scout": "Testscout 2", "scout_level": 4, "modell_level": 6.5, "differenz": -2.5, "richtung": "modell_hoeher"}, {"fall_id": 2, "spieler": "Demo B. Haller", "position": "ZOM", "scout": "Testscout 4", "scout_level": 9, "modell_level": 6.5, "differenz": 2.5, "richtung": "scout_hoeher"}, {"fall_id": 4, "spieler": "Demo D. Petrovic", "position": "ZDM", "scout": "Testscout 4", "scout_level": 9, "modell_level": 6.5, "differenz": 2.5, "richtung": "scout_hoeher"}, {"fall_id": 5, "spieler": "Demo E. Lindqvist", "position": "RA", "scout": "Testscout 4", "scout_level": 8, "modell_level": 5.5, "differenz": 2.5, "richtung": "scout_hoeher"}, {"fall_id": 1, "spieler": "Demo A. Novak", "position": "LV", "scout": "Testscout 5", "scout_level": 4, "modell_level": 6.5, "differenz": -2.5, "richtung": "modell_hoeher"}, {"fall_id": 1, "spieler": "Demo A. Novak", "position": "LV", "scout": "Testscout 6", "scout_level": 4, "modell_level": 6.5, "differenz": -2.5, "richtung": "modell_hoeher"}, {"fall_id": 5, "spieler": "Demo E. Lindqvist", "position": "RA", "scout": "Testscout 7", "scout_level": 8, "modell_level": 5.5, "differenz": 2.5, "richtung": "scout_hoeher"}, {"fall_id": 1, "spieler": "Demo A. Novak", "position": "LV", "scout": "Testscout 8", "scout_level": 4, "modell_level": 6.5, "differenz": -2.5, "richtung": "modell_hoeher"}, {"fall_id": 3, "spieler": "Demo C. Ibrahimi", "position": "ST", "scout": "Testscout 8", "scout_level": 6, "modell_level": 4.0, "differenz": 2.0, "richtung": "scout_hoeher"}, {"fall_id": 3, "spieler": "Demo C. Ibrahimi", "position": "ST", "scout": "Testscout 10", "scout_level": 6, "modell_level": 4.0, "differenz": 2.0, "richtung": "scout_hoeher"}], "schwellen": {"zentraltendenz_max": 0.35, "tote_attribute_sigma": 0.4, "halo_warnung": 0.75, "entkopplung_warnung": 0.55, "konflikt_level_abstand": 2, "mindest_faelle_diagnose": 5}, "warnungen": ["Rater-Strenge: 4.0 Level zwischen Testscout 5 (streng) und Testscout 4 (mild) — eine Kalibrier-Session an gemeinsamen Referenzspielern schließt diese Lücke."]}, "fragebogen": {"version": "0.2", "hinweis": ["Fragen, Skalen und Attribut-Sets stehen als Daten hier, nicht im Code.", "Aendern ohne Python anzufassen. Stabil bleiben muessen die 'key'-Werte -", "wer einen key umbenennt, trennt bestehende Bewertungen von ihrer Frage.", "", "Rev. 0.2 setzt den Scout Rating Audit (Juni 2026) um: Level Rating statt", "abstrakter Gesamtnote, Performance und Ceiling getrennt verankert,", "verpflichtende Attribut-Sets je Position."], "skalen_richtung": "Auf allen Skalen dieses Fragebogens ist der hoehere Wert der bessere - Level 10 wie Attribut 5. Das laeuft absichtlich gleich mit dem Daten-Perzentil (100 = Spitze) und bewusst NICHT wie die Schulnote im alten internen Formular (1 = sehr gut). Die Richtungs-Umkehr war laut Audit die haeufigste Fehlerquelle; hier gibt es nur eine Richtung.", "level": {"min": 1, "max": 10, "titel": "Level Rating", "quelle": "Strykerlabs Level Rating, Skala aus dem Scout Rating Audit (Juni 2026)", "stufen": [{"wert": 10, "ligen": "Premier League", "kontext": "England, top flight", "marktwert": "€20–80m"}, {"wert": 9, "ligen": "La Liga · Bundesliga · Serie A · Ligue 1", "kontext": "Top-5-Ligen", "marktwert": "€10–40m"}, {"wert": 8, "ligen": "Championship · Eredivisie · Primeira", "kontext": "Starke 1. Ligen & ENG 2", "marktwert": "€3–15m"}, {"wert": 7, "ligen": "Belgian Pro League · 2. Bundesliga · Süper Lig", "kontext": "Starke 2. Ligen & mittlere 1. Ligen", "marktwert": "€1.5–7m"}, {"wert": 6, "ligen": "Österreich Bundesliga · starke 2. Ligen", "kontext": "Ausgewählte 1. Ligen", "marktwert": "€0.5–3m"}, {"wert": 5, "ligen": "Slowenien 1. SNL · Georgien · weitere 1. Ligen", "kontext": "Breitere europäische 1. Ligen", "marktwert": "€120–900k"}, {"wert": 4, "ligen": "Österreich 2. Liga · untere 2. Ligen", "kontext": "Untere 2. Ligen", "marktwert": "€60–300k"}, {"wert": 3, "ligen": "Regionalliga · Top-Amateur", "kontext": "Semi-pro / Top-Amateur", "marktwert": "€25–120k"}, {"wert": 2, "ligen": "Untere Amateurligen", "kontext": "Amateur", "marktwert": "€10–50k"}, {"wert": 1, "ligen": "Amateur (niedrig)", "kontext": "Low amateur", "marktwert": "< €20k"}], "fragen": [{"key": "level_heute", "label": "Bewiesenes Niveau", "frage": "Auf welchem Niveau hat er bewiesen, dass er spielt?", "erlaeuterung": "Nicht was er koennte - was er real gezeigt hat.", "leitfrage": true}, {"key": "level_ceiling", "label": "Realistisches Ceiling", "frage": "Auf welchem Niveau spielt er realistisch in zwei bis drei Jahren?", "erlaeuterung": "Eigenstaendig beantworten, nicht als Aufschlag auf das bewiesene Niveau."}]}, "bewertung": {"skala": {"min": 1, "max": 5, "schritt": 1}, "kern": [{"key": "technik", "label": "Technik unter Druck", "anker1": "verliert den Ball bei erstem Gegnerkontakt", "anker5": "löst Drucksituationen sauber und beidfüßig"}, {"key": "spielintelligenz", "label": "Spielintelligenz & Entscheidungen", "anker1": "wählt regelmäßig die zweitbeste Option", "anker5": "erkennt Räume vor dem Ballempfang"}, {"key": "athletik", "label": "Athletik & Robustheit", "anker1": "fällt körperlich und im Tempo ab", "anker5": "athletisch ligaüberdurchschnittlich"}, {"key": "mentalitaet", "label": "Mentalität & Körpersprache", "anker1": "bricht nach Fehlern ein", "anker5": "trägt das Spiel auch gegen den Verlauf"}], "positionen": {"CB": {"label": "Innenverteidiger", "attribute": [{"key": "verteidigen_duell", "label": "Verteidigen im Duell", "anker1": "lässt sich im Eins-gegen-eins ausspielen", "anker5": "gewinnt das Duell vorne wie hinten"}, {"key": "kopfball", "label": "Kopfball & Strafraumverteidigung", "anker1": "verliert Kopfbälle gegen Gleichgroße", "anker5": "beherrscht den eigenen Strafraum in der Luft"}, {"key": "spieleroeffnung", "label": "Spieleröffnung unter Druck", "anker1": "spielt unter Druck nur den Rückpass", "anker5": "öffnet das Spiel mit gebrochenen Linien"}, {"key": "raumverteidigung", "label": "Absicherung & Positionsspiel", "anker1": "steht wiederholt falsch zur Restverteidigung", "anker5": "verteidigt Räume, bevor sie entstehen"}]}, "WB": {"label": "Außenverteidiger", "attribute": [{"key": "vorstoss", "label": "Vorstoßbereitschaft", "anker1": "bleibt auch bei Ballbesitz tief", "anker5": "schiebt konsequent und richtig getimt auf"}, {"key": "flanke", "label": "Hereingabe & letzter Pass von außen", "anker1": "Hereingaben ohne Adressat", "anker5": "findet den Adressaten aus verschiedenen Höhen"}, {"key": "eins_gegen_eins_def", "label": "Eins-gegen-eins defensiv", "anker1": "wird auf der Außenbahn regelmäßig überlaufen", "anker5": "verteidigt die Außenbahn allein"}, {"key": "wiederholungslauf", "label": "Wiederholte Läufe über die Bahn", "anker1": "bricht nach der ersten Halbzeit ein", "anker5": "wiederholt Läufe bis zum Schluss"}]}, "CM": {"label": "Zentrales Mittelfeld", "attribute": [{"key": "ballzirkulation", "label": "Ballzirkulation & Rhythmus", "anker1": "verlangsamt das Spiel bei jedem Kontakt", "anker5": "gibt dem Spiel Takt und Richtung"}, {"key": "pressingresistenz", "label": "Pressingresistenz", "anker1": "verliert den Ball im Aufdrehen", "anker5": "dreht unter Druck auf und löst die Situation"}, {"key": "vertikalpass", "label": "Raumgewinn durch Pässe", "anker1": "spielt fast nur quer und zurück", "anker5": "findet regelmäßig den Pass hinter die Linie"}, {"key": "arbeit_gegen_ball", "label": "Arbeit gegen den Ball", "anker1": "lässt Wege und Räume offen", "anker5": "verteidigt das Zentrum aktiv und vorausschauend"}]}, "WF": {"label": "Flügelspieler", "attribute": [{"key": "eins_gegen_eins_off", "label": "Eins-gegen-eins offensiv", "anker1": "kommt am Gegenspieler nicht vorbei", "anker5": "löst das Eins-gegen-eins wiederholbar auf"}, {"key": "tiefenlauf", "label": "Tiefenläufe & Timing", "anker1": "startet zu früh oder gar nicht", "anker5": "attackiert die Tiefe wiederholt richtig getimt"}, {"key": "hereingabe", "label": "Hereingabe & letzter Pass", "anker1": "Hereingaben ohne Adressat", "anker5": "bedient den Strafraum präzise"}, {"key": "abschluss", "label": "Abschluss", "anker1": "vergibt aus aussichtsreichen Lagen", "anker5": "verwertet Chancen überdurchschnittlich"}]}, "AM": {"label": "Offensives Mittelfeld", "attribute": [{"key": "zwischenraeume", "label": "Bewegung zwischen den Linien", "anker1": "wird von der gegnerischen Kette gedeckt gehalten", "anker5": "findet den Zwischenraum immer wieder"}, {"key": "letzter_pass", "label": "Letzter Pass", "anker1": "sucht den einfachen Pass statt den entscheidenden", "anker5": "erzeugt Chancen mit dem letzten Pass"}, {"key": "abschluss", "label": "Abschluss", "anker1": "vergibt aus aussichtsreichen Lagen", "anker5": "verwertet Chancen überdurchschnittlich"}, {"key": "gegenpressing", "label": "Gegenpressing nach Ballverlust", "anker1": "geht nach Ballverlust nicht nach", "anker5": "erobert Bälle unmittelbar zurück"}]}, "CF": {"label": "Mittelstürmer", "attribute": [{"key": "abschluss", "label": "Abschluss", "anker1": "vergibt aus aussichtsreichen Lagen", "anker5": "verwertet Chancen überdurchschnittlich"}, {"key": "strafraumbewegung", "label": "Bewegung im Strafraum", "anker1": "steht dort, wo der Ball nicht hinkommt", "anker5": "löst sich wiederholt in die richtige Zone"}, {"key": "wandspiel", "label": "Wandspiel & Ballhalten", "anker1": "verliert Bälle mit dem Rücken zum Tor", "anker5": "behauptet Bälle und bindet Mitspieler ein"}, {"key": "pressingauslösung", "label": "Anlaufen & Pressingauslösung", "anker1": "läuft ziellos oder gar nicht an", "anker5": "steuert das gegnerische Aufbauspiel"}]}}, "gruppen_zuordnung": {"CB": ["CB", "IV", "LIV", "RIV", "DEF", "CENTRE-BACK"], "WB": ["WB", "LV", "RV", "LAV", "RAV", "LB", "RB", "LWB", "RWB"], "CM": ["CM", "ZM", "ZDM", "DM", "DMF", "CMF", "SECHS", "ACHT"], "WF": ["WF", "LA", "RA", "LM", "RM", "LW", "RW", "LAMF", "RAMF", "FLUEGEL"], "AM": ["AM", "ZOM", "AMF", "ZEHN"], "CF": ["CF", "ST", "MS", "STUERMER", "FORWARD"]}, "standardgruppe": "CM"}, "prognosen": [{"key": "top5_12m", "label": "Wechsel in eine Top-5-Liga binnen 12 Monaten", "erlaeuterung": "Vereinswechsel mit Registrierung in ENG/ESP/GER/ITA/FRA, erste oder zweite Liga.", "horizont_monate": 12}, {"key": "marktwert_ueber", "label": "Marktwert in 12 Monaten über Schwelle", "erlaeuterung": "Schwelle steht je Fall im Case Pack.", "horizont_monate": 12, "parameter": "marktwert_schwelle"}, {"key": "minuten_1500", "label": "Mindestens 1.500 Pflichtspielminuten in der kommenden Saison", "erlaeuterung": "Liga, Pokal und Europacup zusammen, Verein und Liga egal.", "horizont_monate": 12}], "notiz": {"label": "Kurznotiz (optional)", "max_zeichen": 400}, "schwellen": {"zentraltendenz_max": 0.35, "tote_attribute_sigma": 0.4, "halo_warnung": 0.75, "entkopplung_warnung": 0.55, "konflikt_level_abstand": 2, "mindest_faelle_diagnose": 5}}, "csv": "pack;fall_id;ext_id;spieler;position;positionsgruppe;jahrgang;verein;liga;scout;scout_code;abgegeben_am;sekunden;level_heute;level_ceiling;modell_level;prognose_frage;prognose_wahrscheinlichkeit;modell_wahrscheinlichkeit;ergebnis;aufgeloest_am;quelle;notiz;bew_abschluss;bew_arbeit_gegen_ball;bew_athletik;bew_ballzirkulation;bew_eins_gegen_eins_def;bew_eins_gegen_eins_off;bew_flanke;bew_gegenpressing;bew_hereingabe;bew_kopfball;bew_letzter_pass;bew_mentalitaet;bew_pressingauslösung;bew_pressingresistenz;bew_raumverteidigung;bew_spieleroeffnung;bew_spielintelligenz;bew_strafraumbewegung;bew_technik;bew_tiefenlauf;bew_verteidigen_duell;bew_vertikalpass;bew_vorstoss;bew_wandspiel;bew_wiederholungslauf;bew_zwischenraeume\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 1;62TGK4;2026-08-22T19:08:22+00:00;178;7;8;6.5;marktwert_ueber;0.81;0.44;;;;;;;3;;4;;3;;;;;3;;;;;3;;3;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 1;62TGK4;2026-08-22T19:08:22+00:00;178;7;8;6.5;minuten_1500;0.74;0.61;;;;;;;3;;4;;3;;;;;3;;;;;3;;3;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 1;62TGK4;2026-08-22T19:08:22+00:00;178;7;8;6.5;top5_12m;0.95;0.12;;;;;;;3;;4;;3;;;;;3;;;;;3;;3;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;232;4;7;6.5;marktwert_ueber;0.66;0.44;;;;;;;5;;3;;5;;;;;3;;;;;2;;3;;;;3;;3;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;232;4;7;6.5;minuten_1500;0.15;0.61;;;;;;;5;;3;;5;;;;;3;;;;;2;;3;;;;3;;3;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;232;4;7;6.5;top5_12m;0.56;0.12;;;;;;;5;;3;;5;;;;;3;;;;;2;;3;;;;3;;3;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;248;5;7;6.5;marktwert_ueber;0.18;0.44;;;;;;;4;;3;;3;;;;;3;;;;;3;;3;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;248;5;7;6.5;minuten_1500;0.79;0.61;;;;;;;4;;3;;3;;;;;3;;;;;3;;3;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;248;5;7;6.5;top5_12m;0.8;0.12;;;;;;;4;;3;;3;;;;;3;;;;;3;;3;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;143;8;9;6.5;marktwert_ueber;0.69;0.44;;;;;;;4;;2;;3;;;;;4;;;;;2;;3;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;143;8;9;6.5;minuten_1500;0.14;0.61;;;;;;;4;;2;;3;;;;;4;;;;;2;;3;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;143;8;9;6.5;top5_12m;0.32;0.12;;;;;;;4;;2;;3;;;;;4;;;;;2;;3;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;172;4;4;6.5;marktwert_ueber;0.81;0.44;;;;;;;3;;4;;3;;;;;2;;;;;2;;2;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;172;4;4;6.5;minuten_1500;0.17;0.61;;;;;;;3;;4;;3;;;;;2;;;;;2;;2;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;172;4;4;6.5;top5_12m;0.4;0.12;;;;;;;3;;4;;3;;;;;2;;;;;2;;2;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;200;4;4;6.5;marktwert_ueber;0.42;0.44;;;;;;;4;;3;;5;;;;;3;;;;;2;;5;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;200;4;4;6.5;minuten_1500;0.54;0.61;;;;;;;4;;3;;5;;;;;3;;;;;2;;5;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;200;4;4;6.5;top5_12m;0.76;0.12;;;;;;;4;;3;;5;;;;;3;;;;;2;;5;;;;4;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;199;7;2;6.5;marktwert_ueber;0.59;0.44;;;;;;;3;;4;;2;;;;;3;;;;;2;;3;;;;4;;5;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;199;7;2;6.5;minuten_1500;0.48;0.61;;;;;;;3;;4;;2;;;;;3;;;;;2;;3;;;;4;;5;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;199;7;2;6.5;top5_12m;0.64;0.12;;;;;;;3;;4;;2;;;;;3;;;;;2;;3;;;;4;;5;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;176;4;5;6.5;marktwert_ueber;0.62;0.44;;;;;;;2;;5;;4;;;;;3;;;;;2;;4;;;;2;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;176;4;5;6.5;minuten_1500;0.95;0.61;;;;;;;2;;5;;4;;;;;3;;;;;2;;4;;;;2;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;176;4;5;6.5;top5_12m;0.53;0.12;;;;;;;2;;5;;4;;;;;3;;;;;2;;4;;;;2;;4;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;161;3;8;6.5;marktwert_ueber;0.09;0.44;;;;;;;5;;3;;2;;;;;3;;;;;3;;3;;;;3;;5;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;161;3;8;6.5;minuten_1500;0.48;0.61;;;;;;;5;;3;;2;;;;;3;;;;;3;;3;;;;3;;5;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;161;3;8;6.5;top5_12m;0.07;0.12;;;;;;;5;;3;;2;;;;;3;;;;;3;;3;;;;3;;5;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;195;8;8;6.5;marktwert_ueber;0.09;0.44;;;;;;;5;;5;;4;;;;;4;;;;;3;;5;;;;4;;3;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;195;8;8;6.5;minuten_1500;0.18;0.61;;;;;;;5;;5;;4;;;;;4;;;;;3;;5;;;;4;;3;\ndemo;1;DEMO-01;Demo A. Novak;LV;WB;2006;Demo SV Nord;Demo-Liga 1;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;195;8;8;6.5;top5_12m;0.54;0.12;;;;;;;5;;5;;4;;;;;4;;;;;3;;5;;;;4;;3;\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;177;7;8;6.5;marktwert_ueber;0.82;0.66;;;;;3;;3;;;;;2;;;3;4;;;;;5;;4;;;;;;;5\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;177;7;8;6.5;minuten_1500;0.66;0.49;;;;;3;;3;;;;;2;;;3;4;;;;;5;;4;;;;;;;5\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;177;7;8;6.5;top5_12m;0.92;0.31;;;;;3;;3;;;;;2;;;3;4;;;;;5;;4;;;;;;;5\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;254;5;5;6.5;marktwert_ueber;0.64;0.66;;;;;3;;2;;;;;2;;;4;3;;;;;4;;4;;;;;;;4\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;254;5;5;6.5;minuten_1500;0.23;0.49;;;;;3;;2;;;;;2;;;4;3;;;;;4;;4;;;;;;;4\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;254;5;5;6.5;top5_12m;0.83;0.31;;;;;3;;2;;;;;2;;;4;3;;;;;4;;4;;;;;;;4\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;272;9;8;6.5;marktwert_ueber;0.49;0.66;;;;;3;;3;;;;;3;;;3;4;;;;;3;;4;;;;;;;3\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;272;9;8;6.5;minuten_1500;0.06;0.49;;;;;3;;3;;;;;3;;;3;4;;;;;3;;4;;;;;;;3\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;272;9;8;6.5;top5_12m;0.62;0.31;;;;;3;;3;;;;;3;;;3;4;;;;;3;;4;;;;;;;3\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;199;5;8;6.5;marktwert_ueber;0.92;0.66;;;;;3;;2;;;;;1;;;3;5;;;;;4;;4;;;;;;;5\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;199;5;8;6.5;minuten_1500;0.77;0.49;;;;;3;;2;;;;;1;;;3;5;;;;;4;;4;;;;;;;5\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;199;5;8;6.5;top5_12m;0.95;0.31;;;;;3;;2;;;;;1;;;3;5;;;;;4;;4;;;;;;;5\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;170;8;5;6.5;marktwert_ueber;0.14;0.66;;;;;3;;4;;;;;2;;;1;3;;;;;3;;4;;;;;;;3\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;170;8;5;6.5;minuten_1500;0.28;0.49;;;;;3;;4;;;;;2;;;1;3;;;;;3;;4;;;;;;;3\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;170;8;5;6.5;top5_12m;0.49;0.31;;;;;3;;4;;;;;2;;;1;3;;;;;3;;4;;;;;;;3\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;206;5;8;6.5;marktwert_ueber;0.66;0.66;;;;;2;;1;;;;;2;;;3;4;;;;;5;;3;;;;;;;4\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;206;5;8;6.5;minuten_1500;0.62;0.49;;;;;2;;1;;;;;2;;;3;4;;;;;5;;3;;;;;;;4\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;206;5;8;6.5;top5_12m;0.5;0.31;;;;;2;;1;;;;;2;;;3;4;;;;;5;;3;;;;;;;4\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;149;7;8;6.5;marktwert_ueber;0.65;0.66;;;;;4;;4;;;;;2;;;4;4;;;;;4;;3;;;;;;;5\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;149;7;8;6.5;minuten_1500;0.83;0.49;;;;;4;;4;;;;;2;;;4;4;;;;;4;;3;;;;;;;5\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;149;7;8;6.5;top5_12m;0.35;0.31;;;;;4;;4;;;;;2;;;4;4;;;;;4;;3;;;;;;;5\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;171;6;6;6.5;marktwert_ueber;0.45;0.66;;;;;3;;2;;;;;2;;;3;1;;;;;4;;3;;;;;;;5\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;171;6;6;6.5;minuten_1500;0.15;0.49;;;;;3;;2;;;;;2;;;3;1;;;;;4;;3;;;;;;;5\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;171;6;6;6.5;top5_12m;0.47;0.31;;;;;3;;2;;;;;2;;;3;1;;;;;4;;3;;;;;;;5\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;269;8;7;6.5;marktwert_ueber;0.36;0.66;;;;;3;;3;;;;;1;;;4;3;;;;;5;;3;;;;;;;4\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;269;8;7;6.5;minuten_1500;0.92;0.49;;;;;3;;3;;;;;1;;;4;3;;;;;5;;3;;;;;;;4\ndemo;2;DEMO-02;Demo B. Haller;ZOM;AM;2005;Demo FC Ost;Demo-Liga 1;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;269;8;7;6.5;top5_12m;0.3;0.31;;;;;3;;3;;;;;1;;;4;3;;;;;5;;3;;;;;;;4\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;222;8;9;4.0;marktwert_ueber;0.17;0.28;;;;;3;;4;;;;;;;;;4;4;;;;2;4;3;;;;;4;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;222;8;9;4.0;minuten_1500;0.82;0.34;;;;;3;;4;;;;;;;;;4;4;;;;2;4;3;;;;;4;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;222;8;9;4.0;top5_12m;0.05;0.09;;;;;3;;4;;;;;;;;;4;4;;;;2;4;3;;;;;4;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;174;5;5;4.0;marktwert_ueber;0.64;0.28;;;;;3;;4;;;;;;;;;4;3;;;;2;3;3;;;;;4;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;174;5;5;4.0;minuten_1500;0.45;0.34;;;;;3;;4;;;;;;;;;4;3;;;;2;3;3;;;;;4;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;174;5;5;4.0;top5_12m;0.86;0.09;;;;;3;;4;;;;;;;;;4;3;;;;2;3;3;;;;;4;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;161;7;6;4.0;marktwert_ueber;0.5;0.28;;;;;3;;5;;;;;;;;;4;3;;;;1;3;3;;;;;4;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;161;7;6;4.0;minuten_1500;0.7;0.34;;;;;3;;5;;;;;;;;;4;3;;;;1;3;3;;;;;4;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;161;7;6;4.0;top5_12m;0.92;0.09;;;;;3;;5;;;;;;;;;4;3;;;;1;3;3;;;;;4;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;125;3;7;4.0;marktwert_ueber;0.18;0.28;;;;;4;;4;;;;;;;;;3;3;;;;3;3;2;;;;;4;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;125;3;7;4.0;minuten_1500;0.31;0.34;;;;;4;;4;;;;;;;;;3;3;;;;3;3;2;;;;;4;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;125;3;7;4.0;top5_12m;0.19;0.09;;;;;4;;4;;;;;;;;;3;3;;;;3;3;2;;;;;4;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;212;5;8;4.0;marktwert_ueber;0.62;0.28;;;;;2;;4;;;;;;;;;3;3;;;;1;4;2;;;;;5;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;212;5;8;4.0;minuten_1500;0.54;0.34;;;;;2;;4;;;;;;;;;3;3;;;;1;4;2;;;;;5;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;212;5;8;4.0;top5_12m;0.19;0.09;;;;;2;;4;;;;;;;;;3;3;;;;1;4;2;;;;;5;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;225;5;8;4.0;marktwert_ueber;0.31;0.28;;;;;5;;5;;;;;;;;;3;5;;;;3;2;4;;;;;5;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;225;5;8;4.0;minuten_1500;0.26;0.34;;;;;5;;5;;;;;;;;;3;5;;;;3;2;4;;;;;5;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;225;5;8;4.0;top5_12m;0.42;0.09;;;;;5;;5;;;;;;;;;3;5;;;;3;2;4;;;;;5;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;192;6;6;4.0;marktwert_ueber;0.4;0.28;;;;;4;;5;;;;;;;;;3;1;;;;2;4;2;;;;;5;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;192;6;6;4.0;minuten_1500;0.66;0.34;;;;;4;;5;;;;;;;;;3;1;;;;2;4;2;;;;;5;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;192;6;6;4.0;top5_12m;0.22;0.09;;;;;4;;5;;;;;;;;;3;1;;;;2;4;2;;;;;5;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;165;5;6;4.0;marktwert_ueber;0.85;0.28;;;;;3;;2;;;;;;;;;4;2;;;;3;3;3;;;;;3;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;165;5;6;4.0;minuten_1500;0.57;0.34;;;;;3;;2;;;;;;;;;4;2;;;;3;3;3;;;;;3;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;165;5;6;4.0;top5_12m;0.17;0.09;;;;;3;;2;;;;;;;;;4;2;;;;3;3;3;;;;;3;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;185;6;8;4.0;marktwert_ueber;0.27;0.28;;;;;2;;2;;;;;;;;;5;2;;;;1;4;3;;;;;5;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;185;6;8;4.0;minuten_1500;0.7;0.34;;;;;2;;2;;;;;;;;;5;2;;;;1;4;3;;;;;5;;\ndemo;3;DEMO-03;Demo C. Ibrahimi;ST;CF;2007;Demo United;Demo-Liga 2;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;185;6;8;4.0;top5_12m;0.11;0.09;;;;;2;;2;;;;;;;;;5;2;;;;1;4;3;;;;;5;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 1;62TGK4;2026-08-22T19:08:22+00:00;150;5;6;6.5;marktwert_ueber;0.17;0.52;;;;;;5;3;4;;;;;;;;3;;3;;;4;;3;;;2;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 1;62TGK4;2026-08-22T19:08:22+00:00;150;5;6;6.5;minuten_1500;0.43;0.78;;;;;;5;3;4;;;;;;;;3;;3;;;4;;3;;;2;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 1;62TGK4;2026-08-22T19:08:22+00:00;150;5;6;6.5;top5_12m;0.37;0.18;;;;;;5;3;4;;;;;;;;3;;3;;;4;;3;;;2;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;199;5;5;6.5;marktwert_ueber;0.87;0.52;;;;;;3;2;4;;;;;;;;4;;4;;;4;;2;;;3;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;199;5;5;6.5;minuten_1500;0.39;0.78;;;;;;3;2;4;;;;;;;;4;;4;;;4;;2;;;3;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;199;5;5;6.5;top5_12m;0.94;0.18;;;;;;3;2;4;;;;;;;;4;;4;;;4;;2;;;3;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;265;5;7;6.5;marktwert_ueber;0.47;0.52;;;;;;4;3;4;;;;;;;;4;;3;;;4;;3;;;3;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;265;5;7;6.5;minuten_1500;0.06;0.78;;;;;;4;3;4;;;;;;;;4;;3;;;4;;3;;;3;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;265;5;7;6.5;top5_12m;0.2;0.18;;;;;;4;3;4;;;;;;;;4;;3;;;4;;3;;;3;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;253;9;7;6.5;marktwert_ueber;0.7;0.52;;;;;;4;1;2;;;;;;;;4;;4;;;4;;2;;;4;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;253;9;7;6.5;minuten_1500;0.79;0.78;;;;;;4;1;2;;;;;;;;4;;4;;;4;;2;;;4;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;253;9;7;6.5;top5_12m;0.41;0.18;;;;;;4;1;2;;;;;;;;4;;4;;;4;;2;;;4;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;282;5;5;6.5;marktwert_ueber;0.64;0.52;;;;;;3;2;3;;;;;;;;3;;4;;;4;;3;;;2;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;282;5;5;6.5;minuten_1500;0.47;0.78;;;;;;3;2;3;;;;;;;;3;;4;;;4;;3;;;2;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;282;5;5;6.5;top5_12m;0.51;0.18;;;;;;3;2;3;;;;;;;;3;;4;;;4;;3;;;2;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;212;8;7;6.5;marktwert_ueber;0.59;0.52;;;;;;5;4;3;;;;;;;;3;;4;;;5;;3;;;1;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;212;8;7;6.5;minuten_1500;0.49;0.78;;;;;;5;4;3;;;;;;;;3;;4;;;5;;3;;;1;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;212;8;7;6.5;top5_12m;0.12;0.18;;;;;;5;4;3;;;;;;;;3;;4;;;5;;3;;;1;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;217;7;6;6.5;marktwert_ueber;0.19;0.52;;;;;;4;3;4;;;;;;;;5;;2;;;4;;2;;;2;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;217;7;6;6.5;minuten_1500;0.84;0.78;;;;;;4;3;4;;;;;;;;5;;2;;;4;;2;;;2;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;217;7;6;6.5;top5_12m;0.09;0.18;;;;;;4;3;4;;;;;;;;5;;2;;;4;;2;;;2;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;276;5;7;6.5;marktwert_ueber;0.35;0.52;;;;;;5;3;2;;;;;;;;4;;4;;;5;;3;;;3;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;276;5;7;6.5;minuten_1500;0.29;0.78;;;;;;5;3;2;;;;;;;;4;;4;;;5;;3;;;3;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;276;5;7;6.5;top5_12m;0.93;0.18;;;;;;5;3;2;;;;;;;;4;;4;;;5;;3;;;3;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;237;6;6;6.5;marktwert_ueber;0.16;0.52;;;;;;3;2;4;;;;;;;;5;;4;;;4;;3;;;3;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;237;6;6;6.5;minuten_1500;0.09;0.78;;;;;;3;2;4;;;;;;;;5;;4;;;4;;3;;;3;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;237;6;6;6.5;top5_12m;0.89;0.18;;;;;;3;2;4;;;;;;;;5;;4;;;4;;3;;;3;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;218;7;5;6.5;marktwert_ueber;0.89;0.52;;;;;;4;2;3;;;;;;;;5;;4;;;5;;3;;;1;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;218;7;5;6.5;minuten_1500;0.77;0.78;;;;;;4;2;3;;;;;;;;5;;4;;;5;;3;;;1;;;;\ndemo;4;DEMO-04;Demo D. Petrovic;ZDM;CM;2004;Demo Rangers;Demo-Liga 1;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;218;7;5;6.5;top5_12m;0.81;0.18;;;;;;4;2;3;;;;;;;;5;;4;;;5;;3;;;1;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;275;7;7;5.5;marktwert_ueber;0.43;0.58;;;;;3;;4;;;5;;;2;;;2;;;;;4;;3;4;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;275;7;7;5.5;minuten_1500;0.39;0.43;;;;;3;;4;;;5;;;2;;;2;;;;;4;;3;4;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;275;7;7;5.5;top5_12m;0.22;0.22;;;;;3;;4;;;5;;;2;;;2;;;;;4;;3;4;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;124;5;4;5.5;marktwert_ueber;0.74;0.58;;;;;2;;4;;;4;;;3;;;3;;;;;3;;4;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;124;5;4;5.5;minuten_1500;0.56;0.43;;;;;2;;4;;;4;;;3;;;3;;;;;3;;4;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;124;5;4;5.5;top5_12m;0.37;0.22;;;;;2;;4;;;4;;;3;;;3;;;;;3;;4;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;259;8;5;5.5;marktwert_ueber;0.14;0.58;;;;;2;;3;;;3;;;2;;;2;;;;;4;;3;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;259;8;5;5.5;minuten_1500;0.23;0.43;;;;;2;;3;;;3;;;2;;;2;;;;;4;;3;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;259;8;5;5.5;top5_12m;0.31;0.22;;;;;2;;3;;;3;;;2;;;2;;;;;4;;3;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;275;4;8;5.5;marktwert_ueber;0.8;0.58;;;;;2;;3;;;4;;;4;;;3;;;;;3;;2;4;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;275;4;8;5.5;minuten_1500;0.55;0.43;;;;;2;;3;;;4;;;4;;;3;;;;;3;;2;4;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;275;4;8;5.5;top5_12m;0.84;0.22;;;;;2;;3;;;4;;;4;;;3;;;;;3;;2;4;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;202;5;6;5.5;marktwert_ueber;0.4;0.58;;;;;2;;3;;;5;;;2;;;3;;;;;2;;3;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;202;5;6;5.5;minuten_1500;0.2;0.43;;;;;2;;3;;;5;;;2;;;3;;;;;2;;3;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;202;5;6;5.5;top5_12m;0.17;0.22;;;;;2;;3;;;5;;;2;;;3;;;;;2;;3;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;147;8;4;5.5;marktwert_ueber;0.53;0.58;;;;;2;;3;;;5;;;2;;;3;;;;;2;;5;2;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;147;8;4;5.5;minuten_1500;0.91;0.43;;;;;2;;3;;;5;;;2;;;3;;;;;2;;5;2;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;147;8;4;5.5;top5_12m;0.26;0.22;;;;;2;;3;;;5;;;2;;;3;;;;;2;;5;2;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;201;5;7;5.5;marktwert_ueber;0.94;0.58;;;;;4;;3;;;5;;;3;;;2;;;;;4;;3;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;201;5;7;5.5;minuten_1500;0.06;0.43;;;;;4;;3;;;5;;;3;;;2;;;;;4;;3;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;201;5;7;5.5;top5_12m;0.32;0.22;;;;;4;;3;;;5;;;3;;;2;;;;;4;;3;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;140;5;5;5.5;marktwert_ueber;0.86;0.58;;;;;4;;5;;;5;;;3;;;3;;;;;3;;3;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;140;5;5;5.5;minuten_1500;0.26;0.43;;;;;4;;5;;;5;;;3;;;3;;;;;3;;3;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;140;5;5;5.5;top5_12m;0.25;0.22;;;;;4;;5;;;5;;;3;;;3;;;;;3;;3;3;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;200;6;6;5.5;marktwert_ueber;0.05;0.58;;;;;3;;2;;;4;;;3;;;3;;;;;3;;4;2;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;200;6;6;5.5;minuten_1500;0.87;0.43;;;;;3;;2;;;4;;;3;;;3;;;;;3;;4;2;;;;;;\ndemo;5;DEMO-05;Demo E. Lindqvist;RA;WF;2006;Demo IF Süd;Demo-Liga 3;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;200;6;6;5.5;top5_12m;0.73;0.22;;;;;3;;2;;;4;;;3;;;3;;;;;3;;4;2;;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;243;6;8;6.0;marktwert_ueber;0.28;0.35;;;;;;;5;;;;;;;5;;4;;;3;3;5;;3;;3;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;243;6;8;6.0;minuten_1500;0.48;0.69;;;;;;;5;;;;;;;5;;4;;;3;3;5;;3;;3;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 2;R635QZ;2026-08-22T19:08:22+00:00;243;6;8;6.0;top5_12m;0.21;0.07;;;;;;;5;;;;;;;5;;4;;;3;3;5;;3;;3;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;189;5;6;6.0;marktwert_ueber;0.71;0.35;;;;;;;4;;;;;;;4;;4;;;3;2;3;;2;;4;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;189;5;6;6.0;minuten_1500;0.19;0.69;;;;;;;4;;;;;;;4;;4;;;3;2;3;;2;;4;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 3;58AJM7;2026-08-22T19:08:22+00:00;189;5;6;6.0;top5_12m;0.79;0.07;;;;;;;4;;;;;;;4;;4;;;3;2;3;;2;;4;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;186;7;7;6.0;marktwert_ueber;0.61;0.35;;;;;;;3;;;;;;;5;;4;;;5;2;4;;3;;3;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;186;7;7;6.0;minuten_1500;0.15;0.69;;;;;;;3;;;;;;;5;;4;;;5;2;4;;3;;3;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 4;EX8CTE;2026-08-22T19:08:22+00:00;186;7;7;6.0;top5_12m;0.79;0.07;;;;;;;3;;;;;;;5;;4;;;5;2;4;;3;;3;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;264;3;7;6.0;marktwert_ueber;0.05;0.35;;;;;;;5;;;;;;;5;;3;;;1;3;4;;2;;4;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;264;3;7;6.0;minuten_1500;0.69;0.69;;;;;;;5;;;;;;;5;;3;;;1;3;4;;2;;4;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 5;H8RMRJ;2026-08-22T19:08:22+00:00;264;3;7;6.0;top5_12m;0.93;0.07;;;;;;;5;;;;;;;5;;3;;;1;3;4;;2;;4;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;161;3;5;6.0;marktwert_ueber;0.53;0.35;;;;;;;3;;;;;;;4;;5;;;4;2;3;;3;;4;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;161;3;5;6.0;minuten_1500;0.87;0.69;;;;;;;3;;;;;;;4;;5;;;4;2;3;;3;;4;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 6;BRHSBD;2026-08-22T19:08:22+00:00;161;3;5;6.0;top5_12m;0.83;0.07;;;;;;;3;;;;;;;4;;5;;;4;2;3;;3;;4;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;236;3;7;6.0;marktwert_ueber;0.55;0.35;;;;;;;4;;;;;;;5;;3;;;4;1;3;;4;;3;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;236;3;7;6.0;minuten_1500;0.91;0.69;;;;;;;4;;;;;;;5;;3;;;4;1;3;;4;;3;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 7;UARJGA;2026-08-22T19:08:22+00:00;236;3;7;6.0;top5_12m;0.08;0.07;;;;;;;4;;;;;;;5;;3;;;4;1;3;;4;;3;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;131;5;9;6.0;marktwert_ueber;0.34;0.35;;;;;;;4;;;;;;;4;;3;;;1;2;1;;3;;5;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;131;5;9;6.0;minuten_1500;0.27;0.69;;;;;;;4;;;;;;;4;;3;;;1;2;1;;3;;5;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 8;MKJNY4;2026-08-22T19:08:22+00:00;131;5;9;6.0;top5_12m;0.95;0.07;;;;;;;4;;;;;;;4;;3;;;1;2;1;;3;;5;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;292;3;8;6.0;marktwert_ueber;0.77;0.35;;;;;;;4;;;;;;;4;;4;;;3;1;3;;3;;3;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;292;3;8;6.0;minuten_1500;0.56;0.69;;;;;;;4;;;;;;;4;;4;;;3;1;3;;3;;3;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 9;QUB4RT;2026-08-22T19:08:22+00:00;292;3;8;6.0;top5_12m;0.63;0.07;;;;;;;4;;;;;;;4;;4;;;3;1;3;;3;;3;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;206;3;7;6.0;marktwert_ueber;0.28;0.35;;;;;;;5;;;;;;;4;;3;;;4;2;1;;3;;4;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;206;3;7;6.0;minuten_1500;0.08;0.69;;;;;;;5;;;;;;;4;;3;;;4;2;1;;3;;4;;;;;\ndemo;6;DEMO-06;Demo F. Okonkwo;IV;CB;2005;Demo SV Nord;Demo-Liga 1;Testscout 10;28PP34;2026-08-22T19:08:22+00:00;206;3;7;6.0;top5_12m;0.32;0.07;;;;;;;5;;;;;;;4;;3;;;4;2;1;;3;;4;;;;;\n", "modelle": {"1": {"bewertung": {"spielintelligenz": 3.25, "athletik": 4.55, "mentalitaet": 3.6, "flanke": 3.4, "vorstoss": 4.2, "eins_gegen_eins_def": 3.8, "technik": 3.9, "wiederholungslauf": 4.65}, "prognose": {"top5_12m": 0.12, "marktwert_ueber": 0.44, "minuten_1500": 0.61}, "level": {"level_heute": 6.5}}, "2": {"bewertung": {"zwischenraeume": 4.55, "spielintelligenz": 4.45, "gegenpressing": 2.55, "athletik": 2.9, "mentalitaet": 3.4, "letzter_pass": 4.35, "technik": 4.7, "abschluss": 3.65}, "prognose": {"top5_12m": 0.31, "marktwert_ueber": 0.66, "minuten_1500": 0.49}, "level": {"level_heute": 6.5}}, "3": {"bewertung": {"strafraumbewegung": 3.35, "spielintelligenz": 2.95, "athletik": 4.9, "mentalitaet": 4.05, "technik": 3.1, "pressingauslösung": 3.8, "abschluss": 3.95, "wandspiel": 4.2}, "prognose": {"top5_12m": 0.09, "marktwert_ueber": 0.28, "minuten_1500": 0.34}, "level": {"level_heute": 4.0}}, "4": {"bewertung": {"pressingresistenz": 3.9, "vertikalpass": 3.2, "spielintelligenz": 4.65, "athletik": 3.35, "mentalitaet": 4.8, "arbeit_gegen_ball": 4.5, "technik": 3.55, "ballzirkulation": 4.1}, "prognose": {"top5_12m": 0.18, "marktwert_ueber": 0.52, "minuten_1500": 0.78}, "level": {"level_heute": 6.5}}, "5": {"bewertung": {"tiefenlauf": 3.8, "spielintelligenz": 3.4, "hereingabe": 3.55, "athletik": 4.1, "mentalitaet": 3.2, "technik": 4.25, "abschluss": 2.95, "eins_gegen_eins_off": 4.65}, "prognose": {"top5_12m": 0.22, "marktwert_ueber": 0.58, "minuten_1500": 0.43}, "level": {"level_heute": 5.5}}, "6": {"bewertung": {"spielintelligenz": 3.8, "kopfball": 4.75, "verteidigen_duell": 4.35, "mentalitaet": 4.15, "athletik": 4.45, "technik": 2.95, "spieleroeffnung": 2.7, "raumverteidigung": 3.6}, "prognose": {"top5_12m": 0.07, "marktwert_ueber": 0.35, "minuten_1500": 0.69}, "level": {"level_heute": 6.0}}}, "kohorten": {"1": {"n": 10, "mittel": {"technik": 3.4, "spielintelligenz": 2.4, "athletik": 3.8, "mentalitaet": 3.1, "vorstoss": 3.6, "flanke": 3.4, "eins_gegen_eins_def": 3.6, "wiederholungslauf": 4.0, "level_heute": 5.4, "level_ceiling": 6.2}, "mittel_bereinigt": 5.0, "n_bereinigt": 8}, "2": {"n": 9, "mittel": {"technik": 3.56, "spielintelligenz": 4.11, "athletik": 2.67, "mentalitaet": 3.44, "zwischenraeume": 4.22, "letzter_pass": 3.11, "abschluss": 3.0, "gegenpressing": 1.89, "level_heute": 6.67, "level_ceiling": 7.0}, "mittel_bereinigt": 7.14, "n_bereinigt": 8}, "3": {"n": 9, "mittel": {"technik": 2.78, "spielintelligenz": 2.0, "athletik": 3.89, "mentalitaet": 3.67, "abschluss": 3.22, "strafraumbewegung": 3.33, "wandspiel": 4.33, "pressingauslösung": 2.89, "level_heute": 5.56, "level_ceiling": 7.0}, "mittel_bereinigt": 5.46, "n_bereinigt": 8}, "4": {"n": 10, "mittel": {"technik": 2.7, "spielintelligenz": 4.3, "athletik": 2.5, "mentalitaet": 4.0, "ballzirkulation": 3.3, "pressingresistenz": 3.6, "vertikalpass": 2.4, "arbeit_gegen_ball": 4.0, "level_heute": 6.2, "level_ceiling": 6.1}, "mittel_bereinigt": 6.56, "n_bereinigt": 8}, "5": {"n": 9, "mittel": {"technik": 3.33, "spielintelligenz": 3.11, "athletik": 3.33, "mentalitaet": 2.67, "eins_gegen_eins_off": 4.44, "tiefenlauf": 3.0, "hereingabe": 2.67, "abschluss": 2.67, "level_heute": 5.89, "level_ceiling": 5.78}, "mittel_bereinigt": 5.92, "n_bereinigt": 8}, "6": {"n": 9, "mittel": {"technik": 2.89, "spielintelligenz": 3.0, "athletik": 4.11, "mentalitaet": 3.67, "verteidigen_duell": 3.67, "kopfball": 4.44, "spieleroeffnung": 2.0, "raumverteidigung": 3.11, "level_heute": 4.22, "level_ceiling": 7.11}, "mittel_bereinigt": 3.89, "n_bereinigt": 8}}};
+</script>
+
+<script>
+
+/* ------------------------------------------------------------------ Attrappe
+   Statt eines Servers: aufgezeichnete Antworten eines echten Laufs. Nur die
+   Abgabe wird hier gerechnet, weil sie von der Eingabe abhaengt - drei
+   Formeln, die im Original in metriken.py stehen. Alles andere ist wortwoertlich
+   das, was der Server geliefert hat.                                        */
+const DATEN = window.__SL_DATEN;
+const ZUSTAND = JSON.parse(JSON.stringify(DATEN.pack));
+
+const mittel = (xs) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+
+function naehe(werte, modell, spanne) {
+  const d = Object.keys(modell || {})
+    .filter((k) => werte[k] !== undefined && werte[k] !== null)
+    .map((k) => Math.abs(Number(werte[k]) - Number(modell[k])));
+  return d.length ? Math.round((100 * (1 - mittel(d) / spanne)) * 10) / 10 : null;
+}
+
+function abgabe(koerper) {
+  const fall = ZUSTAND.faelle.find((f) => f.id === koerper.fall_id);
+  const modell = DATEN.modelle[String(koerper.fall_id)] || {};
+  const leit = ZUSTAND.fragebogen.level.fragen.find((q) => q.leitfrage).key;
+
+  fall.eigene_bewertung = {
+    level: koerper.level || {}, antworten: koerper.antworten || {},
+    prognosen: koerper.prognosen || {}, notiz: koerper.notiz || "",
+    abgegeben: !!koerper.abgeben, geaendert_am: new Date().toISOString(),
+  };
+  if (!koerper.abgeben) return { gespeichert: true, abgegeben: false };
+
+  const meins = Number((koerper.level || {})[leit]);
+  const seins = Number((modell.level || {})[leit]);
+  const abstand = (Number.isFinite(meins) && Number.isFinite(seins))
+    ? Math.round((meins - seins) * 10) / 10 : null;
+  const attr = fall.attribute
+    .map((a) => Number((koerper.antworten || {})[a.key]))
+    .filter(Number.isFinite);
+
+  fall.modell = modell;
+  fall.rueckmeldung = {
+    modell_naehe: naehe(koerper.antworten || {}, modell.bewertung, 4),
+    prognose_naehe: naehe(koerper.prognosen || {}, modell.prognose, 1),
+    level_abstand: abstand,
+    konflikt: (abstand !== null && Math.abs(abstand) >= 2)
+      ? { differenz: abstand,
+          richtung: abstand > 0 ? "scout_hoeher" : "modell_hoeher" } : null,
+    attribut_mittel: attr.length ? Math.round(mittel(attr) * 100) / 100 : null,
+    kohorte: DATEN.kohorten[String(koerper.fall_id)] || null,
+  };
+  return { gespeichert: true, abgegeben: true, modell: modell,
+           rueckmeldung: fall.rueckmeldung };
+}
+
+const ROUTEN = {
+  "/api/fragebogen": () => DATEN.fragebogen,
+  "/api/anmelden": () => DATEN.anmelden,
+  "/api/pack": () => ZUSTAND,
+  "/api/profil": () => DATEN.profil,
+  "/api/leaderboard": () => DATEN.leaderboard,
+  "/api/admin/uebersicht": () => DATEN.uebersicht,
+  "/api/admin/kalibrierung": () => DATEN.kalibrierung,
+  "/api/admin/pack_status": () => ({ hinweis: "In der Vorschau ohne Wirkung." }),
+  "/api/admin/aufloesen": () => ({ hinweis: "In der Vorschau ohne Wirkung." }),
+};
+
+window.fetch = function (eingabe, optionen) {
+  const pfad = String(eingabe).replace(/^https?:\/\/[^/]+/, "").split("?")[0];
+  let antwort;
+  if (pfad === "/api/bewertung") {
+    antwort = abgabe(JSON.parse((optionen || {}).body || "{}"));
+  } else if (pfad === "/api/admin/export.csv") {
+    return Promise.resolve(new Response(DATEN.csv,
+      { status: 200, headers: { "Content-Type": "text/csv" } }));
+  } else if (ROUTEN[pfad]) {
+    antwort = ROUTEN[pfad]();
+  } else {
+    return Promise.resolve(new Response(
+      JSON.stringify({ fehler: "In der Vorschau nicht hinterlegt." }),
+      { status: 404, headers: { "Content-Type": "application/json" } }));
+  }
+  return Promise.resolve(new Response(JSON.stringify(antwort),
+    { status: 200, headers: { "Content-Type": "application/json" } }));
+};
+
+/* Angemeldet starten - ein Code-Eingabefeld waere in einer Vorschau nur eine
+   Huerde vor dem, was gezeigt werden soll. */
+try { localStorage.setItem("sl_code", DATEN.anmelden.code); } catch (e) {}
+try { sessionStorage.setItem("sl_admin", "vorschau"); } catch (e) {}
+
+</script>
+
+<script>
+(function () {
+  const WURZEL = document.getElementById("app-scout");
+/* Scout League - Frontend. Kein Build, kein Framework: eine Datei, die der
+   Server so ausliefert, wie sie hier steht. */
+"use strict";
+
+/* Browser-Speicher kann werfen, nicht nur leer sein - privates Fenster,
+   blockierte Site-Daten. Ein Anmeldecode ist Bequemlichkeit, kein Zustand,
+   ohne den die App laufen muesste. */
+const speicher = {
+  lies(key) {
+    try { return localStorage.getItem(key) || ""; } catch (e) { return ""; }
+  },
+  schreib(key, wert) {
+    try { localStorage.setItem(key, wert); } catch (e) { /* egal */ }
+  },
+  loesche(key) {
+    try { localStorage.removeItem(key); } catch (e) { /* egal */ }
+  },
+};
+
+const S = {
+  code: speicher.lies("sl_code"),
+  name: "",
+  daten: null,          // Antwort von /api/pack
+  fall: null,           // aktuell geoeffneter Fall
+  entwurf: null,        // {antworten, prognosen, notiz}
+  begonnen: 0,
+};
+
+const el = (s) => document.getElementById(s);
+
+function esc(t) {
+  return String(t == null ? "" : t).replace(/[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function zahl(v, n = 1, fallback = "–") {
+  return (v === null || v === undefined || Number.isNaN(v))
+    ? fallback : Number(v).toFixed(n);
+}
+
+/* Prognoseschluessel auf den Fragetext - das Leaderboard ist auch fuer
+   Leute lesbar, die den Fragebogen nicht kennen. */
+function prognoseLabel(key) {
+  const fb = S.daten && S.daten.fragebogen;
+  const p = fb && fb.prognosen.find((x) => x.key === key);
+  return p ? p.label : key;
+}
+
+async function api(pfad, optionen = {}) {
+  const kopf = Object.assign({ "Content-Type": "application/json" },
+                             optionen.headers || {});
+  if (S.code) kopf["X-Scout-Code"] = S.code;
+  const r = await fetch(pfad, Object.assign({}, optionen, { headers: kopf }));
+  const text = await r.text();
+  let daten = null;
+  try { daten = text ? JSON.parse(text) : null; } catch (e) { daten = null; }
+  if (!r.ok) throw new Error((daten && daten.fehler) || `Fehler ${r.status}`);
+  return daten;
+}
+
+function meldung(ziel, text, art = "fehler") {
+  el(ziel).innerHTML = text
+    ? `<div class="meldung ${art}">${esc(text)}</div>` : "";
+}
+
+/* --------------------------------------------------------------- Navigation */
+const TABS = ["pack", "fall", "profil", "liga"];
+
+function zeige(tab) {
+  TABS.forEach((t) => { el("tab-" + t).hidden = (t !== tab); });
+  el("anmeldung").hidden = true;
+  el("kopf").hidden = false;
+  WURZEL.querySelectorAll("#kopf nav button").forEach((b) => {
+    b.setAttribute("aria-current", String(b.dataset.tab === tab));
+  });
+  window.scrollTo(0, 0);
+}
+
+WURZEL.querySelectorAll("#kopf nav button").forEach((b) => {
+  b.addEventListener("click", () => {
+    if (b.dataset.tab === "abmelden") return abmelden();
+    if (b.dataset.tab === "profil") return profilLaden();
+    if (b.dataset.tab === "liga") return ligaLaden();
+    packLaden();
+  });
+});
+
+el("zurueck").addEventListener("click", () => packLaden());
+
+function abmelden() {
+  speicher.loesche("sl_code");
+  location.reload();
+}
+
+/* --------------------------------------------------------------- Anmeldung */
+el("anmeldeform").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const code = el("code").value.trim().toUpperCase();
+  if (!code) return;
+  try {
+    S.code = code;
+    const r = await api("/api/anmelden", {
+      method: "POST", body: JSON.stringify({ code }),
+    });
+    S.name = r.name;
+    speicher.schreib("sl_code", code);
+    el("wer").textContent = "· " + r.name;
+    packLaden();
+  } catch (err) {
+    S.code = "";
+    meldung("anmeldefehler", err.message);
+  }
+});
+
+/* --------------------------------------------------------------- Case Pack */
+async function packLaden() {
+  try {
+    S.daten = await api("/api/pack");
+  } catch (err) {
+    if (String(err.message).includes("Scout-Code")) return abmelden();
+    zeige("pack");
+    el("falliste").innerHTML = "";
+    return meldung("packmeldung", err.message);
+  }
+  const d = S.daten;
+  el("packtitel").textContent = d.pack.titel;
+  const fertig = d.faelle.filter((f) => f.eigene_bewertung.abgegeben).length;
+  el("packsub").textContent =
+    `${fertig} von ${d.faelle.length} abgegeben`
+    + (d.pack.status === "offen" ? "" : " · Pack geschlossen");
+  meldung("packmeldung",
+    fertig === d.faelle.length && d.faelle.length
+      ? "Pack vollständig. Deine Prognosen lösen wir auf, sobald die Realität geantwortet hat."
+      : "", "ok");
+
+  el("falliste").innerHTML = d.faelle.map((f, i) => `
+    <button class="fallzeile" data-fall="${f.id}">
+      <span class="nr mono">${i + 1}</span>
+      <span class="txt">
+        <span class="name">${esc(f.name)}</span>
+        <span class="meta">${esc([f.position, f.jahrgang, f.verein]
+          .filter(Boolean).join(" · "))}</span>
+      </span>
+      <span class="abzeichen ${f.eigene_bewertung.abgegeben ? "gut" : "offen"}">
+        ${f.eigene_bewertung.abgegeben ? "abgegeben" : "offen"}</span>
+    </button>`).join("");
+
+  WURZEL.querySelectorAll("[data-fall]").forEach((b) => {
+    b.addEventListener("click", () => fallOeffnen(Number(b.dataset.fall)));
+  });
+  zeige("pack");
+}
+
+/* -------------------------------------------------------------- Ein Fall */
+function fallOeffnen(id) {
+  S.fall = S.daten.faelle.find((f) => f.id === id);
+  S.entwurf = {
+    level: Object.assign({}, S.fall.eigene_bewertung.level),
+    antworten: Object.assign({}, S.fall.eigene_bewertung.antworten),
+    prognosen: Object.assign({}, S.fall.eigene_bewertung.prognosen),
+    notiz: S.fall.eigene_bewertung.notiz || "",
+  };
+  S.begonnen = Date.now();
+  fallZeichnen();
+  zeige("fall");
+}
+
+function videoBlock(url) {
+  if (!url || !/^https:\/\//i.test(url)) return "";
+  const sicher = esc(url);
+  if (/\.(mp4|webm|mov)(\?|$)/i.test(url)) {
+    return `<div class="video"><video controls preload="metadata"
+              src="${sicher}"></video></div>`;
+  }
+  return `<div class="video"><iframe src="${sicher}" loading="lazy"
+            referrerpolicy="no-referrer"
+            allow="accelerometer; encrypted-media; picture-in-picture"
+            allowfullscreen></iframe></div>`;
+}
+
+function indexBlock(indizes, attribute) {
+  const eintraege = attribute
+    .filter((q) => indizes[q.key] !== undefined && indizes[q.key] !== null)
+    .map((q) => ({ label: q.label, wert: Number(indizes[q.key]) }));
+  if (!eintraege.length) return "";
+  return `<h3>Aggregierte Indizes</h3>
+    <div class="indizes">${eintraege.map((e) => `
+      <div class="indexzeile">
+        <span class="muted">${esc(e.label)}</span>
+        <span class="balken"><i style="width:${Math.max(0, Math.min(100, e.wert))}%"></i></span>
+        <span class="mono" style="text-align:right">${Math.round(e.wert)}</span>
+      </div>`).join("")}</div>
+    <p class="klein muted" style="margin-top:8px">Skala 0&ndash;100, positionsnormiert.
+    Eigene Indizes, keine Rohdaten.</p>`;
+}
+
+/* Level Rating. Zehn Stufen mit echten Liga-Ankern - der Punkt aus dem Audit
+   ist, dass die Anker im Moment der Entscheidung sichtbar sein muessen, nicht
+   in einer Fussnote. Deshalb steht unter der Auswahl immer die Stufe, die
+   gerade gewaehlt ist, und die volle Tabelle liegt einen Klick daneben. */
+function levelBlock(frage, stufen, wert, gesperrt) {
+  const gewaehlt = stufen.find((st) => st.wert === wert);
+  return `<div class="levelfrage" data-level="${esc(frage.key)}">
+    <div class="label">${esc(frage.frage)}</div>
+    <div class="klein muted" style="margin-bottom:8px">${esc(frage.erlaeuterung || "")}</div>
+    <div class="levelskala">
+      ${stufen.slice().sort((a, b) => a.wert - b.wert).map((st) => `
+        <button type="button" data-wert="${st.wert}"
+          aria-pressed="${wert === st.wert}" title="${esc(st.ligen)}"
+          ${gesperrt ? "disabled" : ""}>${st.wert}</button>`).join("")}
+    </div>
+    <div class="levelanker">${gewaehlt ? `
+      <b>${gewaehlt.wert} · ${esc(gewaehlt.ligen)}</b>
+      <span class="muted">${esc(gewaehlt.kontext)} · ${esc(gewaehlt.marktwert)}</span>`
+      : `<span class="muted">Noch keine Stufe gewählt.</span>`}</div>
+    <details class="leveltabelle">
+      <summary class="klein">Alle Stufen anzeigen</summary>
+      <table class="vergleich">
+        ${stufen.map((st) => `<tr${st.wert === wert ? ' class="ich"' : ""}>
+          <td class="zahl mono" style="width:26px">${st.wert}</td>
+          <td>${esc(st.ligen)}<br><span class="muted klein">${esc(st.kontext)}</span></td>
+          <td class="zahl muted" style="white-space:nowrap">${esc(st.marktwert)}</td>
+        </tr>`).join("")}
+      </table>
+    </details>
+  </div>`;
+}
+
+function fallZeichnen() {
+  const f = S.fall;
+  const fb = S.daten.fragebogen;
+  const gesperrt = f.eigene_bewertung.abgegeben || S.daten.pack.status !== "offen";
+
+  const steckbrief = [
+    ["Position", f.position], ["Rolle", f.positionsgruppe_label],
+    ["Jahrgang", f.jahrgang], ["Verein", f.verein], ["Liga", f.liga],
+    ["Fuß", f.fuss],
+  ].filter(([, v]) => v).map(([k, v]) =>
+    `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
+
+  const levelHtml = fb.level.fragen.map((q) =>
+    levelBlock(q, fb.level.stufen, S.entwurf.level[q.key], gesperrt)).join("");
+
+  const attrHtml = f.attribute.map((q) => `
+    <div class="frage">
+      <div class="label">${esc(q.label)}</div>
+      <div class="anker"><span>1 &ndash; ${esc(q.anker1 || "")}</span>
+                         <span>${esc(q.anker5 || "")} &ndash; 5</span></div>
+      <div class="skala" data-frage="${esc(q.key)}">
+        ${[1, 2, 3, 4, 5].map((n) => `
+          <button type="button" data-wert="${n}"
+            aria-pressed="${S.entwurf.antworten[q.key] === n}"
+            ${gesperrt ? "disabled" : ""}>${n}</button>`).join("")}
+      </div>
+    </div>`).join("");
+
+  const prognosenHtml = fb.prognosen.map((p) => {
+    const param = p.parameter ? (f.parameter || {})[p.parameter] : null;
+    const wert = S.entwurf.prognosen[p.key];
+    const prozent = wert === undefined ? 50 : Math.round(wert * 100);
+    return `<div class="prognose" data-prognose="${esc(p.key)}">
+      <div class="kopfzeile">
+        <div>
+          <div class="label" style="font-weight:600">${esc(p.label)}${
+            param ? " &mdash; " + esc(param) : ""}</div>
+          <div class="klein muted">${esc(p.erlaeuterung || "")}</div>
+        </div>
+        <div class="wert mono">${wert === undefined ? "–" : prozent + "%"}</div>
+      </div>
+      <input type="range" min="0" max="100" step="5" value="${prozent}"
+             ${gesperrt ? "disabled" : ""}>
+    </div>`;
+  }).join("");
+
+  el("fallinhalt").innerHTML = `
+    <h1>${esc(f.name)}</h1>
+    <p class="sub">${esc([f.position, f.jahrgang, f.verein, f.liga]
+      .filter(Boolean).join(" · "))}</p>
+
+    <div class="karte">
+      <dl class="steckbrief" style="margin-top:0">${steckbrief}</dl>
+      ${videoBlock(f.video_url)}
+      ${indexBlock(f.indizes, f.attribute)}
+    </div>
+
+    <div id="rueckmeldung"></div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">${esc(fb.level.titel)}</h2>
+      <p class="klein muted">Jede Stufe ist ein reales Liga-Niveau mit
+      Marktwertband. Beide Fragen unabhängig beantworten &mdash; das Ceiling ist
+      kein Aufschlag auf das bewiesene Niveau.</p>
+      ${levelHtml}
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">Attribute
+        <span class="abzeichen">${esc(f.positionsgruppe)}</span></h2>
+      <p class="klein muted">Verpflichtendes Set für
+      ${esc(f.positionsgruppe_label)}. Höher ist besser &mdash; auf jeder Skala
+      hier. Nutze die ganze Breite: wer überall die 3 vergibt, erzeugt keine
+      Information.</p>
+      ${attrHtml}
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">Prognosen</h2>
+      <p class="klein muted">Wie wahrscheinlich ist das? 0&nbsp;% heißt sicher nicht,
+      100&nbsp;% heißt sicher ja. Bewertet wird mit dem Brier-Score &mdash;
+      übertriebene Sicherheit kostet mehr, als sie einbringt.</p>
+      ${prognosenHtml}
+    </div>
+
+    <div class="karte">
+      <label class="klein muted" for="notiz">${esc(fb.notiz.label)}</label>
+      <textarea id="notiz" maxlength="${fb.notiz.max_zeichen}"
+        ${gesperrt ? "disabled" : ""}>${esc(S.entwurf.notiz)}</textarea>
+    </div>
+
+    <div id="fallmeldung"></div>
+    ${gesperrt ? `<p class="klein muted">Abgegeben am
+        ${esc((f.eigene_bewertung.geaendert_am || "").replace("T", " ").slice(0, 16))}
+        &mdash; Bewertungen bleiben danach gesperrt.</p>`
+      : `<div class="reihe">
+           <button class="knopf" id="abgeben">Abgeben</button>
+           <button class="knopf leise" id="speichern">Zwischenstand sichern</button>
+           <span class="klein muted" id="fortschritt"></span>
+         </div>
+         <p class="klein muted" style="margin-top:10px">Nach der Abgabe siehst du
+         die Modellerwartung. Vorher bleibt sie verborgen &mdash; sonst wäre die
+         Modell-Nähe kein Maß, sondern eine Vorlage.</p>`}
+  `;
+
+  if (f.eigene_bewertung.abgegeben) rueckmeldungZeichnen(f.rueckmeldung, f.modell);
+  fallVerdrahten(gesperrt);
+}
+
+function fallVerdrahten(gesperrt) {
+  if (gesperrt) return;
+
+  WURZEL.querySelectorAll(".levelfrage").forEach((box) => {
+    box.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-wert]");
+      if (!b) return;
+      const key = box.dataset.level;
+      const wert = Number(b.dataset.wert);
+      S.entwurf.level[key] = wert;
+      // Nur den Ankertext und die Markierung nachziehen. Das Element neu zu
+      // bauen wuerde bei jedem Klick weitere Listener anhaengen - und die
+      // Abgabe dann mehrfach abschicken.
+      box.querySelectorAll(".levelskala button").forEach((x) => {
+        x.setAttribute("aria-pressed", String(Number(x.dataset.wert) === wert));
+      });
+      const stufe = S.daten.fragebogen.level.stufen.find((st) => st.wert === wert);
+      const anker = box.querySelector(".levelanker");
+      if (anker && stufe) {
+        anker.innerHTML = `<b>${stufe.wert} · ${esc(stufe.ligen)}</b>`
+          + `<span class="muted">${esc(stufe.kontext)} · ${esc(stufe.marktwert)}</span>`;
+      }
+      box.querySelectorAll(".leveltabelle tr").forEach((tr) => {
+        tr.classList.toggle("ich",
+          Number(tr.firstElementChild.textContent.trim()) === wert);
+      });
+      fortschritt();
+    });
+  });
+
+  WURZEL.querySelectorAll(".skala").forEach((skala) => {
+    skala.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-wert]");
+      if (!b) return;
+      const key = skala.dataset.frage;
+      const wert = Number(b.dataset.wert);
+      S.entwurf.antworten[key] = wert;
+      skala.querySelectorAll("button").forEach((x) => {
+        x.setAttribute("aria-pressed", String(Number(x.dataset.wert) === wert));
+      });
+      fortschritt();
+    });
+  });
+
+  WURZEL.querySelectorAll(".prognose").forEach((box) => {
+    const range = box.querySelector("input[type=range]");
+    const anzeige = box.querySelector(".wert");
+    const setzen = () => {
+      S.entwurf.prognosen[box.dataset.prognose] = Number(range.value) / 100;
+      anzeige.textContent = range.value + "%";
+      fortschritt();
+    };
+    range.addEventListener("input", setzen);
+    range.addEventListener("change", setzen);
+  });
+
+  const notiz = el("notiz");
+  if (notiz) notiz.addEventListener("input", () => { S.entwurf.notiz = notiz.value; });
+
+  el("speichern").addEventListener("click", () => senden(false));
+  el("abgeben").addEventListener("click", () => senden(true));
+  fortschritt();
+}
+
+function fortschritt() {
+  const fb = S.daten.fragebogen;
+  const attribute = S.fall.attribute;
+  const l = fb.level.fragen.filter(
+    (q) => S.entwurf.level[q.key] !== undefined).length;
+  const a = attribute.filter(
+    (q) => S.entwurf.antworten[q.key] !== undefined).length;
+  const p = fb.prognosen.filter(
+    (q) => S.entwurf.prognosen[q.key] !== undefined).length;
+  const voll = l === fb.level.fragen.length && a === attribute.length
+    && p === fb.prognosen.length;
+  const box = el("fortschritt");
+  if (box) {
+    box.textContent = `${l}/${fb.level.fragen.length} Level · `
+      + `${a}/${attribute.length} Attribute · `
+      + `${p}/${fb.prognosen.length} Prognosen`;
+  }
+  const knopf = el("abgeben");
+  if (knopf) knopf.disabled = !voll;
+}
+
+async function senden(abgeben) {
+  meldung("fallmeldung", "");
+  try {
+    const r = await api("/api/bewertung", {
+      method: "POST",
+      body: JSON.stringify({
+        fall_id: S.fall.id,
+        level: S.entwurf.level,
+        antworten: S.entwurf.antworten,
+        prognosen: S.entwurf.prognosen,
+        notiz: S.entwurf.notiz,
+        sekunden: Math.round((Date.now() - S.begonnen) / 1000),
+        abgeben: abgeben,
+      }),
+    });
+    if (!abgeben) return meldung("fallmeldung", "Zwischenstand gesichert.", "ok");
+
+    // Der Entwurf ist ab jetzt der Bestand - die Rueckmeldungstabelle liest
+    // aus eigene_bewertung, nicht aus dem Entwurf.
+    S.fall.eigene_bewertung.level = Object.assign({}, S.entwurf.level);
+    S.fall.eigene_bewertung.antworten = Object.assign({}, S.entwurf.antworten);
+    S.fall.eigene_bewertung.prognosen = Object.assign({}, S.entwurf.prognosen);
+    S.fall.eigene_bewertung.notiz = S.entwurf.notiz;
+    S.fall.eigene_bewertung.abgegeben = true;
+    S.fall.eigene_bewertung.geaendert_am = new Date().toISOString();
+    S.fall.modell = r.modell;
+    S.fall.rueckmeldung = r.rueckmeldung;
+    fallZeichnen();
+    meldung("fallmeldung", "Abgegeben.", "ok");
+  } catch (err) {
+    meldung("fallmeldung", err.message);
+  }
+}
+
+function rueckmeldungZeichnen(r, modell) {
+  if (!r) return;
+  const fb = S.daten.fragebogen;
+  const mb = (modell && modell.bewertung) || {};
+  const mp = (modell && modell.prognose) || {};
+  const ml = (modell && modell.level) || {};
+  const antw = S.fall.eigene_bewertung.antworten;
+  const lvl = S.fall.eigene_bewertung.level;
+  const prog = S.fall.eigene_bewertung.prognosen;
+  const koh = r.kohorte;
+
+  const kohWert = (key) => {
+    if (!koh || !koh.mittel) return "–";
+    const v = koh.mittel[key];
+    return v === undefined || v === null ? "–" : zahl(v, 1);
+  };
+
+  const levelZeilen = fb.level.fragen.map((q) => `
+    <tr><td>${esc(q.label)}</td>
+      <td class="zahl">${lvl[q.key] === undefined ? "–" : lvl[q.key]}</td>
+      <td class="zahl">${ml[q.key] === undefined ? "–" : zahl(ml[q.key], 1)}</td>
+      <td class="zahl muted">${kohWert(q.key)}</td></tr>`).join("");
+
+  const attrZeilen = S.fall.attribute.map((q) => `
+    <tr><td>${esc(q.label)}</td>
+      <td class="zahl">${antw[q.key] === undefined ? "–" : antw[q.key]}</td>
+      <td class="zahl">${mb[q.key] === undefined ? "–" : zahl(mb[q.key], 1)}</td>
+      <td class="zahl muted">${kohWert(q.key)}</td></tr>`).join("");
+
+  const progZeilen = fb.prognosen.map((p) => `
+    <tr><td>${esc(p.label)}</td>
+      <td class="zahl">${prog[p.key] === undefined ? "–"
+        : Math.round(prog[p.key] * 100) + "%"}</td>
+      <td class="zahl">${mp[p.key] === undefined ? "–"
+        : Math.round(mp[p.key] * 100) + "%"}</td>
+      <td class="zahl muted">offen</td></tr>`).join("");
+
+  const k = r.konflikt;
+  const konfliktBox = k ? `
+    <div class="meldung ${k.richtung === "scout_hoeher" ? "warn" : "warn"}"
+         style="margin:12px 0 0">
+      <b>Konfliktfall.</b> ${k.richtung === "scout_hoeher"
+        ? `Du siehst ihn ${Math.abs(k.differenz)} Stufen über dem Modell —
+           Bauchgefühl ohne Datenstütze, oder das Modell übersieht etwas.`
+        : `Das Modell sieht ihn ${Math.abs(k.differenz)} Stufen über dir —
+           möglicherweise ein Übersehener.`}
+      Solche Fälle landen auf der Review-Liste; dort steckt laut Audit der
+      meiste Erkenntnisgewinn.
+    </div>` : "";
+
+  el("rueckmeldung").innerHTML = `
+    <div class="karte">
+      <h2 style="margin-top:0">Sofort-Rückmeldung</h2>
+      <div class="kennzahl">
+        <div><div class="k">LEVEL-ABSTAND</div>
+             <div class="v">${r.level_abstand === null ? "–"
+               : (r.level_abstand > 0 ? "+" : "") + zahl(r.level_abstand, 1)}</div>
+             <div class="n">du gegen Modell</div></div>
+        <div><div class="k">MODELL-NÄHE</div>
+             <div class="v">${zahl(r.modell_naehe, 0)}</div>
+             <div class="n">0&ndash;100, Attribute</div></div>
+        <div><div class="k">PROGNOSE-NÄHE</div>
+             <div class="v">${zahl(r.prognose_naehe, 0)}</div>
+             <div class="n">0&ndash;100, gegen Modell</div></div>
+        <div><div class="k">ATTRIBUT-MITTEL</div>
+             <div class="v">${zahl(r.attribut_mittel, 1)}</div>
+             <div class="n">dein Schnitt, 1&ndash;5</div></div>
+      </div>
+      ${konfliktBox}
+      <p class="klein muted" style="margin-top:10px">Nähe ist kein Gütemaß.
+      Wer vom Modell abweicht und recht behält, gewinnt die Liga &mdash;
+      entschieden wird sie über den Brier-Score gegen die Realität.</p>
+      <div class="scroll"><table class="vergleich">
+        <tr><th>Level Rating</th><th class="zahl">Du</th><th class="zahl">Modell</th>
+            <th class="zahl">Feld</th></tr>
+        ${levelZeilen}
+        <tr><th style="padding-top:14px">Attribut</th>
+            <th class="zahl" style="padding-top:14px">Du</th>
+            <th class="zahl" style="padding-top:14px">Modell</th>
+            <th class="zahl" style="padding-top:14px">Feld</th></tr>
+        ${attrZeilen}
+        <tr><th style="padding-top:14px">Prognose</th>
+            <th class="zahl" style="padding-top:14px">Du</th>
+            <th class="zahl" style="padding-top:14px">Modell</th>
+            <th class="zahl" style="padding-top:14px">Realität</th></tr>
+        ${progZeilen}
+      </table></div>
+      ${koh ? `<p class="klein muted">Feld = Mittel aus ${koh.n} Abgaben.${
+          koh.mittel_bereinigt !== undefined
+            ? ` Rater-bereinigt (jeder Scout an seinen eigenen Abgaben
+                z-standardisiert): <b>${zahl(koh.mittel_bereinigt, 1)}</b>
+                auf der Leitfrage.` : ""}</p>`
+        : `<p class="klein muted">Der Feldvergleich erscheint ab drei Abgaben
+           zu diesem Fall.</p>`}
+    </div>`;
+}
+
+/* ---------------------------------------------------------------- Profil */
+async function profilLaden() {
+  zeige("profil");
+  el("profilinhalt").innerHTML = `<p class="muted">Lädt …</p>`;
+  let p;
+  try { p = await api("/api/profil"); }
+  catch (err) { return el("profilinhalt").innerHTML =
+    `<div class="meldung fehler">${esc(err.message)}</div>`; }
+
+  const sw = p.schwellen || {};
+  const v = p.verteilung || {};
+  const stufen = Object.keys(v).sort((a, b) => Number(a) - Number(b));
+  const max = Math.max(1, ...Object.values(v));
+  const balken = stufen.map((k) =>
+    `<div style="height:${Math.round((v[k] / max) * 100)}%"><b>${v[k] || ""}</b></div>`
+  ).join("");
+  const achse = stufen.map((k) => `<span>${k}</span>`).join("");
+
+  // Unter einer Handvoll Faellen ist jede dieser Diagnosen Rauschen: wer einen
+  // Spieler bewertet hat, hat per Konstruktion 100 % auf einer Stufe.
+  const mind = sw.mindest_faelle_diagnose || 5;
+  const genug = p.n_faelle >= mind;
+  const zt = p.zentraltendenz;
+  const ztWarn = genug && zt && zt.anteil > (sw.zentraltendenz_max || 0.35);
+  const haloWarn = p.halo !== null && p.halo >= (sw.halo_warnung || 0.75);
+  const entWarn = p.entkopplung !== null
+    && p.entkopplung >= (sw.entkopplung_warnung || 0.55);
+  const messbar = p.halo !== null || p.entkopplung !== null;
+  const kurve = (p.kalibrierungskurve || []).filter((b) => b.n > 0);
+
+  el("profilinhalt").innerHTML = `
+    <div class="karte">
+      <h2 style="margin-top:0">Wie du bewertest</h2>
+      <div class="kennzahl">
+        <div><div class="k">FÄLLE</div><div class="v">${p.n_faelle}</div>
+             <div class="n">abgegeben</div></div>
+        <div><div class="k">SPREIZUNG</div><div class="v">${zahl(p.spreizung, 2)}</div>
+             <div class="n">Streuung deiner Level</div></div>
+        <div><div class="k">BIAS</div>
+             <div class="v">${p.bias === null ? "–"
+               : (p.bias > 0 ? "+" : "") + zahl(p.bias, 2)}</div>
+             <div class="n">gegen das Feld</div></div>
+        <div><div class="k">TRENNSCHÄRFE</div>
+             <div class="v">${zahl(p.trennschaerfe, 2)}</div>
+             <div class="n">Rangkorrelation Modell</div></div>
+      </div>
+      <h3>Verteilung deiner bewiesenen Level</h3>
+      <div class="verteilung">${balken}</div>
+      <div class="achse">${achse}</div>
+      ${zt ? `<p class="klein ${ztWarn ? "warnton" : "muted"}">
+        ${Math.round(zt.anteil * 100)}&nbsp;% deiner Level entfallen auf Stufe
+        ${zt.modalwert}; du nutzt ${zt.genutzte_stufen} der 10 Stufen.
+        ${!genug ? `Als Diagnose zählt das erst ab ${mind} bewerteten Fällen —
+           bis dahin ist die Zahl eine Momentaufnahme.`
+          : ztWarn ? `Ziel sind höchstens ${Math.round(
+            (sw.zentraltendenz_max || 0.35) * 100)}&nbsp;% auf einer Stufe —
+            darunter kann die Skala nicht ranken.`
+          : "Das liegt im Zielkorridor."}</p>` : ""}
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">Wie eigenständig deine Urteile sind</h2>
+      <div class="kennzahl">
+        <div><div class="k">HALO</div><div class="v">${zahl(p.halo, 2)}</div>
+             <div class="n">Level ↔ Attribut-Mittel</div></div>
+        <div><div class="k">ENTKOPPLUNG</div>
+             <div class="v">${zahl(p.entkopplung, 2)}</div>
+             <div class="n">Niveau ↔ Ceiling</div></div>
+      </div>
+      <p class="klein ${haloWarn || entWarn ? "warnton" : "muted"}">
+        ${!messbar ? `Beide Korrelationen brauchen mindestens drei abgegebene
+           Fälle mit unterschiedlichen Bewertungen. Wer überall dasselbe
+           vergibt, hat keinen messbaren Halo — das zeigt dann die Spreizung
+           oben.` : ""}
+        ${haloWarn ? `Dein Level folgt dem Attribut-Mittel fast eins zu eins
+           (r = ${zahl(p.halo, 2)}) — das Gesamturteil trägt dann kaum eigene
+           Information. ` : ""}
+        ${entWarn ? `Bewiesenes Niveau und Ceiling laufen bei dir gleich
+           (r = ${zahl(p.entkopplung, 2)}) — das Ceiling wirkt wie ein Aufschlag
+           statt wie eine eigene Schätzung. ` : ""}
+        ${messbar && !haloWarn && !entWarn ? `Was messbar ist, liegt im
+           unkritischen Bereich: dein Gesamturteil ist mehr als der Schnitt der
+           Attribute, und das Ceiling ist eine eigene Einschätzung.` : ""}
+      </p>
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">Ob du recht behältst</h2>
+      ${p.n_aufgeloest ? `
+        <div class="kennzahl">
+          <div><div class="k">BRIER</div><div class="v">${zahl(p.brier, 3)}</div>
+               <div class="n">0 perfekt, 0,25 Münzwurf</div></div>
+          <div><div class="k">BRIER-SKILL</div>
+               <div class="v">${zahl(p.brier_skill, 2)}</div>
+               <div class="n">gegen die Basisrate</div></div>
+          <div><div class="k">KALIBRIERUNG</div>
+               <div class="v">${zahl(p.kalibrierungsfehler, 3)}</div>
+               <div class="n">Abstand gesagt/eingetreten</div></div>
+          <div><div class="k">AUFGELÖST</div><div class="v">${p.n_aufgeloest}</div>
+               <div class="n">Prognosen</div></div>
+        </div>
+        ${kurve.length ? `<h3>Kalibrierung</h3>
+          <div class="scroll"><table class="vergleich">
+            <tr><th>Gesagt</th><th class="zahl">n</th><th class="zahl">Ø gesagt</th>
+                <th class="zahl">eingetreten</th></tr>
+            ${kurve.map((b) => `<tr>
+              <td>${Math.round(b.von * 100)}–${Math.round(b.bis * 100)}%</td>
+              <td class="zahl">${b.n}</td>
+              <td class="zahl">${Math.round(b.gesagt * 100)}%</td>
+              <td class="zahl">${Math.round(b.eingetreten * 100)}%</td></tr>`).join("")}
+          </table></div>` : ""}`
+        : `<p class="muted">Noch keine deiner Prognosen ist aufgelöst. Das dauert
+           bis zum Ende des Prognosehorizonts &mdash; bis dahin zählt oben, wie du
+           bewertest.</p>`}
+    </div>`;
+}
+
+/* ------------------------------------------------------------ Leaderboard */
+async function ligaLaden() {
+  zeige("liga");
+  el("ligainhalt").innerHTML = `<p class="muted">Lädt …</p>`;
+  let d;
+  try { d = await api("/api/leaderboard"); }
+  catch (err) { return el("ligainhalt").innerHTML =
+    `<div class="meldung fehler">${esc(err.message)}</div>`; }
+
+  el("ligasub").textContent = d.hinweis;
+  if (!d.zeilen.length) {
+    return el("ligainhalt").innerHTML =
+      `<p class="muted">Noch keine Abgaben.</p>`;
+  }
+
+  el("ligainhalt").innerHTML = `
+    <div class="karte scroll">
+      <table class="tab">
+        <tr><th>#</th><th>Scout</th><th class="zahl">Fälle</th>
+            <th class="zahl">Trennschärfe</th><th class="zahl">Spreizung</th>
+            <th class="zahl">Bias</th><th class="zahl">Halo</th>
+            <th class="zahl">Modell-Nähe</th>
+            <th class="zahl">Brier</th><th class="zahl">Skill</th></tr>
+        ${d.zeilen.map((z) => `
+          <tr class="${z.name === S.name ? "ich" : ""}">
+            <td class="mono">${z.rang}</td>
+            <td>${esc(z.name)}</td>
+            <td class="zahl">${z.n_faelle}</td>
+            <td class="zahl">${zahl(z.trennschaerfe, 2)}</td>
+            <td class="zahl">${zahl(z.spreizung, 2)}${
+              z.spreizungs_index !== null && z.spreizungs_index !== undefined
+                ? ` <span class="muted">(${zahl(z.spreizungs_index, 2)}×)</span>` : ""}</td>
+            <td class="zahl">${z.bias === null ? "–"
+              : (z.bias > 0 ? "+" : "") + zahl(z.bias, 2)}</td>
+            <td class="zahl">${zahl(z.halo, 2)}</td>
+            <td class="zahl">${zahl(z.modell_naehe, 0)}</td>
+            <td class="zahl">${z.n_aufgeloest ? zahl(z.brier, 3) : "–"}</td>
+            <td class="zahl">${z.n_aufgeloest ? zahl(z.brier_skill, 2) : "–"}</td>
+          </tr>`).join("")}
+      </table>
+    </div>
+    <div class="karte flach klein muted">
+      <b>Spreizung</b> Streuung der Gesamteinschätzung; in Klammern im Verhältnis
+      zum Median des Felds. &nbsp;
+      <b>Bias</b> Abstand zum Feldmittel &mdash; positiv heißt milder. &nbsp;
+      <b>Trennschärfe</b> Rangkorrelation mit dem Modell über alle Fälle. &nbsp;
+      <b>Halo</b> wie stark das Level dem Attribut-Mittel folgt — nahe 1 heißt,
+      das Gesamturteil ist nur ein Echo. &nbsp;
+      <b>Modell-Nähe</b> 0&ndash;100, ausdrücklich kein Gütemaß. &nbsp;
+      <b>Brier</b> Prognosefehler gegen die Realität, kleiner ist besser. &nbsp;
+      <b>Skill</b> Brier gegen die Basisrate &mdash; über 0 heißt besser als raten.
+      ${Object.keys(d.basisraten || {}).length ? `<br><br><b>Basisraten:</b> `
+        + Object.entries(d.basisraten).map(([k, v]) =>
+            `${esc(prognoseLabel(k))} ${Math.round(v * 100)}%`).join(" · ") : ""}
+    </div>`;
+}
+
+/* -------------------------------------------------------------------- Start */
+(async function start() {
+  if (!S.code) return;
+  try {
+    const r = await api("/api/anmelden", {
+      method: "POST", body: JSON.stringify({ code: S.code }),
+    });
+    S.name = r.name;
+    el("wer").textContent = "· " + r.name;
+    packLaden();
+  } catch (err) {
+    speicher.loesche("sl_code");
+    S.code = "";
+  }
+})();
+
+})();
+</script>
+
+<script>
+(function () {
+  const WURZEL = document.getElementById("app-admin");
+"use strict";
+const el = (s) => document.getElementById(s);
+const esc = (t) => String(t == null ? "" : t).replace(/[&<>"']/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* Sitzungsspeicher kann werfen, nicht nur leer sein. */
+const merke = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} };
+const hole = (k) => { try { return sessionStorage.getItem(k) || ""; } catch (e) { return ""; } };
+
+let TOKEN = hole("sl_admin");
+let FRAGEN = [];      // [{key, label}] aus dem Fragebogen
+let ANSICHT = "uebersicht";
+
+const zahl = (v, n = 2, f = "–") =>
+  (v === null || v === undefined || Number.isNaN(v)) ? f : Number(v).toFixed(n);
+
+async function api(pfad, optionen = {}) {
+  const kopf = Object.assign({ "Content-Type": "application/json",
+                               "X-Admin-Token": TOKEN }, optionen.headers || {});
+  const r = await fetch(pfad, Object.assign({}, optionen, { headers: kopf }));
+  const text = await r.text();
+  let d = null;
+  try { d = text ? JSON.parse(text) : null; } catch (e) { d = text; }
+  if (!r.ok) throw new Error((d && d.fehler) || `Fehler ${r.status}`);
+  return d;
+}
+
+el("laden").addEventListener("click", () => {
+  TOKEN = el("token").value.trim();
+  merke("sl_admin", TOKEN);
+  laden();
+});
+
+WURZEL.querySelectorAll("[data-ansicht]").forEach((b) => {
+  b.addEventListener("click", () => { ANSICHT = b.dataset.ansicht; laden(); });
+});
+
+async function laden() {
+  el("tokenfehler").innerHTML = "";
+  let u, fb;
+  try {
+    [u, fb] = await Promise.all([
+      api("/api/admin/uebersicht"),
+      fetch("/api/fragebogen").then((r) => r.ok ? r.json() : null).catch(() => null),
+    ]);
+  } catch (err) {
+    el("tokenfehler").innerHTML =
+      `<div class="meldung fehler">${esc(err.message)}</div>`;
+    return;
+  }
+  el("tokenkarte").hidden = true;
+  el("reiter").hidden = false;
+  WURZEL.querySelectorAll("[data-ansicht]").forEach((b) => {
+    b.style.background = b.dataset.ansicht === ANSICHT ? "var(--surface-2)" : "";
+  });
+  FRAGEN = (fb && fb.prognosen ? fb.prognosen : [])
+    .map((p) => ({ key: p.key, label: p.label }));
+
+  if (ANSICHT === "kalibrierung") return kalibrierungZeichnen();
+
+  if (!u.pack) {
+    el("inhalt").innerHTML = `<div class="karte">Kein Case Pack vorhanden.
+      Import über <code>python3 scoutleague/cli.py pack --datei …</code></div>`;
+    return;
+  }
+
+  el("inhalt").innerHTML = `
+    <div class="karte">
+      <h2 style="margin-top:0">${esc(u.pack.titel)}
+        <span class="abzeichen ${u.pack.status === "offen" ? "offen" : "gut"}">
+          ${esc(u.pack.status)}</span></h2>
+      <div class="reihe">
+        <button class="knopf leise" id="umschalten">
+          ${u.pack.status === "offen" ? "Pack schließen" : "Pack öffnen"}</button>
+        <button class="knopf leise" id="csv">CSV exportieren</button>
+      </div>
+    </div>
+
+    <div class="karte scroll">
+      <h2 style="margin-top:0">Scouts</h2>
+      <table class="tab">
+        <tr><th>Code</th><th>Name</th><th class="zahl">abgegeben</th>
+            <th class="zahl">offen</th></tr>
+        ${u.scouts.map((s) => `<tr><td class="mono">${esc(s.code)}</td>
+          <td>${esc(s.name)}</td><td class="zahl">${s.abgegeben}</td>
+          <td class="zahl">${s.offen}</td></tr>`).join("")}
+      </table>
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">Fälle und Auflösung</h2>
+      <p class="klein muted">Auflösen heißt: die Realität hat geantwortet.
+      Jede Auflösung erzeugt Outcome-Labels für alle Scouts, die zu diesem Fall
+      abgegeben haben.</p>
+      ${u.faelle.map((f) => `
+        <div style="border-top:1px solid var(--border);padding:12px 0">
+          <div class="reihe">
+            <b>${esc(f.name)}</b>
+            <span class="muted klein">${esc(f.verein)} · Fall ${f.id}</span>
+            <span class="abzeichen">${f.abgaben} Abgaben</span>
+          </div>
+          <div style="margin-top:6px">
+            ${FRAGEN.map((q) => {
+              const a = f.aufloesungen[q.key];
+              const stil = (an, farbe) => "padding:4px 10px;margin-left:4px"
+                + (an ? `;background:var(${farbe});color:#fff;border-color:transparent` : "");
+              return `<div class="klein" style="display:flex;align-items:center;
+                        gap:6px;margin:5px 0">
+                <span style="flex:1;min-width:0">${esc(q.label)}</span>
+                <button class="knopf leise" style="${stil(a === 1, "--gut")}"
+                  data-fall="${f.id}" data-frage="${esc(q.key)}" data-erg="1">ja</button>
+                <button class="knopf leise" style="${stil(a === 0, "--schlecht")}"
+                  data-fall="${f.id}" data-frage="${esc(q.key)}" data-erg="0">nein</button>
+                <span class="muted" style="width:52px;text-align:right">${
+                  a === undefined ? "offen" : "gelöst"}</span>
+              </div>`;
+            }).join("")}
+          </div>
+        </div>`).join("")}
+    </div>`;
+
+  el("umschalten").addEventListener("click", async () => {
+    await api("/api/admin/pack_status", {
+      method: "POST",
+      body: JSON.stringify({ slug: u.pack.slug,
+        status: u.pack.status === "offen" ? "geschlossen" : "offen" }),
+    });
+    laden();
+  });
+
+  el("csv").addEventListener("click", async () => {
+    const r = await fetch("/api/admin/export.csv", {
+      headers: { "X-Admin-Token": TOKEN } });
+    const blob = await r.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "scoutleague.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  WURZEL.querySelectorAll("[data-frage]").forEach((b) => {
+    b.addEventListener("click", async () => {
+      await api("/api/admin/aufloesen", {
+        method: "POST",
+        body: JSON.stringify({ fall_id: Number(b.dataset.fall),
+          frage: b.dataset.frage, ergebnis: Number(b.dataset.erg),
+          quelle: "admin-ui" }),
+      });
+      laden();
+    });
+  });
+}
+
+/* Der Scout Rating Audit als laufendes Dashboard. Dieselben fuenf Diagnosen,
+   die im Juni einmalig auf 187 Bewertungen gerechnet wurden - hier auf allem,
+   was die Liga bisher abgegeben hat. */
+async function kalibrierungZeichnen() {
+  el("inhalt").innerHTML = `<p class="muted">Lädt …</p>`;
+  let r;
+  try { r = await api("/api/admin/kalibrierung"); }
+  catch (err) {
+    return el("inhalt").innerHTML =
+      `<div class="meldung fehler">${esc(err.message)}</div>`;
+  }
+  if (!r.n_bewertungen) {
+    return el("inhalt").innerHTML =
+      `<div class="karte"><p class="muted">Noch keine Abgaben.</p></div>`;
+  }
+
+  const sw = r.schwellen || {};
+
+  const warnungen = r.warnungen.length
+    ? r.warnungen.map((w) => `<div class="meldung warn">${esc(w)}</div>`).join("")
+    : `<div class="meldung ok">Keine der fünf Audit-Diagnosen schlägt an.</div>`;
+
+  const zt = Object.entries(r.zentraltendenz).map(([k, z]) => `
+    <tr><td>${esc(z.label)}</td>
+      <td>${z.modalwert}</td>
+      <td class="${z.ueber_ziel ? "zelle-tot" : "zelle-gut"}">
+        ${Math.round(z.anteil * 100)}%</td>
+      <td>${z.genutzte_stufen}</td>
+      <td>${z.n}</td></tr>`).join("");
+
+  const strenge = r.rater_strenge || {};
+  const strengeZeilen = Object.entries(strenge.je_scout || {})
+    .sort((a, b) => a[1] - b[1])
+    .map(([n, m]) => `<tr><td>${esc(n)}</td><td>${zahl(m, 2)}</td></tr>`).join("");
+
+  const haloZeilen = Object.keys(r.halo.je_scout).sort().map((n) => `
+    <tr><td>${esc(n)}</td>
+      <td class="${r.halo.je_scout[n] >= (sw.halo_warnung || .75) ? "zelle-tot" : ""}">
+        ${zahl(r.halo.je_scout[n])}</td>
+      <td class="${r.entkopplung.je_scout[n] >= (sw.entkopplung_warnung || .55)
+        ? "zelle-tot" : ""}">${zahl(r.entkopplung.je_scout[n])}</td></tr>`).join("");
+
+  const svm = r.scout_vs_modell;
+  const svmZeilen = Object.keys(svm.je_gruppe).map((g) => {
+    const faelle = (svm.n_faelle_je_gruppe || {})[g];
+    const zuWenig = svm.je_gruppe[g] === null
+      && faelle !== undefined && faelle < (svm.mindest_faelle || 3);
+    return `<tr><td>${esc(g)}</td>
+      <td class="${svm.je_gruppe[g] === null ? "" :
+        svm.je_gruppe[g] >= 0.3 ? "zelle-gut" : "zelle-tot"}">
+        ${zuWenig ? '<span class="muted">zu wenige Fälle</span>'
+                  : zahl(svm.je_gruppe[g])}</td>
+      <td>${faelle === undefined ? "–" : faelle}</td>
+      <td>${svm.n_je_gruppe[g]}</td></tr>`;
+  }).join("");
+
+  const attrBloecke = Object.entries(r.attribute).map(([gruppe, attrs]) => `
+    <h3>${esc(gruppe)}</h3>
+    <div class="scroll"><table class="matrix">
+      <tr><th>Attribut</th><th>σ</th><th>Ø</th><th>n</th></tr>
+      ${Object.entries(attrs).sort((a, b) => (a[1].sigma || 0) - (b[1].sigma || 0))
+        .map(([k, v]) => `<tr>
+          <td>${esc(k)}</td>
+          <td class="${v.tot ? "zelle-tot" : "zelle-gut"}">${zahl(v.sigma)}</td>
+          <td>${zahl(v.mittel)}</td><td>${v.n}</td></tr>`).join("")}
+    </table></div>`).join("");
+
+  const konflikte = r.konflikte.length ? `
+    <div class="scroll"><table class="matrix">
+      <tr><th>Spieler</th><th style="text-align:left">Pos</th>
+          <th style="text-align:left">Scout</th>
+          <th>Scout</th><th>Modell</th><th>Δ</th>
+          <th style="text-align:left">Lesart</th></tr>
+      ${r.konflikte.map((k) => `<tr>
+        <td>${esc(k.spieler)}</td><td style="text-align:left">${esc(k.position)}</td>
+        <td style="text-align:left">${esc(k.scout)}</td>
+        <td>${k.scout_level}</td><td>${zahl(k.modell_level, 1)}</td>
+        <td class="zelle-tot">${k.differenz > 0 ? "+" : ""}${zahl(k.differenz, 1)}</td>
+        <td style="text-align:left">${k.richtung === "scout_hoeher"
+          ? "Bauchgefühl ohne Datenstütze" : "möglicher Übersehener"}</td>
+      </tr>`).join("")}
+    </table></div>` : `<p class="muted">Keine Konfliktfälle über
+      ${sw.konflikt_level_abstand} Stufen Abstand.</p>`;
+
+  el("inhalt").innerHTML = `
+    <div class="karte">
+      <h2 style="margin-top:0">Kalibrier-Report</h2>
+      <p class="klein muted">${r.n_bewertungen} Bewertungen von ${r.n_scouts}
+      Scouts. Die fünf Diagnosen aus dem Scout Rating Audit, gerechnet auf dem,
+      was die Liga bisher abgegeben hat.</p>
+      ${warnungen}
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">1 · Zentraltendenz</h2>
+      <p class="klein muted">Anteil der häufigsten Stufe. Ziel:
+      höchstens ${Math.round((sw.zentraltendenz_max || .35) * 100)}&nbsp;%
+      — darüber kann die Skala nicht ranken.</p>
+      <div class="scroll"><table class="matrix">
+        <tr><th>Frage</th><th>Modalwert</th><th>Anteil</th>
+            <th>Stufen genutzt</th><th>n</th></tr>
+        ${zt}
+      </table></div>
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">2 · Rater-Strenge</h2>
+      <p class="klein muted">Mittleres vergebenes Level je Scout.
+      ${strenge.spanne !== null && strenge.spanne !== undefined
+        ? `Spanne: <b>${zahl(strenge.spanne, 2)}</b> Level zwischen
+           ${esc(strenge.strengster || "")} und ${esc(strenge.mildester || "")}.`
+        : "Für einen Vergleich braucht es mindestens zwei Scouts."}</p>
+      <div class="scroll"><table class="matrix">
+        <tr><th>Scout</th><th>Ø Level</th></tr>${strengeZeilen}
+      </table></div>
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">3 · Halo und Entkopplung</h2>
+      <p class="klein muted">Halo = wie stark das Level dem Attribut-Mittel folgt
+      (Warnung ab ${sw.halo_warnung}). Entkopplung = Gleichlauf von bewiesenem
+      Niveau und Ceiling (Warnung ab ${sw.entkopplung_warnung}).
+      Gesamt: Halo <b>${zahl(r.halo.gesamt)}</b>,
+      Entkopplung <b>${zahl(r.entkopplung.gesamt)}</b>.</p>
+      <div class="scroll"><table class="matrix">
+        <tr><th>Scout</th><th>Halo r</th><th>Entkopplung r</th></tr>${haloZeilen}
+      </table></div>
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">4 · Attribut-Trennschärfe</h2>
+      <p class="klein muted">Streuung je Attribut. Unter σ =
+      ${sw.tote_attribute_sigma} ist ein Attribut tot: es kostet Zeit und
+      unterscheidet nichts.</p>
+      ${attrBloecke}
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">5 · Scout gegen Modell</h2>
+      <p class="klein muted">Rangkorrelation des Levels, gesamt
+      <b>${zahl(svm.gesamt)}</b>. Wo der Zusammenhang niedrig ist, lohnt der
+      Daten-Input als Korrektiv am meisten. Je Gruppe braucht die Korrelation
+      mindestens ${svm.mindest_faelle || 3} verschiedene Fälle &mdash; viele
+      Bewertungen zu einem einzigen Spieler ergeben keine Rangfolge.</p>
+      <div class="scroll"><table class="matrix">
+        <tr><th>Gruppe</th><th>ρ</th><th>Fälle</th><th>Bewertungen</th></tr>
+        ${svmZeilen}
+      </table></div>
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">6 · Konfliktfälle</h2>
+      <p class="klein muted">Scout und Modell mindestens
+      ${sw.konflikt_level_abstand} Stufen auseinander. Laut Audit die wertvollste
+      Review-Liste — dort steckt der meiste Erkenntnisgewinn.</p>
+      ${konflikte}
+    </div>`;
+}
+
+if (TOKEN) { el("token").value = TOKEN; laden(); }
+})();
+</script>
+
+<script>
+/* Umschalter. Beide Ansichten sind bereits gezeichnet; hier wird nur
+   sichtbar gemacht, was gerade gefragt ist. */
+(function () {
+  const TEXTE = {
+    scout: "<b>Das sieht ein Scout.</b> Vier Fälle sind offen und ausfüllbar, "
+      + "zwei sind abgegeben und zeigen die Sofort-Rückmeldung. Die Daten "
+      + "stammen aus einem echten Lauf mit zehn Testscouts auf erfundenen "
+      + "Spielern.",
+    admin: "<b>Das sieht die Redaktion.</b> Abgabestand und Auflösung unter "
+      + "<i>Übersicht</i>, die fünf Diagnosen aus dem Scout Rating Audit unter "
+      + "<i>Kalibrier-Report</i>.",
+  };
+  const HINWEIS = " Kennzahlen in Profil, Liga und Report sind ein Standbild: "
+    + "sie rechnen im Betrieb live mit, in dieser Vorschau nicht. Der volle "
+    + "Umfang läuft mit <code>python3 scoutleague/serve.py</code>.";
+
+  const notiz = document.getElementById("notiz");
+  const buehnen = { scout: document.getElementById("buehne-scout"),
+                    admin: document.getElementById("buehne-admin") };
+
+  function waehle(welche) {
+    Object.entries(buehnen).forEach(([k, n]) => { n.hidden = k !== welche; });
+    document.querySelectorAll("[data-ansicht-wahl]").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b.dataset.ansichtWahl === welche));
+    });
+    notiz.innerHTML = TEXTE[welche] + HINWEIS;
+    window.scrollTo(0, 0);
+  }
+
+  document.querySelectorAll("[data-ansicht-wahl]").forEach((b) => {
+    b.addEventListener("click", () => waehle(b.dataset.ansichtWahl));
+  });
+  waehle("scout");
+})();
+</script>

@@ -8,13 +8,23 @@
   --s1:#2a78d6; --gut:#2f8f5b; --warn:#b8791f; --schlecht:#c0392b;
   --radius:10px;
 }
+/* Drei Zustaende, nicht zwei: die meisten Betrachter haben gar keine
+   ausdrueckliche Wahl getroffen, dann entscheidet allein die
+   Systemeinstellung. Wo eine Umgebung data-theme setzt, gewinnt die Wahl -
+   in beide Richtungen. Nur Token werden umdefiniert, nie Komponenten. */
 @media (prefers-color-scheme: dark){
-  :root{
+  :root:not([data-theme="light"]){
     --plane:#12120f; --surface:#1a1a16; --surface-2:#22221d;
     --ink:#f4f3ee; --ink-2:#b8b6ad; --muted:#8b8981;
     --border:rgba(244,243,238,.13); --grid:#2b2a25;
     --s1:#3987e5; --gut:#4bb37b; --warn:#d69a3c; --schlecht:#e06455;
   }
+}
+:root[data-theme="dark"]{
+  --plane:#12120f; --surface:#1a1a16; --surface-2:#22221d;
+  --ink:#f4f3ee; --ink-2:#b8b6ad; --muted:#8b8981;
+  --border:rgba(244,243,238,.13); --grid:#2b2a25;
+  --s1:#3987e5; --gut:#4bb37b; --warn:#d69a3c; --schlecht:#e06455;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}

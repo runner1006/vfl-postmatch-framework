@@ -15,6 +15,31 @@ interne Skala an 187 Bewertungen vermessen und sechs Empfehlungen ausgesprochen;
 alle sechs stecken jetzt im Produkt statt in einer Präsentation — siehe
 [Was der Audit geändert hat](#was-der-audit-geändert-hat).
 
+## Nur ansehen, ohne alles
+
+`scoutleague/vorschau.html` ist die App als eine Datei — Doppelklick genügt,
+kein Server, keine Installation. Sie zeigt beide Ansichten (Scout und Admin)
+mit Daten aus einem echten Lauf: zehn Testscouts auf sechs erfundenen Spielern.
+Bewerten und Abgeben funktioniert, die Kennzahlen in Profil, Liga und
+Kalibrier-Report sind ein Standbild.
+
+Markup, Stylesheet und Skripte kommen unverändert aus `static/` — ersetzt ist
+allein `fetch`. Die Vorschau kann also nicht auseinanderlaufen mit dem, was der
+Server ausliefert. Neu bauen nach einer UI-Änderung:
+
+```bash
+python3 scoutleague/vorschau_bauen.py --daten scoutleague/vorschau_daten.json
+```
+
+Die aufgezeichneten Antworten selbst erneuern (braucht einen laufenden Server):
+
+```bash
+python3 scoutleague/cli.py demo > codes.txt
+SCOUTLEAGUE_ADMIN_TOKEN=geheim python3 scoutleague/serve.py --port 8099 &
+python3 scoutleague/vorschau_daten.py --port 8099 --token geheim \
+    --codes codes.txt --ziel scoutleague/vorschau_daten.json
+```
+
 ## In drei Minuten ausprobieren
 
 ```bash
@@ -132,6 +157,9 @@ db.py              SQLite-Schema, idempotent bei jedem Start
 export.py          Admin-Übersicht, Auflösung, CSV
 cli.py             Betriebswerkzeug (scouts, pack, status, aufloesen, export, stand)
 tests.py           133 Prüfungen: Metrik-Mathematik + End-to-End gegen echten Server
+vorschau.html      die App als eine Datei, ohne Server — Doppelklick genügt
+vorschau_bauen.py  baut vorschau.html aus static/ plus aufgezeichneten Antworten
+vorschau_daten.py  zeichnet die Antworten eines laufenden Servers auf
 fragebogen.json    Level-Skala, Attribut-Sets je Position, Prognosen und
                    Schwellenwerte als Daten, nicht im Code
 pakete/            Case Packs (VORLAGE.json, demo.json)

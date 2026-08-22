@@ -2,8 +2,23 @@
    Server so ausliefert, wie sie hier steht. */
 "use strict";
 
+/* Browser-Speicher kann werfen, nicht nur leer sein - privates Fenster,
+   blockierte Site-Daten. Ein Anmeldecode ist Bequemlichkeit, kein Zustand,
+   ohne den die App laufen muesste. */
+const speicher = {
+  lies(key) {
+    try { return localStorage.getItem(key) || ""; } catch (e) { return ""; }
+  },
+  schreib(key, wert) {
+    try { localStorage.setItem(key, wert); } catch (e) { /* egal */ }
+  },
+  loesche(key) {
+    try { localStorage.removeItem(key); } catch (e) { /* egal */ }
+  },
+};
+
 const S = {
-  code: localStorage.getItem("sl_code") || "",
+  code: speicher.lies("sl_code"),
   name: "",
   daten: null,          // Antwort von /api/pack
   fall: null,           // aktuell geoeffneter Fall
@@ -11,7 +26,6 @@ const S = {
   begonnen: 0,
 };
 
-const $ = (s) => document.querySelector(s);
 const el = (s) => document.getElementById(s);
 
 function esc(t) {
@@ -74,7 +88,7 @@ document.querySelectorAll("#kopf nav button").forEach((b) => {
 el("zurueck").addEventListener("click", () => packLaden());
 
 function abmelden() {
-  localStorage.removeItem("sl_code");
+  speicher.loesche("sl_code");
   location.reload();
 }
 
@@ -89,7 +103,7 @@ el("anmeldeform").addEventListener("submit", async (e) => {
       method: "POST", body: JSON.stringify({ code }),
     });
     S.name = r.name;
-    localStorage.setItem("sl_code", code);
+    speicher.schreib("sl_code", code);
     el("wer").textContent = "· " + r.name;
     packLaden();
   } catch (err) {
@@ -722,7 +736,7 @@ async function ligaLaden() {
     el("wer").textContent = "· " + r.name;
     packLaden();
   } catch (err) {
-    localStorage.removeItem("sl_code");
+    speicher.loesche("sl_code");
     S.code = "";
   }
 })();
