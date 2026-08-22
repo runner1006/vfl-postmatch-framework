@@ -1,0 +1,18 @@
+{
+  "slug": "vfl-bochum",
+  "name": "VfL Bochum 1848",
+  "kurz": "VfL Bochum",
+  "kuerzel": "VfL",
+  "farbe": "#005ca9",
+  "farbe_kontrast": "#ffffff",
+  "spielidee": "Aggressiv und hoch verteidigen, vertikal spielen, über die Flügel gefährlich werden",
+  "kpi_set": "rev3",
+  "quelle": { "team_key": "bochum" },
+  "ziel": {
+    "referenz": "aufsteiger_2bl",
+    "gilt_fuer_liga": "2BL",
+    "label": "Aufstieg in die Bundesliga",
+    "kohorte": "18 direkte Aufsteiger der 2. Bundesliga seit 2017/18"
+  },
+  "hinweise": []
+}

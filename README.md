@@ -13,7 +13,8 @@ undurchsichtigen Note zu verrechnen:
 Ebene A misst **Identität**, nicht Qualität. Ein hoher Stilwert ist keine Aussage über
 Aufstiegschancen — dafür ist Ebene B da. Diese Trennung ist der Kern des Ansatzes.
 
-**→ [Dashboard ansehen](https://runner1006.github.io/vfl-postmatch-framework/dashboard.html)**
+**→ [Dashboard ansehen](https://runner1006.github.io/vfl-postmatch-framework/dashboard.html)** ·
+**[Beispiel-Report](https://runner1006.github.io/vfl-postmatch-framework/beispiel-report.html)**
 
 ## Datenbasis
 
@@ -43,13 +44,58 @@ Zwei Punkte, die bewusst offen ausgewiesen sind statt weggerechnet:
 Die vollständige Liste steht in [`framework_spec.md`](framework_spec.md), die
 Spaltendokumentation in [`ergebnisse/SCHEMA.md`](ergebnisse/SCHEMA.md).
 
+## Post-Match-Report
+
+Der Report ist das Produkt: **zwei A4-Seiten je Spiel** — vorne die drei Ebenen,
+Stärken und Schwächen sowie das Gegnerbild, hinten alle 15 KPIs im Einzelnen und die Lesehilfe.
+Er ist white-label: Name, Kürzel, Farbe, Spielidee und Zielreferenz stehen in einem Klubprofil,
+nicht im Code.
+
+```bash
+python3 skripte/report.py --klub vfl-bochum --letztes          # jüngstes Spiel
+python3 skripte/report.py --klub vfl-bochum --spieltag 12 --pdf
+python3 skripte/report.py --klub schalke-04 --alle             # ganze Saison
+python3 skripte/report.py --alle-klubs --letztes               # alle Profile
+python3 skripte/report.py --klub vfl-bochum --liste            # nur auflisten
+```
+
+Ausgabe landet in `reports/<slug>/` samt Übersichtsseite; `--pdf` druckt zusätzlich über ein
+lokal installiertes Chromium nach A4. Eine eingecheckte Musterseite liegt als
+[`beispiel-report.html`](beispiel-report.html) im Wurzelverzeichnis.
+
+### Ein neuer Klub
+
+Eine JSON-Datei in `klubs/`, kein Python:
+
+```json
+{
+  "slug": "schalke-04", "name": "FC Schalke 04", "kurz": "Schalke 04", "kuerzel": "S04",
+  "farbe": "#004d9d", "spielidee": "…", "kpi_set": "rev3",
+  "quelle": { "team_key": "schalke_muslic" },
+  "ziel": { "referenz": "aufsteiger_2bl", "gilt_fuer_liga": "2BL", "label": "Aufstieg" },
+  "hinweise": ["…"]
+}
+```
+
+`quelle.team_key` zeigt auf einen Datenblock in `ergebnisse/dashboard_matches.json`. `ziel`
+schaltet Ebene B: Ohne Eintrag — oder in einer Liga, für die die Aufstiegsreferenz nicht gilt —
+weist der Report sie als *nicht anwendbar* aus, statt eine unpassende Marke zu rechnen. Was für
+ein Profil grundsätzlich gilt, steht unter `hinweise` und erscheint in der Lesehilfe.
+
+Die Engine liest ausschließlich `ergebnisse/dashboard_matches.json`, kommt ohne Fremdpakete aus
+und rechnet nichts nach, was die Pipeline schon gerechnet hat. Prüfen:
+`python3 skripte/test_report.py` — 23 Tests über Profile, die drei Ebenen, die Saisonlage,
+Kreuzproben gegen `bochum_2526_scored.csv` und das Rendern **aller** Spiele **aller** Profile.
+
 ## Aufbau
 
 ```
 dashboard.html            in sich geschlossen, keine externen Requests — Doppelklick genügt
+beispiel-report.html      Musterseite der Report-Engine
 framework_spec.md         Methodik, Validierung, Grenzen
+klubs/                    ein JSON je Klub — Name, Farbe, Spielidee, Zielreferenz
 ergebnisse/               gerechnete Befunde + SCHEMA.md
-skripte/                  die Pipeline
+skripte/                  die Pipeline und die Report-Engine
 ```
 
 ### Pipeline
@@ -68,9 +114,14 @@ Der Reihe nach, aus `skripte/`:
 | 8 | `scoring.py` | Scores, Aufstiegsbarometer, Ergebnisdateien |
 | 9 | `dashboard_data.py`, `dashboard_match_data.py` | Anzeigedaten als JSON |
 | 10 | `build_dashboard.py` | JSON in `dashboard.html` einspielen |
+| 11 | `report.py` | Post-Match-Report je Klub und Spiel *(braucht nur Schritt 9)* |
+
+Die Report-Engine hängt allein an Schritt 9: `befund.py` rechnet die drei Ebenen aus
+`dashboard_matches.json`, `klubprofil.py` lädt und prüft das Klubprofil, `report.py` setzt die
+Seite.
 
 Prüfen: `python3 verify.py` — 46 Prüfungen über Skalenlage, Redundanz, Leakage-Freiheit,
-Kalibrierung und Rechenidentitäten.
+Kalibrierung und Rechenidentitäten. Dazu `python3 skripte/test_report.py` für die Report-Engine.
 
 Das aktive KPI-Set steht als Daten in `skripte/kpi_varianten.json`, nicht im Code — samt aller
 geprüften Alternativen mit Effektstärke, Konsistenz und Redundanz-Blockaden. KPIs lassen sich
@@ -93,3 +144,5 @@ Die Wyscout-Rohdaten (`daten/`, 61 MB) und zwei große Zwischendateien
 Repository — sie sind providerlizenziert und aus den Skripten reproduzierbar. Für einen
 vollständigen Lauf die Pipeline ab Schritt 1 durchziehen; bis dahin lässt sich das Dashboard
 nur neu bauen (Schritt 10), nicht neu rechnen, und `verify.py` läuft erst nach Schritt 8.
+Die Report-Engine (Schritt 11) läuft dagegen aus einem frischen Klon heraus — sie braucht nur
+`ergebnisse/dashboard_matches.json`, und die liegt im Repository.

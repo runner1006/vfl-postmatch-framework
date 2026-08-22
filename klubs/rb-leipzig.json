@@ -1,0 +1,16 @@
+{
+  "slug": "rb-leipzig",
+  "name": "RB Leipzig",
+  "kurz": "RB Leipzig",
+  "kuerzel": "RBL",
+  "farbe": "#001f47",
+  "farbe_kontrast": "#ffffff",
+  "spielidee": "Referenzprofil Werner — gemessen gegen das Bochumer Spielidee-Set",
+  "kpi_set": "rev3",
+  "quelle": { "team_key": "leipzig_werner" },
+  "ziel": {},
+  "hinweise": [
+    "Bundesliga: Die Aufstiegsreferenz der 2. Bundesliga gilt hier nicht, Ebene B bleibt leer.",
+    "Die Stiltreue misst die Nähe zur Bochumer Spielidee, nicht zu einer eigenen."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "slug": "sturm-graz",
+  "name": "SK Sturm Graz",
+  "kurz": "Sturm Graz",
+  "kuerzel": "STU",
+  "farbe": "#101010",
+  "farbe_kontrast": "#ffffff",
+  "spielidee": "Referenzprofil Ilzer — gemessen gegen das Bochumer Spielidee-Set",
+  "kpi_set": "rev3",
+  "quelle": { "team_key": "sturm_ilzer" },
+  "ziel": {},
+  "hinweise": [
+    "Österreichische Bundesliga: Die Aufstiegsreferenz der 2. Bundesliga gilt hier nicht, Ebene B bleibt leer.",
+    "Die Stiltreue misst die Nähe zur Bochumer Spielidee, nicht zu einer eigenen."
+  ]
+}

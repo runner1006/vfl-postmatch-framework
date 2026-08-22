@@ -1,4 +1,9 @@
 """Zentrale Konfiguration: Wettbewerbe, Saisons, Referenzkohorte, Spaltenlisten."""
+import os
+
+# Pfade relativ zum Repository, damit die Pipeline aus jedem Klon laeuft.
+# Ueberschreibbar, wenn Rohdaten oder Ergebnisse woanders liegen.
+WURZEL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ---------------------------------------------------------------- Wettbewerbe
 COMP_2BL = 423   # 2. Bundesliga
@@ -159,5 +164,5 @@ MATCH_COLS = [
     "status", "meta_match_data_downloaded", "meta_match_physical_data_downloaded",
 ]
 
-DATA = "/Users/philip_sl/files/vfl-postmatch-framework/daten"
-OUT = "/Users/philip_sl/files/vfl-postmatch-framework/ergebnisse"
+DATA = os.environ.get("VFL_DATEN", os.path.join(WURZEL, "daten"))
+OUT = os.environ.get("VFL_ERGEBNISSE", os.path.join(WURZEL, "ergebnisse"))

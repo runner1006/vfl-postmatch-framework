@@ -1,0 +1,20 @@
+{
+  "slug": "schalke-04",
+  "name": "FC Schalke 04",
+  "kurz": "Schalke 04",
+  "kuerzel": "S04",
+  "farbe": "#004d9d",
+  "farbe_kontrast": "#ffffff",
+  "spielidee": "Referenzprofil Muslic — gemessen gegen das Bochumer Spielidee-Set",
+  "kpi_set": "rev3",
+  "quelle": { "team_key": "schalke_muslic" },
+  "ziel": {
+    "referenz": "aufsteiger_2bl",
+    "gilt_fuer_liga": "2BL",
+    "label": "Aufstieg in die Bundesliga",
+    "kohorte": "18 direkte Aufsteiger der 2. Bundesliga seit 2017/18"
+  },
+  "hinweise": [
+    "Die Stiltreue misst die Nähe zur Bochumer Spielidee, nicht zu einer eigenen. Für ein klubeigenes Urteil müsste das KPI-Set neu verankert werden."
+  ]
+}
