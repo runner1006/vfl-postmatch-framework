@@ -1,0 +1,151 @@
+/* Gemeinsames Aussehen von Druckreport und App. Einzige Quelle: report.py setzt
+   die Datei in die erzeugte Seite ein, build_app.py in app.html. Nicht in der
+   erzeugten Datei bearbeiten - Aenderungen gehoeren hierher. */
+/* Palette. Nur --klub und --klub-kontrast kommen aus dem Klubprofil und werden
+   von der erzeugenden Seite ueberschrieben; alles andere ist Produktfarbe. */
+:root{
+  --ink:#141412;--ink2:#4d4c48;--muted:#84827b;--line:rgba(20,20,18,.15);
+  --track:#e6e5df;--karte:#fbfbf9;--band:#f1f0ec;--gut:#286c47;--schlecht:#a83b2a;
+  --klub:#1b3a5c;--klub-kontrast:#ffffff;
+}
+*{box-sizing:border-box}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0;font:9.6pt/1.42 -apple-system,"Segoe UI",system-ui,Helvetica,Arial,sans-serif;
+  color:var(--ink);background:#fff}
+h2{font-size:11pt;margin:0 0 6px;letter-spacing:-.01em}
+h3{font-size:8.6pt;margin:0 0 5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2)}
+h4{font-size:9pt;margin:0 0 3px}
+p{margin:0}
+table{border-collapse:collapse;width:100%}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.seite{background:#fff}
+@media screen{
+  body{background:#e8e7e2;padding:22px 0}
+  .seite{width:210mm;min-height:297mm;margin:0 auto 20px;padding:11mm 12mm;
+    box-shadow:0 2px 16px rgba(0,0,0,.15)}
+}
+@media print{
+  .seite{width:auto;min-height:0;padding:0;box-shadow:none;break-after:page}
+  .seite:last-child{break-after:auto}
+}
+
+.kopf{display:flex;justify-content:space-between;align-items:flex-start;
+  border-bottom:2px solid var(--klub);padding-bottom:6px;margin-bottom:9px}
+.marke{display:flex;gap:9px;align-items:center}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
+  background:var(--klub);color:var(--klub-kontrast);font-weight:700;font-size:9.5pt;
+  letter-spacing:.02em;border-radius:4px}
+.klub{font-weight:700;font-size:12pt;letter-spacing:-.015em;line-height:1.15}
+.doktyp{font-size:8.4pt;color:var(--ink2);text-transform:uppercase;letter-spacing:.1em}
+.kopf-rechts{text-align:right;font-size:8.6pt;color:var(--ink2);line-height:1.45}
+.kopf-rechts b{color:var(--ink);font-size:9.4pt}
+
+.ergebnis{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
+  margin:0 0 9px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+.teams{font-size:15.5pt;letter-spacing:-.02em;font-weight:600;white-space:nowrap}
+.punkte{font-size:15.5pt;font-weight:700;line-height:1;white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.punkte span{font-size:8.4pt;font-weight:400;color:var(--muted);margin-left:5px}
+.teams .tore{margin:0 11px;padding:1px 9px;background:var(--klub);color:var(--klub-kontrast);
+  border-radius:4px;font-variant-numeric:tabular-nums}
+.teams .geg{font-weight:400;color:var(--ink2)}
+.ort{font-size:8.6pt;color:var(--muted)}
+
+.ebenen{display:grid;grid-template-columns:1.32fr 1fr;gap:8px;align-items:stretch}
+.rechts{display:grid;gap:8px}
+.karte{border:1px solid var(--line);border-radius:5px;padding:8px 9px 9px;background:var(--karte);
+  display:flex;flex-direction:column}
+.karte .fuss{margin-top:auto;padding-top:5px}
+.kopfzeile{font-weight:700;font-size:9.4pt;margin-bottom:6px;display:flex;
+  align-items:baseline;gap:6px;flex-wrap:wrap}
+.stufe{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+  background:var(--klub);color:var(--klub-kontrast);border-radius:3px;font-size:8pt}
+.frage{font-weight:400;font-size:8.2pt;color:var(--muted)}
+.kennzahl{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin:2px 0 6px}
+.kennzahl .wert{font-size:26pt;line-height:1;font-weight:700;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums}
+.kennzahl.klein .wert{font-size:19pt}
+.kennzahl .von{font-size:8.4pt;color:var(--ink2)}
+.kennzahl .neben{flex-basis:100%;font-size:8.2pt;color:var(--muted);margin-top:2px}
+.fuss{font-size:7.7pt;line-height:1.35;color:var(--muted);margin-top:6px}
+.leerkarte{font-size:9pt;color:var(--ink2);padding:8px 0 10px}
+.leerkarte span{display:block;font-size:8.2pt;color:var(--muted);margin-top:3px}
+
+.urteil{display:inline-block;font-size:8.4pt;font-weight:600;padding:2px 7px;border-radius:3px;
+  margin-bottom:5px}
+.urteil.gut{background:#e3f0e8;color:var(--gut)}
+.urteil.schlecht{background:#f7e6e2;color:var(--schlecht)}
+.urteil.neutral{background:#ecebe5;color:var(--ink2)}
+
+.bar{position:relative;height:5px;background:var(--track);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--klub);border-radius:3px}
+.bar.duenn{height:4px}
+.bar .tick{position:absolute;left:50%;top:0;width:1px;height:100%;background:rgba(0,0,0,.30)}
+.bar.leer{background:repeating-linear-gradient(90deg,var(--track) 0 3px,#fff 3px 6px)}
+.bz{width:38%;padding:0 8px}
+
+.phasen th{text-align:left;font-weight:400;padding:2.6px 0;white-space:nowrap}
+.phasen .gew{color:var(--muted);font-size:7.8pt;margin-left:5px}
+.phasen .pfrage{font-size:7.6pt;color:var(--muted);font-weight:400;white-space:normal;
+  max-width:52mm;line-height:1.3;margin-top:1px}
+.phasen th{vertical-align:top;padding-right:6px}
+.phasen td{padding:2.6px 0;vertical-align:top}
+.phasen .bz{padding-top:5px}
+.phasen .num{padding-top:0}
+.spark{width:100%;height:28px;display:block;margin:0 0 4px}
+.spark .pfad{fill:none;stroke:var(--klub);stroke-width:1.4;stroke-linejoin:round}
+.spark .mid{stroke:rgba(0,0,0,.18);stroke-width:.8;stroke-dasharray:3 3}
+.spark .jetzt{fill:var(--klub);stroke:#fff;stroke-width:1.4}
+
+.ziel th{text-align:left;font-weight:400;padding:2.2px 0}
+.ziel .soll{text-align:right;color:var(--muted);font-size:8pt;white-space:nowrap}
+.pbar{display:flex;height:15px;border-radius:3px;overflow:hidden;margin:5px 0 2px;
+  font-size:7.4pt;color:#fff;line-height:15px;text-align:center}
+.pbar .p0{background:var(--klub)}
+.pbar .p1{background:#9b9992}
+.pbar .p2{background:#3f3e3a}
+.plabels{display:flex;font-size:7.4pt;color:var(--muted)}
+.plabels span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plabels span:nth-child(2){text-align:center}
+.plabels span:last-child{text-align:right}
+.ziel .zweit{text-align:right;font-weight:400;color:var(--ink2);padding-left:10px}
+
+.paar{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:9px}
+.kpiliste{list-style:none;margin:0;padding:0}
+.kpiliste li{margin-bottom:5px}
+.kz{display:flex;align-items:baseline;gap:6px;margin-bottom:2px}
+.kurz{display:inline-block;min-width:20px;font-size:7.4pt;font-weight:700;color:var(--klub);
+  letter-spacing:.04em}
+.kname{font-weight:600}
+.kz .num{margin-left:auto;font-weight:700}
+.mgmt{font-size:8pt;color:var(--muted);margin-top:2px}
+
+.kontextblock{margin-top:9px}
+.kontextspalten{display:grid;grid-template-columns:repeat(3,1fr);gap:0 16px;font-size:8pt}
+.kontext td,.kontext th{border-bottom:1px solid var(--line);padding:2.2px 0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kontext th{max-width:33mm}
+.kontext .perz{width:9mm;color:var(--muted);font-size:7.4pt}
+.hinweise{margin-top:8px;border-top:1px solid var(--line);padding-top:6px;
+  font-size:7.9pt;line-height:1.35;color:var(--schlecht)}
+.hinweise b{color:var(--ink2)}
+.profilhinweise{margin:5px 0 0;padding-left:13px;font-size:7.8pt;color:var(--muted)}
+
+.block{margin-bottom:13px}
+.kpispalten{column-count:2;column-gap:16px}
+.gruppe{break-inside:avoid;margin-bottom:9px}
+.gkopf{background:var(--band);font-weight:700;font-size:8.6pt;padding:3px 6px;
+  display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px}
+.gkopf span{font-weight:400;color:var(--ink2);font-size:7.6pt;white-space:nowrap}
+.kpiz{margin-bottom:6px}
+.kpiz .def{font-size:7.4pt;line-height:1.3;color:var(--muted);margin-top:2px}
+.kpiz .def b{color:var(--ink2);font-weight:600}
+.kontext th{text-align:left;font-weight:400}
+.warn{color:var(--schlecht);font-weight:700}
+
+.methode .spalten{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;font-size:8.2pt;
+  color:var(--ink2)}
+.seitenfuss{margin-top:auto;padding-top:6px;border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;font-size:7.6pt;color:var(--muted)}
+.seite{display:flex;flex-direction:column}

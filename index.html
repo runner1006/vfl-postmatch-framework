@@ -40,6 +40,7 @@ th{font-weight:600;white-space:nowrap;padding-right:18px}
   background:var(--s1);color:#fff;text-decoration:none;font-weight:600;font-size:15px}
 .cta:hover{filter:brightness(1.08)}
 .cta.zweit{background:transparent;color:var(--s1);border:1px solid var(--s1);margin-left:8px}
+.links a{text-decoration:none} .links a:hover{text-decoration:underline}
 .links{border-top:1px solid var(--border);padding-top:22px;margin-top:34px;
   font-size:14px;color:var(--ink-2)}
 .links a{color:var(--s1)}
@@ -69,16 +70,19 @@ ul{margin:0;padding-left:20px}
         <td>Passt das Ergebnis zur gezeigten Leistung?</td></tr>
   </table>
 
-  <a class="cta" href="dashboard.html">Dashboard öffnen</a>
+  <a class="cta" href="app.html">Spielberichte öffnen</a>
+  <a class="cta zweit" href="dashboard.html">Dashboard</a>
   <a class="cta zweit" href="beispiel-report.html">Beispiel-Report</a>
 
   <p>Das Dashboard zeigt den Spielbericht für ein einzelnes Spiel, den Verlauf über eine
   Saison und die Validierung gegen vier Referenzmannschaften: RB Leipzig unter Werner,
   Sturm Graz und TSG Hoffenheim unter Ilzer sowie Schalke 04 unter Muslic.</p>
 
-  <p>Der Beispiel-Report ist die druckfertige A4-Fassung für ein einzelnes Spiel. Klubname,
-  Farbe, Spielidee und Zielreferenz kommen aus einem Klubprofil — ein neuer Klub ist eine
-  JSON-Datei, kein neuer Code.</p>
+  <p>Die <a href="app.html">Spielberichte</a> sind die Oberfläche darüber: Klub wählen, Spiel
+  aus der Saisonliste wählen, Bericht lesen, drucken. Was der Browser zeigt, ist Zeile für
+  Zeile dieselbe Rechnung wie der Ausdruck — zwei Seiten A4. Klubname, Farbe, Spielidee und
+  Zielreferenz kommen aus einem Klubprofil; ein neuer Klub ist eine JSON-Datei, kein neuer
+  Code.</p>
 
   <div class="links">
     <ul>

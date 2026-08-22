@@ -13,8 +13,9 @@ undurchsichtigen Note zu verrechnen:
 Ebene A misst **Identität**, nicht Qualität. Ein hoher Stilwert ist keine Aussage über
 Aufstiegschancen — dafür ist Ebene B da. Diese Trennung ist der Kern des Ansatzes.
 
-**→ [Dashboard ansehen](https://runner1006.github.io/vfl-postmatch-framework/dashboard.html)** ·
-**[Beispiel-Report](https://runner1006.github.io/vfl-postmatch-framework/beispiel-report.html)**
+**→ [Spielberichte öffnen](https://runner1006.github.io/vfl-postmatch-framework/app.html)** ·
+[Dashboard](https://runner1006.github.io/vfl-postmatch-framework/dashboard.html) ·
+[Beispiel-Report](https://runner1006.github.io/vfl-postmatch-framework/beispiel-report.html)
 
 ## Datenbasis
 
@@ -44,6 +45,28 @@ Zwei Punkte, die bewusst offen ausgewiesen sind statt weggerechnet:
 Die vollständige Liste steht in [`framework_spec.md`](framework_spec.md), die
 Spaltendokumentation in [`ergebnisse/SCHEMA.md`](ergebnisse/SCHEMA.md).
 
+## Die Oberfläche
+
+`app.html` ist der Arbeitsplatz für den Tag nach dem Spiel: links Klub und Saison wählen, die
+Spiele der Saison als Liste mit Ergebnis, Stiltreue und Ziel-Marker (✓/✗), rechts der Bericht
+zum ausgewählten Spiel. Pfeiltasten wechseln das Spiel, die Adresszeile hält den Stand fest
+(`app.html#klub=vfl-bochum&spiel=33`), *Drucken / PDF* gibt exakt die zwei A4-Seiten aus.
+
+Wie das Dashboard ist die App eine einzelne Datei ohne externe Requests — Doppelklick genügt.
+Nach einem Rechenlauf neu einspielen:
+
+```bash
+python3 skripte/build_app.py        # Daten, Klubprofile, Texte und report.css in app.html
+```
+
+Die Rechnung steht damit zweimal: in `befund.py` für den Druck und in `app.html` für die
+Oberfläche. Das ist bewusst so — die App soll ohne Server laufen, und Python läuft nicht im
+Browser. Damit beide nicht auseinanderlaufen, prüft `python3 skripte/test_frontend.py` die App
+in einem lokalen Chromium gegen Python: **jedes Spiel jedes Profils, Zahl für Zahl.** Alles,
+was nur Text ist — Flag-Texte, Kurzbeschriftungen, Rundungsregeln, Trennschärfe-Wörter —
+liefert `build_app.py` aus dem Python-Code in die App, steht also ohnehin nur einmal. Das
+Aussehen liegt in `skripte/report.css` und wird von beiden Seiten benutzt.
+
 ## Post-Match-Report
 
 Der Report ist das Produkt: **zwei A4-Seiten je Spiel** — vorne die drei Ebenen,
@@ -70,7 +93,7 @@ Eine JSON-Datei in `klubs/`, kein Python:
 ```json
 {
   "slug": "schalke-04", "name": "FC Schalke 04", "kurz": "Schalke 04", "kuerzel": "S04",
-  "farbe": "#004d9d", "spielidee": "…", "kpi_set": "rev3",
+  "farbe": "#004d9d", "spielidee": "…", "kpi_set": "rev3", "primaer": false,
   "quelle": { "team_key": "schalke_muslic" },
   "ziel": { "referenz": "aufsteiger_2bl", "gilt_fuer_liga": "2BL", "label": "Aufstieg" },
   "hinweise": ["…"]
@@ -80,7 +103,8 @@ Eine JSON-Datei in `klubs/`, kein Python:
 `quelle.team_key` zeigt auf einen Datenblock in `ergebnisse/dashboard_matches.json`. `ziel`
 schaltet Ebene B: Ohne Eintrag — oder in einer Liga, für die die Aufstiegsreferenz nicht gilt —
 weist der Report sie als *nicht anwendbar* aus, statt eine unpassende Marke zu rechnen. Was für
-ein Profil grundsätzlich gilt, steht unter `hinweise` und erscheint in der Lesehilfe.
+ein Profil grundsätzlich gilt, steht unter `hinweise` und erscheint in der Lesehilfe. `primaer`
+markiert den Klub, dem die App gehört — er steht in der Auswahl oben und öffnet sich zuerst.
 
 Die Engine liest ausschließlich `ergebnisse/dashboard_matches.json`, kommt ohne Fremdpakete aus
 und rechnet nichts nach, was die Pipeline schon gerechnet hat. Prüfen:
@@ -90,6 +114,7 @@ Kreuzproben gegen `bochum_2526_scored.csv` und das Rendern **aller** Spiele **al
 ## Aufbau
 
 ```
+app.html                  die Oberfläche: Klub, Saison, Spiel, Bericht, Druck
 dashboard.html            in sich geschlossen, keine externen Requests — Doppelklick genügt
 beispiel-report.html      Musterseite der Report-Engine
 framework_spec.md         Methodik, Validierung, Grenzen
@@ -115,13 +140,15 @@ Der Reihe nach, aus `skripte/`:
 | 9 | `dashboard_data.py`, `dashboard_match_data.py` | Anzeigedaten als JSON |
 | 10 | `build_dashboard.py` | JSON in `dashboard.html` einspielen |
 | 11 | `report.py` | Post-Match-Report je Klub und Spiel *(braucht nur Schritt 9)* |
+| 12 | `build_app.py` | Daten, Profile und Aussehen in `app.html` einspielen |
 
-Die Report-Engine hängt allein an Schritt 9: `befund.py` rechnet die drei Ebenen aus
+Report-Engine und App hängen allein an Schritt 9: `befund.py` rechnet die drei Ebenen aus
 `dashboard_matches.json`, `klubprofil.py` lädt und prüft das Klubprofil, `report.py` setzt die
-Seite.
+Druckseite, `build_app.py` dieselben Daten in `app.html`.
 
 Prüfen: `python3 verify.py` — 46 Prüfungen über Skalenlage, Redundanz, Leakage-Freiheit,
-Kalibrierung und Rechenidentitäten. Dazu `python3 skripte/test_report.py` für die Report-Engine.
+Kalibrierung und Rechenidentitäten. Dazu `python3 skripte/test_report.py` (Report-Engine) und
+`python3 skripte/test_frontend.py` (App gegen Druck, braucht ein lokales Chromium).
 
 Das aktive KPI-Set steht als Daten in `skripte/kpi_varianten.json`, nicht im Code — samt aller
 geprüften Alternativen mit Effektstärke, Konsistenz und Redundanz-Blockaden. KPIs lassen sich
@@ -144,5 +171,6 @@ Die Wyscout-Rohdaten (`daten/`, 61 MB) und zwei große Zwischendateien
 Repository — sie sind providerlizenziert und aus den Skripten reproduzierbar. Für einen
 vollständigen Lauf die Pipeline ab Schritt 1 durchziehen; bis dahin lässt sich das Dashboard
 nur neu bauen (Schritt 10), nicht neu rechnen, und `verify.py` läuft erst nach Schritt 8.
-Die Report-Engine (Schritt 11) läuft dagegen aus einem frischen Klon heraus — sie braucht nur
-`ergebnisse/dashboard_matches.json`, und die liegt im Repository.
+Report-Engine und App (Schritte 11 und 12) laufen dagegen aus einem frischen Klon heraus — sie
+brauchen nur `ergebnisse/dashboard_matches.json`, und die liegt im Repository. `app.html` ist
+fertig gebaut eingecheckt und geht per Doppelklick auf.

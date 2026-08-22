@@ -52,4 +52,7 @@ def lade(slug):
 
 
 def alle():
-    return [lade(s) for s in slugs()]
+    """Alle Profile. Das als `primaer` markierte zuerst — es ist der Klub, dem
+    die App beim Oeffnen gehoert; danach alphabetisch."""
+    return sorted((lade(s) for s in slugs()),
+                  key=lambda p: (not p.get("primaer"), p["kurz"]))
