@@ -16,9 +16,13 @@ import argparse
 import json
 import os
 import re
+import sys
 
 HIER = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(HIER, "static")
+sys.path.insert(0, HIER)
+
+import logik  # noqa: E402
 
 
 def lies(name):
@@ -273,9 +277,29 @@ RAHMEN_JS = r"""
 """
 
 
+def fragebogen_auffrischen(daten):
+    """Fragen, Anker und Attribut-Sets aus der aktuellen fragebogen.json holen.
+
+    Die aufgezeichneten Antworten sind ein Standbild der *Abgaben* - der
+    Fragebogen selbst ist Konfiguration und darf nicht mitaltern. Ohne diesen
+    Schritt zeigt die Vorschau nach jeder Textaenderung im Fragebogen weiter
+    den Wortlaut vom Tag der Aufzeichnung.
+    """
+    fb = logik.fragebogen()
+    daten["fragebogen"] = fb
+    daten["pack"]["fragebogen"] = logik.fragebogen_fuer_frontend(fb)
+    for fall in daten["pack"]["faelle"]:
+        gruppe = logik.positionsgruppe(fall.get("position", ""), fb)
+        fall["positionsgruppe"] = gruppe
+        fall["positionsgruppe_label"] = \
+            fb["bewertung"]["positionen"][gruppe]["label"]
+        fall["attribute"] = logik.attribute_fuer(fall.get("position", ""), fb)
+    return daten
+
+
 def bauen(daten_pfad, ziel):
     with open(daten_pfad, encoding="utf-8") as f:
-        daten = json.load(f)
+        daten = fragebogen_auffrischen(json.load(f))
 
     css = lies("stil.css")
     scout_html = lies("index.html")

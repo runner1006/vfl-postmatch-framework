@@ -9,7 +9,7 @@
     "abstrakter Gesamtnote, Performance und Ceiling getrennt verankert,",
     "verpflichtende Attribut-Sets je Position."
   ],
-  "skalen_richtung": "Auf allen Skalen dieses Fragebogens ist der hoehere Wert der bessere - Level 10 wie Attribut 5. Das laeuft absichtlich gleich mit dem Daten-Perzentil (100 = Spitze) und bewusst NICHT wie die Schulnote im alten internen Formular (1 = sehr gut). Die Richtungs-Umkehr war laut Audit die haeufigste Fehlerquelle; hier gibt es nur eine Richtung.",
+  "skalen_richtung": "Auf allen Skalen dieses Fragebogens ist der höhere Wert der bessere — Level 10 wie Attribut 5. Das läuft absichtlich gleich mit dem Daten-Perzentil (100 = Spitze) und bewusst NICHT wie die Schulnote im alten internen Formular (1 = sehr gut). Die Richtungs-Umkehr war laut Audit die häufigste Fehlerquelle; hier gibt es nur eine Richtung.",
   "level": {
     "min": 1,
     "max": 10,
@@ -82,14 +82,14 @@
         "key": "level_heute",
         "label": "Bewiesenes Niveau",
         "frage": "Auf welchem Niveau hat er bewiesen, dass er spielt?",
-        "erlaeuterung": "Nicht was er koennte - was er real gezeigt hat.",
+        "erlaeuterung": "Nicht was er könnte — was er real gezeigt hat.",
         "leitfrage": true
       },
       {
         "key": "level_ceiling",
         "label": "Realistisches Ceiling",
         "frage": "Auf welchem Niveau spielt er realistisch in zwei bis drei Jahren?",
-        "erlaeuterung": "Eigenstaendig beantworten, nicht als Aufschlag auf das bewiesene Niveau."
+        "erlaeuterung": "Eigenständig beantworten, nicht als Aufschlag auf das bewiesene Niveau."
       }
     ]
   },

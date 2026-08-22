@@ -194,35 +194,31 @@ function indexBlock(indizes, attribute) {
     Eigene Indizes, keine Rohdaten.</p>`;
 }
 
-/* Level Rating. Zehn Stufen mit echten Liga-Ankern - der Punkt aus dem Audit
-   ist, dass die Anker im Moment der Entscheidung sichtbar sein muessen, nicht
-   in einer Fussnote. Deshalb steht unter der Auswahl immer die Stufe, die
-   gerade gewaehlt ist, und die volle Tabelle liegt einen Klick daneben. */
+/* Level Rating. Der Anker muss dort stehen, wo entschieden wird - eine Zahl
+   von 1 bis 10 ist ohne Liga und Marktwertband eine Ratefrage, und was hinter
+   einem Aufklapper liegt, klickt am Ende jeder auf. Deshalb alle zehn Stufen
+   offen, jede mit ihren Ligen. Beste Stufe oben, wie in der Tabelle des Audits.
+
+   Native Radios statt Knoepfen: ein Tabstopp je Frage statt zehn, Pfeiltasten
+   funktionieren von selbst, und die Auswahl ist ohne JavaScript korrekt
+   ausgezeichnet. */
 function levelBlock(frage, stufen, wert, gesperrt) {
-  const gewaehlt = stufen.find((st) => st.wert === wert);
+  const leiter = stufen.slice().sort((a, b) => b.wert - a.wert);
   return `<div class="levelfrage" data-level="${esc(frage.key)}">
     <div class="label">${esc(frage.frage)}</div>
-    <div class="klein muted" style="margin-bottom:8px">${esc(frage.erlaeuterung || "")}</div>
-    <div class="levelskala">
-      ${stufen.slice().sort((a, b) => a.wert - b.wert).map((st) => `
-        <button type="button" data-wert="${st.wert}"
-          aria-pressed="${wert === st.wert}" title="${esc(st.ligen)}"
-          ${gesperrt ? "disabled" : ""}>${st.wert}</button>`).join("")}
+    <div class="klein muted hinweis">${esc(frage.erlaeuterung || "")}</div>
+    <div class="leiter" role="radiogroup" aria-label="${esc(frage.frage)}">
+      ${leiter.map((st) => `
+        <label class="stufe${wert === st.wert ? " gewaehlt" : ""}${
+          gesperrt ? " gesperrt" : ""}">
+          <input type="radio" name="lvl-${esc(frage.key)}" value="${st.wert}"
+                 ${wert === st.wert ? "checked" : ""}${gesperrt ? " disabled" : ""}>
+          <span class="nr">${st.wert}</span>
+          <span class="txt"><b>${esc(st.ligen)}</b>
+            <small>${esc(st.kontext)}</small></span>
+          <span class="geld">${esc(st.marktwert)}</span>
+        </label>`).join("")}
     </div>
-    <div class="levelanker">${gewaehlt ? `
-      <b>${gewaehlt.wert} · ${esc(gewaehlt.ligen)}</b>
-      <span class="muted">${esc(gewaehlt.kontext)} · ${esc(gewaehlt.marktwert)}</span>`
-      : `<span class="muted">Noch keine Stufe gewählt.</span>`}</div>
-    <details class="leveltabelle">
-      <summary class="klein">Alle Stufen anzeigen</summary>
-      <table class="vergleich">
-        ${stufen.map((st) => `<tr${st.wert === wert ? ' class="ich"' : ""}>
-          <td class="zahl mono" style="width:26px">${st.wert}</td>
-          <td>${esc(st.ligen)}<br><span class="muted klein">${esc(st.kontext)}</span></td>
-          <td class="zahl muted" style="white-space:nowrap">${esc(st.marktwert)}</td>
-        </tr>`).join("")}
-      </table>
-    </details>
   </div>`;
 }
 
@@ -339,27 +335,12 @@ function fallVerdrahten(gesperrt) {
   if (gesperrt) return;
 
   document.querySelectorAll(".levelfrage").forEach((box) => {
-    box.addEventListener("click", (e) => {
-      const b = e.target.closest("button[data-wert]");
-      if (!b) return;
-      const key = box.dataset.level;
-      const wert = Number(b.dataset.wert);
-      S.entwurf.level[key] = wert;
-      // Nur den Ankertext und die Markierung nachziehen. Das Element neu zu
-      // bauen wuerde bei jedem Klick weitere Listener anhaengen - und die
-      // Abgabe dann mehrfach abschicken.
-      box.querySelectorAll(".levelskala button").forEach((x) => {
-        x.setAttribute("aria-pressed", String(Number(x.dataset.wert) === wert));
-      });
-      const stufe = S.daten.fragebogen.level.stufen.find((st) => st.wert === wert);
-      const anker = box.querySelector(".levelanker");
-      if (anker && stufe) {
-        anker.innerHTML = `<b>${stufe.wert} · ${esc(stufe.ligen)}</b>`
-          + `<span class="muted">${esc(stufe.kontext)} · ${esc(stufe.marktwert)}</span>`;
-      }
-      box.querySelectorAll(".leveltabelle tr").forEach((tr) => {
-        tr.classList.toggle("ich",
-          Number(tr.firstElementChild.textContent.trim()) === wert);
+    box.addEventListener("change", (e) => {
+      const eingabe = e.target.closest("input[type=radio]");
+      if (!eingabe) return;
+      S.entwurf.level[box.dataset.level] = Number(eingabe.value);
+      box.querySelectorAll(".stufe").forEach((st) => {
+        st.classList.toggle("gewaehlt", st.contains(eingabe));
       });
       fortschritt();
     });

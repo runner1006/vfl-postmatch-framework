@@ -29,6 +29,16 @@ def fragebogen():
         return json.load(f)
 
 
+def fragebogen_fuer_frontend(fb=None):
+    """Der Ausschnitt, den das Frontend braucht. Die Attribut-Sets haengen an
+    der Position und kommen deshalb je Fall mit, nicht hier."""
+    fb = fb or fragebogen()
+    teil = {k: fb[k] for k in ("version", "skalen_richtung", "level",
+                               "prognosen", "notiz", "schwellen")}
+    teil["skala"] = fb["bewertung"]["skala"]
+    return teil
+
+
 def leitfrage(fb=None):
     fb = fb or fragebogen()
     for f in fb["level"]["fragen"]:
@@ -114,9 +124,7 @@ def pack_fuer_scout(con, scout, slug=None):
         "pack": {"slug": pack["slug"], "titel": pack["titel"],
                  "status": pack["status"], "schliesst_am": pack["schliesst_am"]},
         "faelle": ausgabe,
-        "fragebogen": {k: fb[k] for k in
-                       ("version", "skalen_richtung", "level", "prognosen",
-                        "notiz", "schwellen")} | {"skala": fb["bewertung"]["skala"]},
+        "fragebogen": fragebogen_fuer_frontend(fb),
     }
 
 
