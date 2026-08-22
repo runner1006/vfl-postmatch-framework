@@ -98,11 +98,12 @@ textarea{
 .fallzeile .meta{color:var(--muted);font-size:12.5px}
 
 /* ----------------------------------------------------------------- Fall */
-.steckbrief{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
+.steckbrief{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));
   gap:10px;margin:12px 0 4px}
 .steckbrief div{background:var(--surface-2);border-radius:8px;padding:8px 10px}
 .steckbrief dt{font-size:11.5px;color:var(--muted);margin:0}
-.steckbrief dd{margin:1px 0 0;font-weight:600;font-size:14px}
+.steckbrief dd{margin:1px 0 0;font-weight:600;font-size:14px;
+  hyphens:auto}
 
 .indizes{display:grid;grid-template-columns:1fr;gap:6px;margin:10px 0 0}
 .indexzeile{display:grid;grid-template-columns:150px 1fr 34px;gap:10px;
@@ -171,3 +172,41 @@ input[type=range]{width:100%;margin:10px 0 0;accent-color:var(--s1)}
 
 .fusszeile{margin-top:34px;padding-top:16px;border-top:1px solid var(--border);
   color:var(--muted);font-size:12.5px}
+
+/* ------------------------------------------------------------ Level Rating */
+/* Zehn Stufen muessen auf ein Telefon passen, ohne dass die Anker verschwinden:
+   Knopfraster oben, gewaehlte Stufe im Klartext darunter, volle Tabelle einen
+   Klick daneben. */
+.levelfrage{padding:16px 0;border-bottom:1px solid var(--border)}
+.levelfrage:last-child{border-bottom:none}
+.levelskala{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+@media (max-width:560px){.levelskala{grid-template-columns:repeat(5,1fr)}}
+.levelskala button{
+  background:var(--surface-2);border:1px solid transparent;border-radius:8px;
+  padding:11px 0;font:inherit;font-weight:600;font-size:15px;color:var(--ink-2);
+  cursor:pointer
+}
+.levelskala button:hover{border-color:var(--border)}
+.levelskala button[aria-pressed="true"]{background:var(--s1);color:#fff}
+.levelskala button:disabled{cursor:default;opacity:.75}
+.levelanker{
+  margin-top:9px;padding:9px 11px;background:var(--surface-2);border-radius:8px;
+  font-size:13px;line-height:1.45
+}
+.levelanker b{display:block;font-size:13.5px}
+.leveltabelle{margin-top:8px}
+.leveltabelle summary{cursor:pointer;color:var(--s1);padding:3px 0}
+.leveltabelle table{margin-top:4px}
+
+.meldung.warn{background:color-mix(in srgb,var(--warn) 15%,transparent);
+  color:var(--warn)}
+.warnton{color:var(--warn)}
+
+/* --------------------------------------------------------- Kalibrier-Report */
+.matrix{width:100%;border-collapse:collapse;font-size:13px}
+.matrix th,.matrix td{padding:6px 8px;border-bottom:1px solid var(--border);
+  text-align:right;white-space:nowrap}
+.matrix th:first-child,.matrix td:first-child{text-align:left}
+.matrix th{font-weight:600;color:var(--ink-2);font-size:12px}
+.zelle-tot{color:var(--schlecht);font-weight:600}
+.zelle-gut{color:var(--gut)}

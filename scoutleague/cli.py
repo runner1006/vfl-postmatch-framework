@@ -20,6 +20,7 @@ sys.path.insert(0, HIER)
 import db        # noqa: E402
 import export    # noqa: E402
 import logik     # noqa: E402
+import metriken  # noqa: E402
 
 # Ohne I, O, 0, 1 - Codes werden vorgelesen und abgetippt.
 ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -74,7 +75,8 @@ def pack_importieren(con, pfad):
         daten = json.load(f)
 
     fb = logik.fragebogen()
-    fragen = {q["key"] for q in fb["bewertung"]["fragen"]}
+    level_fragen = {q["key"] for q in fb["level"]["fragen"]}
+    lmin, lmax = fb["level"]["min"], fb["level"]["max"]
     prognosen = {p["key"] for p in fb["prognosen"]}
     param_pflicht = {p["parameter"] for p in fb["prognosen"] if p.get("parameter")}
 
@@ -95,11 +97,19 @@ def pack_importieren(con, pfad):
         modell = fall.get("modell") or {}
         m_bew = dict(modell.get("bewertung") or {})
         m_prog = dict(modell.get("prognose") or {})
+        m_level = dict(modell.get("level") or {})
 
+        # Attribut-Set haengt an der Position - was nicht dazugehoert, waere
+        # eine Modellerwartung zu einer Frage, die nie gestellt wird.
+        gueltige = set(logik.attribut_keys(fall.get("position", ""), fb))
+        gruppe = logik.positionsgruppe(fall.get("position", ""), fb)
+        if not fall.get("position"):
+            print(f"  Hinweis: {wo} ohne Position - faellt auf die Gruppe "
+                  f"{gruppe} zurueck.", file=sys.stderr)
         for k in list(m_bew):
-            if k not in fragen:
-                raise SystemExit(f"{wo}: Modellbewertung '{k}' steht nicht im "
-                                 f"Fragebogen.")
+            if k not in gueltige:
+                raise SystemExit(f"{wo}: Modellbewertung '{k}' gehoert nicht "
+                                 f"zum Attribut-Set der Gruppe {gruppe}.")
         for k in list(m_prog):
             if k not in prognosen:
                 raise SystemExit(f"{wo}: Modellprognose '{k}' steht nicht im "
@@ -107,17 +117,41 @@ def pack_importieren(con, pfad):
             if not 0.0 <= float(m_prog[k]) <= 1.0:
                 raise SystemExit(f"{wo}: Modellprognose '{k}' muss zwischen 0 "
                                  f"und 1 liegen.")
+        for k in list(m_level):
+            if k not in level_fragen:
+                raise SystemExit(f"{wo}: Modell-Level '{k}' steht nicht im "
+                                 f"Fragebogen.")
+            if not lmin <= float(m_level[k]) <= lmax:
+                raise SystemExit(f"{wo}: Modell-Level '{k}' muss zwischen "
+                                 f"{lmin} und {lmax} liegen.")
 
         # Fehlende Modellbewertungen aus den Indizes ableiten, wo moeglich
-        for k in fragen:
+        for k in gueltige:
             if k not in m_bew and k in indizes:
                 m_bew[k] = index_zu_skala(indizes[k])
+
+        # Die Bruecke aus dem Audit: bewiesenes Liga-Niveau plus Verschiebung
+        # durch das Daten-Perzentil. Nur wenn der Pack das Niveau nennt -
+        # geraten wird hier nichts.
+        leit = logik.leitfrage(fb)
+        basis = fall.get("liga_level")
+        perzentil = indizes.get("profile_percentile")
+        if leit not in m_level and basis is not None and perzentil is not None:
+            abgeleitet = metriken.perzentil_zu_level(perzentil, basis)
+            if abgeleitet is not None:
+                m_level[leit] = abgeleitet
+                print(f"  {wo}: Modell-Level {abgeleitet} aus Liga-Niveau "
+                      f"{basis} und Perzentil {perzentil} abgeleitet.",
+                      file=sys.stderr)
 
         fehlend = sorted(prognosen - set(m_prog))
         if fehlend:
             print(f"  Hinweis: {wo} ohne Modellprognose fuer "
                   f"{', '.join(fehlend)} - dort entfaellt das Sofort-Feedback.",
                   file=sys.stderr)
+        if leit not in m_level:
+            print(f"  Hinweis: {wo} ohne Modell-Level - Trennschaerfe und "
+                  f"Konfliktliste lassen diesen Fall aus.", file=sys.stderr)
 
         params = fall.get("parameter") or {}
         for p in param_pflicht:
@@ -125,7 +159,9 @@ def pack_importieren(con, pfad):
                 print(f"  Hinweis: {wo} ohne Parameter '{p}' - die zugehoerige "
                       f"Prognosefrage bleibt unspezifisch.", file=sys.stderr)
 
-        aufbereitet.append((fall, indizes, {"bewertung": m_bew, "prognose": m_prog},
+        aufbereitet.append((fall, indizes,
+                            {"bewertung": m_bew, "prognose": m_prog,
+                             "level": m_level},
                             params))
 
     with con:

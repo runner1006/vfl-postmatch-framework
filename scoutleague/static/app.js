@@ -141,6 +141,7 @@ async function packLaden() {
 function fallOeffnen(id) {
   S.fall = S.daten.faelle.find((f) => f.id === id);
   S.entwurf = {
+    level: Object.assign({}, S.fall.eigene_bewertung.level),
     antworten: Object.assign({}, S.fall.eigene_bewertung.antworten),
     prognosen: Object.assign({}, S.fall.eigene_bewertung.prognosen),
     notiz: S.fall.eigene_bewertung.notiz || "",
@@ -163,8 +164,8 @@ function videoBlock(url) {
             allowfullscreen></iframe></div>`;
 }
 
-function indexBlock(indizes, fragen) {
-  const eintraege = fragen
+function indexBlock(indizes, attribute) {
+  const eintraege = attribute
     .filter((q) => indizes[q.key] !== undefined && indizes[q.key] !== null)
     .map((q) => ({ label: q.label, wert: Number(indizes[q.key]) }));
   if (!eintraege.length) return "";
@@ -179,40 +180,65 @@ function indexBlock(indizes, fragen) {
     Eigene Indizes, keine Rohdaten.</p>`;
 }
 
+/* Level Rating. Zehn Stufen mit echten Liga-Ankern - der Punkt aus dem Audit
+   ist, dass die Anker im Moment der Entscheidung sichtbar sein muessen, nicht
+   in einer Fussnote. Deshalb steht unter der Auswahl immer die Stufe, die
+   gerade gewaehlt ist, und die volle Tabelle liegt einen Klick daneben. */
+function levelBlock(frage, stufen, wert, gesperrt) {
+  const gewaehlt = stufen.find((st) => st.wert === wert);
+  return `<div class="levelfrage" data-level="${esc(frage.key)}">
+    <div class="label">${esc(frage.frage)}</div>
+    <div class="klein muted" style="margin-bottom:8px">${esc(frage.erlaeuterung || "")}</div>
+    <div class="levelskala">
+      ${stufen.slice().sort((a, b) => a.wert - b.wert).map((st) => `
+        <button type="button" data-wert="${st.wert}"
+          aria-pressed="${wert === st.wert}" title="${esc(st.ligen)}"
+          ${gesperrt ? "disabled" : ""}>${st.wert}</button>`).join("")}
+    </div>
+    <div class="levelanker">${gewaehlt ? `
+      <b>${gewaehlt.wert} · ${esc(gewaehlt.ligen)}</b>
+      <span class="muted">${esc(gewaehlt.kontext)} · ${esc(gewaehlt.marktwert)}</span>`
+      : `<span class="muted">Noch keine Stufe gewählt.</span>`}</div>
+    <details class="leveltabelle">
+      <summary class="klein">Alle Stufen anzeigen</summary>
+      <table class="vergleich">
+        ${stufen.map((st) => `<tr${st.wert === wert ? ' class="ich"' : ""}>
+          <td class="zahl mono" style="width:26px">${st.wert}</td>
+          <td>${esc(st.ligen)}<br><span class="muted klein">${esc(st.kontext)}</span></td>
+          <td class="zahl muted" style="white-space:nowrap">${esc(st.marktwert)}</td>
+        </tr>`).join("")}
+      </table>
+    </details>
+  </div>`;
+}
+
 function fallZeichnen() {
   const f = S.fall;
   const fb = S.daten.fragebogen;
   const gesperrt = f.eigene_bewertung.abgegeben || S.daten.pack.status !== "offen";
 
   const steckbrief = [
-    ["Position", f.position], ["Jahrgang", f.jahrgang],
-    ["Verein", f.verein], ["Liga", f.liga], ["Fuß", f.fuss],
+    ["Position", f.position], ["Rolle", f.positionsgruppe_label],
+    ["Jahrgang", f.jahrgang], ["Verein", f.verein], ["Liga", f.liga],
+    ["Fuß", f.fuss],
   ].filter(([, v]) => v).map(([k, v]) =>
     `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
 
-  const gruppen = [];
-  fb.bewertung.fragen.forEach((q) => {
-    const g = q.gruppe || "";
-    if (!gruppen.length || gruppen[gruppen.length - 1].name !== g) {
-      gruppen.push({ name: g, fragen: [] });
-    }
-    gruppen[gruppen.length - 1].fragen.push(q);
-  });
+  const levelHtml = fb.level.fragen.map((q) =>
+    levelBlock(q, fb.level.stufen, S.entwurf.level[q.key], gesperrt)).join("");
 
-  const fragenHtml = gruppen.map((g) => `
-    ${g.name ? `<h3>${esc(g.name)}</h3>` : ""}
-    ${g.fragen.map((q) => `
-      <div class="frage">
-        <div class="label">${esc(q.label)}</div>
-        <div class="anker"><span>1 &ndash; ${esc(q.anker1 || "")}</span>
-                           <span>${esc(q.anker5 || "")} &ndash; 5</span></div>
-        <div class="skala" data-frage="${esc(q.key)}">
-          ${[1, 2, 3, 4, 5].map((n) => `
-            <button type="button" data-wert="${n}"
-              aria-pressed="${S.entwurf.antworten[q.key] === n}"
-              ${gesperrt ? "disabled" : ""}>${n}</button>`).join("")}
-        </div>
-      </div>`).join("")}`).join("");
+  const attrHtml = f.attribute.map((q) => `
+    <div class="frage">
+      <div class="label">${esc(q.label)}</div>
+      <div class="anker"><span>1 &ndash; ${esc(q.anker1 || "")}</span>
+                         <span>${esc(q.anker5 || "")} &ndash; 5</span></div>
+      <div class="skala" data-frage="${esc(q.key)}">
+        ${[1, 2, 3, 4, 5].map((n) => `
+          <button type="button" data-wert="${n}"
+            aria-pressed="${S.entwurf.antworten[q.key] === n}"
+            ${gesperrt ? "disabled" : ""}>${n}</button>`).join("")}
+      </div>
+    </div>`).join("");
 
   const prognosenHtml = fb.prognosen.map((p) => {
     const param = p.parameter ? (f.parameter || {})[p.parameter] : null;
@@ -240,16 +266,27 @@ function fallZeichnen() {
     <div class="karte">
       <dl class="steckbrief" style="margin-top:0">${steckbrief}</dl>
       ${videoBlock(f.video_url)}
-      ${indexBlock(f.indizes, fb.bewertung.fragen)}
+      ${indexBlock(f.indizes, f.attribute)}
     </div>
 
     <div id="rueckmeldung"></div>
 
     <div class="karte">
-      <h2 style="margin-top:0">Bewertung</h2>
-      <p class="klein muted">Nutze die ganze Skala. Wer überall die 3 vergibt,
-      erzeugt keine Information &mdash; das Profil zeigt dir das.</p>
-      ${fragenHtml}
+      <h2 style="margin-top:0">${esc(fb.level.titel)}</h2>
+      <p class="klein muted">Jede Stufe ist ein reales Liga-Niveau mit
+      Marktwertband. Beide Fragen unabhängig beantworten &mdash; das Ceiling ist
+      kein Aufschlag auf das bewiesene Niveau.</p>
+      ${levelHtml}
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">Attribute
+        <span class="abzeichen">${esc(f.positionsgruppe)}</span></h2>
+      <p class="klein muted">Verpflichtendes Set für
+      ${esc(f.positionsgruppe_label)}. Höher ist besser &mdash; auf jeder Skala
+      hier. Nutze die ganze Breite: wer überall die 3 vergibt, erzeugt keine
+      Information.</p>
+      ${attrHtml}
     </div>
 
     <div class="karte">
@@ -287,6 +324,33 @@ function fallZeichnen() {
 function fallVerdrahten(gesperrt) {
   if (gesperrt) return;
 
+  document.querySelectorAll(".levelfrage").forEach((box) => {
+    box.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-wert]");
+      if (!b) return;
+      const key = box.dataset.level;
+      const wert = Number(b.dataset.wert);
+      S.entwurf.level[key] = wert;
+      // Nur den Ankertext und die Markierung nachziehen. Das Element neu zu
+      // bauen wuerde bei jedem Klick weitere Listener anhaengen - und die
+      // Abgabe dann mehrfach abschicken.
+      box.querySelectorAll(".levelskala button").forEach((x) => {
+        x.setAttribute("aria-pressed", String(Number(x.dataset.wert) === wert));
+      });
+      const stufe = S.daten.fragebogen.level.stufen.find((st) => st.wert === wert);
+      const anker = box.querySelector(".levelanker");
+      if (anker && stufe) {
+        anker.innerHTML = `<b>${stufe.wert} · ${esc(stufe.ligen)}</b>`
+          + `<span class="muted">${esc(stufe.kontext)} · ${esc(stufe.marktwert)}</span>`;
+      }
+      box.querySelectorAll(".leveltabelle tr").forEach((tr) => {
+        tr.classList.toggle("ich",
+          Number(tr.firstElementChild.textContent.trim()) === wert);
+      });
+      fortschritt();
+    });
+  });
+
   document.querySelectorAll(".skala").forEach((skala) => {
     skala.addEventListener("click", (e) => {
       const b = e.target.closest("button[data-wert]");
@@ -323,14 +387,19 @@ function fallVerdrahten(gesperrt) {
 
 function fortschritt() {
   const fb = S.daten.fragebogen;
-  const a = fb.bewertung.fragen.filter(
+  const attribute = S.fall.attribute;
+  const l = fb.level.fragen.filter(
+    (q) => S.entwurf.level[q.key] !== undefined).length;
+  const a = attribute.filter(
     (q) => S.entwurf.antworten[q.key] !== undefined).length;
   const p = fb.prognosen.filter(
     (q) => S.entwurf.prognosen[q.key] !== undefined).length;
-  const voll = a === fb.bewertung.fragen.length && p === fb.prognosen.length;
+  const voll = l === fb.level.fragen.length && a === attribute.length
+    && p === fb.prognosen.length;
   const box = el("fortschritt");
   if (box) {
-    box.textContent = `${a}/${fb.bewertung.fragen.length} Bewertungen · `
+    box.textContent = `${l}/${fb.level.fragen.length} Level · `
+      + `${a}/${attribute.length} Attribute · `
       + `${p}/${fb.prognosen.length} Prognosen`;
   }
   const knopf = el("abgeben");
@@ -344,6 +413,7 @@ async function senden(abgeben) {
       method: "POST",
       body: JSON.stringify({
         fall_id: S.fall.id,
+        level: S.entwurf.level,
         antworten: S.entwurf.antworten,
         prognosen: S.entwurf.prognosen,
         notiz: S.entwurf.notiz,
@@ -355,6 +425,7 @@ async function senden(abgeben) {
 
     // Der Entwurf ist ab jetzt der Bestand - die Rueckmeldungstabelle liest
     // aus eigene_bewertung, nicht aus dem Entwurf.
+    S.fall.eigene_bewertung.level = Object.assign({}, S.entwurf.level);
     S.fall.eigene_bewertung.antworten = Object.assign({}, S.entwurf.antworten);
     S.fall.eigene_bewertung.prognosen = Object.assign({}, S.entwurf.prognosen);
     S.fall.eigene_bewertung.notiz = S.entwurf.notiz;
@@ -374,56 +445,95 @@ function rueckmeldungZeichnen(r, modell) {
   const fb = S.daten.fragebogen;
   const mb = (modell && modell.bewertung) || {};
   const mp = (modell && modell.prognose) || {};
+  const ml = (modell && modell.level) || {};
   const antw = S.fall.eigene_bewertung.antworten;
+  const lvl = S.fall.eigene_bewertung.level;
   const prog = S.fall.eigene_bewertung.prognosen;
   const koh = r.kohorte;
 
-  const zeilen = fb.bewertung.fragen.map((q) => {
-    const du = antw[q.key];
-    const m = mb[q.key];
-    const k = koh && koh.mittel ? koh.mittel[q.key] : null;
-    return `<tr><td>${esc(q.label)}</td>
-      <td class="zahl">${du === undefined ? "–" : du}</td>
-      <td class="zahl">${m === undefined ? "–" : zahl(m, 1)}</td>
-      <td class="zahl muted">${k === null || k === undefined ? "–" : zahl(k, 1)}</td></tr>`;
-  }).join("");
+  const kohWert = (key) => {
+    if (!koh || !koh.mittel) return "–";
+    const v = koh.mittel[key];
+    return v === undefined || v === null ? "–" : zahl(v, 1);
+  };
 
-  const progZeilen = fb.prognosen.map((p) => {
-    const du = prog[p.key];
-    const m = mp[p.key];
-    return `<tr><td>${esc(p.label)}</td>
-      <td class="zahl">${du === undefined ? "–" : Math.round(du * 100) + "%"}</td>
-      <td class="zahl">${m === undefined ? "–" : Math.round(m * 100) + "%"}</td>
-      <td class="zahl muted">offen</td></tr>`;
-  }).join("");
+  const levelZeilen = fb.level.fragen.map((q) => `
+    <tr><td>${esc(q.label)}</td>
+      <td class="zahl">${lvl[q.key] === undefined ? "–" : lvl[q.key]}</td>
+      <td class="zahl">${ml[q.key] === undefined ? "–" : zahl(ml[q.key], 1)}</td>
+      <td class="zahl muted">${kohWert(q.key)}</td></tr>`).join("");
+
+  const attrZeilen = S.fall.attribute.map((q) => `
+    <tr><td>${esc(q.label)}</td>
+      <td class="zahl">${antw[q.key] === undefined ? "–" : antw[q.key]}</td>
+      <td class="zahl">${mb[q.key] === undefined ? "–" : zahl(mb[q.key], 1)}</td>
+      <td class="zahl muted">${kohWert(q.key)}</td></tr>`).join("");
+
+  const progZeilen = fb.prognosen.map((p) => `
+    <tr><td>${esc(p.label)}</td>
+      <td class="zahl">${prog[p.key] === undefined ? "–"
+        : Math.round(prog[p.key] * 100) + "%"}</td>
+      <td class="zahl">${mp[p.key] === undefined ? "–"
+        : Math.round(mp[p.key] * 100) + "%"}</td>
+      <td class="zahl muted">offen</td></tr>`).join("");
+
+  const k = r.konflikt;
+  const konfliktBox = k ? `
+    <div class="meldung ${k.richtung === "scout_hoeher" ? "warn" : "warn"}"
+         style="margin:12px 0 0">
+      <b>Konfliktfall.</b> ${k.richtung === "scout_hoeher"
+        ? `Du siehst ihn ${Math.abs(k.differenz)} Stufen über dem Modell —
+           Bauchgefühl ohne Datenstütze, oder das Modell übersieht etwas.`
+        : `Das Modell sieht ihn ${Math.abs(k.differenz)} Stufen über dir —
+           möglicherweise ein Übersehener.`}
+      Solche Fälle landen auf der Review-Liste; dort steckt laut Audit der
+      meiste Erkenntnisgewinn.
+    </div>` : "";
 
   el("rueckmeldung").innerHTML = `
     <div class="karte">
       <h2 style="margin-top:0">Sofort-Rückmeldung</h2>
       <div class="kennzahl">
+        <div><div class="k">LEVEL-ABSTAND</div>
+             <div class="v">${r.level_abstand === null ? "–"
+               : (r.level_abstand > 0 ? "+" : "") + zahl(r.level_abstand, 1)}</div>
+             <div class="n">du gegen Modell</div></div>
         <div><div class="k">MODELL-NÄHE</div>
              <div class="v">${zahl(r.modell_naehe, 0)}</div>
-             <div class="n">0&ndash;100, Bewertung</div></div>
+             <div class="n">0&ndash;100, Attribute</div></div>
         <div><div class="k">PROGNOSE-NÄHE</div>
              <div class="v">${zahl(r.prognose_naehe, 0)}</div>
              <div class="n">0&ndash;100, gegen Modell</div></div>
+        <div><div class="k">ATTRIBUT-MITTEL</div>
+             <div class="v">${zahl(r.attribut_mittel, 1)}</div>
+             <div class="n">dein Schnitt, 1&ndash;5</div></div>
       </div>
+      ${konfliktBox}
       <p class="klein muted" style="margin-top:10px">Nähe ist kein Gütemaß.
       Wer vom Modell abweicht und recht behält, gewinnt die Liga &mdash;
       entschieden wird sie über den Brier-Score gegen die Realität.</p>
       <div class="scroll"><table class="vergleich">
-        <tr><th>Bewertung</th><th class="zahl">Du</th><th class="zahl">Modell</th>
+        <tr><th>Level Rating</th><th class="zahl">Du</th><th class="zahl">Modell</th>
             <th class="zahl">Feld</th></tr>
-        ${zeilen}
+        ${levelZeilen}
+        <tr><th style="padding-top:14px">Attribut</th>
+            <th class="zahl" style="padding-top:14px">Du</th>
+            <th class="zahl" style="padding-top:14px">Modell</th>
+            <th class="zahl" style="padding-top:14px">Feld</th></tr>
+        ${attrZeilen}
         <tr><th style="padding-top:14px">Prognose</th>
             <th class="zahl" style="padding-top:14px">Du</th>
             <th class="zahl" style="padding-top:14px">Modell</th>
             <th class="zahl" style="padding-top:14px">Realität</th></tr>
         ${progZeilen}
       </table></div>
-      ${koh ? `<p class="klein muted">Feld = Mittel aus ${koh.n} Abgaben.</p>`
-            : `<p class="klein muted">Der Feldvergleich erscheint ab drei Abgaben
-               zu diesem Fall.</p>`}
+      ${koh ? `<p class="klein muted">Feld = Mittel aus ${koh.n} Abgaben.${
+          koh.mittel_bereinigt !== undefined
+            ? ` Rater-bereinigt (jeder Scout an seinen eigenen Abgaben
+                z-standardisiert): <b>${zahl(koh.mittel_bereinigt, 1)}</b>
+                auf der Leitfrage.` : ""}</p>`
+        : `<p class="klein muted">Der Feldvergleich erscheint ab drei Abgaben
+           zu diesem Fall.</p>`}
     </div>`;
 }
 
@@ -436,13 +546,25 @@ async function profilLaden() {
   catch (err) { return el("profilinhalt").innerHTML =
     `<div class="meldung fehler">${esc(err.message)}</div>`; }
 
+  const sw = p.schwellen || {};
   const v = p.verteilung || {};
+  const stufen = Object.keys(v).sort((a, b) => Number(a) - Number(b));
   const max = Math.max(1, ...Object.values(v));
-  const balken = Object.keys(v).sort().map((k) =>
+  const balken = stufen.map((k) =>
     `<div style="height:${Math.round((v[k] / max) * 100)}%"><b>${v[k] || ""}</b></div>`
   ).join("");
-  const achse = Object.keys(v).sort().map((k) => `<span>${k}</span>`).join("");
+  const achse = stufen.map((k) => `<span>${k}</span>`).join("");
 
+  // Unter einer Handvoll Faellen ist jede dieser Diagnosen Rauschen: wer einen
+  // Spieler bewertet hat, hat per Konstruktion 100 % auf einer Stufe.
+  const mind = sw.mindest_faelle_diagnose || 5;
+  const genug = p.n_faelle >= mind;
+  const zt = p.zentraltendenz;
+  const ztWarn = genug && zt && zt.anteil > (sw.zentraltendenz_max || 0.35);
+  const haloWarn = p.halo !== null && p.halo >= (sw.halo_warnung || 0.75);
+  const entWarn = p.entkopplung !== null
+    && p.entkopplung >= (sw.entkopplung_warnung || 0.55);
+  const messbar = p.halo !== null || p.entkopplung !== null;
   const kurve = (p.kalibrierungskurve || []).filter((b) => b.n > 0);
 
   el("profilinhalt").innerHTML = `
@@ -452,7 +574,7 @@ async function profilLaden() {
         <div><div class="k">FÄLLE</div><div class="v">${p.n_faelle}</div>
              <div class="n">abgegeben</div></div>
         <div><div class="k">SPREIZUNG</div><div class="v">${zahl(p.spreizung, 2)}</div>
-             <div class="n">Streuung deiner Note</div></div>
+             <div class="n">Streuung deiner Level</div></div>
         <div><div class="k">BIAS</div>
              <div class="v">${p.bias === null ? "–"
                : (p.bias > 0 ? "+" : "") + zahl(p.bias, 2)}</div>
@@ -461,12 +583,44 @@ async function profilLaden() {
              <div class="v">${zahl(p.trennschaerfe, 2)}</div>
              <div class="n">Rangkorrelation Modell</div></div>
       </div>
-      <h3>Verteilung deiner Gesamteinschätzungen</h3>
+      <h3>Verteilung deiner bewiesenen Level</h3>
       <div class="verteilung">${balken}</div>
       <div class="achse">${achse}</div>
-      <p class="klein muted">Eine Spreizung nahe 0 heißt: du vergibst fast immer
-      dieselbe Note. Das ist die häufigste Kalibrierungsschwäche &mdash; und der
-      Grund, warum diese Zahl hier oben steht.</p>
+      ${zt ? `<p class="klein ${ztWarn ? "warnton" : "muted"}">
+        ${Math.round(zt.anteil * 100)}&nbsp;% deiner Level entfallen auf Stufe
+        ${zt.modalwert}; du nutzt ${zt.genutzte_stufen} der 10 Stufen.
+        ${!genug ? `Als Diagnose zählt das erst ab ${mind} bewerteten Fällen —
+           bis dahin ist die Zahl eine Momentaufnahme.`
+          : ztWarn ? `Ziel sind höchstens ${Math.round(
+            (sw.zentraltendenz_max || 0.35) * 100)}&nbsp;% auf einer Stufe —
+            darunter kann die Skala nicht ranken.`
+          : "Das liegt im Zielkorridor."}</p>` : ""}
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">Wie eigenständig deine Urteile sind</h2>
+      <div class="kennzahl">
+        <div><div class="k">HALO</div><div class="v">${zahl(p.halo, 2)}</div>
+             <div class="n">Level ↔ Attribut-Mittel</div></div>
+        <div><div class="k">ENTKOPPLUNG</div>
+             <div class="v">${zahl(p.entkopplung, 2)}</div>
+             <div class="n">Niveau ↔ Ceiling</div></div>
+      </div>
+      <p class="klein ${haloWarn || entWarn ? "warnton" : "muted"}">
+        ${!messbar ? `Beide Korrelationen brauchen mindestens drei abgegebene
+           Fälle mit unterschiedlichen Bewertungen. Wer überall dasselbe
+           vergibt, hat keinen messbaren Halo — das zeigt dann die Spreizung
+           oben.` : ""}
+        ${haloWarn ? `Dein Level folgt dem Attribut-Mittel fast eins zu eins
+           (r = ${zahl(p.halo, 2)}) — das Gesamturteil trägt dann kaum eigene
+           Information. ` : ""}
+        ${entWarn ? `Bewiesenes Niveau und Ceiling laufen bei dir gleich
+           (r = ${zahl(p.entkopplung, 2)}) — das Ceiling wirkt wie ein Aufschlag
+           statt wie eine eigene Schätzung. ` : ""}
+        ${messbar && !haloWarn && !entWarn ? `Was messbar ist, liegt im
+           unkritischen Bereich: dein Gesamturteil ist mehr als der Schnitt der
+           Attribute, und das Ceiling ist eine eigene Einschätzung.` : ""}
+      </p>
     </div>
 
     <div class="karte">
@@ -520,7 +674,8 @@ async function ligaLaden() {
       <table class="tab">
         <tr><th>#</th><th>Scout</th><th class="zahl">Fälle</th>
             <th class="zahl">Trennschärfe</th><th class="zahl">Spreizung</th>
-            <th class="zahl">Bias</th><th class="zahl">Modell-Nähe</th>
+            <th class="zahl">Bias</th><th class="zahl">Halo</th>
+            <th class="zahl">Modell-Nähe</th>
             <th class="zahl">Brier</th><th class="zahl">Skill</th></tr>
         ${d.zeilen.map((z) => `
           <tr class="${z.name === S.name ? "ich" : ""}">
@@ -533,6 +688,7 @@ async function ligaLaden() {
                 ? ` <span class="muted">(${zahl(z.spreizungs_index, 2)}×)</span>` : ""}</td>
             <td class="zahl">${z.bias === null ? "–"
               : (z.bias > 0 ? "+" : "") + zahl(z.bias, 2)}</td>
+            <td class="zahl">${zahl(z.halo, 2)}</td>
             <td class="zahl">${zahl(z.modell_naehe, 0)}</td>
             <td class="zahl">${z.n_aufgeloest ? zahl(z.brier, 3) : "–"}</td>
             <td class="zahl">${z.n_aufgeloest ? zahl(z.brier_skill, 2) : "–"}</td>
@@ -544,6 +700,8 @@ async function ligaLaden() {
       zum Median des Felds. &nbsp;
       <b>Bias</b> Abstand zum Feldmittel &mdash; positiv heißt milder. &nbsp;
       <b>Trennschärfe</b> Rangkorrelation mit dem Modell über alle Fälle. &nbsp;
+      <b>Halo</b> wie stark das Level dem Attribut-Mittel folgt — nahe 1 heißt,
+      das Gesamturteil ist nur ein Echo. &nbsp;
       <b>Modell-Nähe</b> 0&ndash;100, ausdrücklich kein Gütemaß. &nbsp;
       <b>Brier</b> Prognosefehler gegen die Realität, kleiner ist besser. &nbsp;
       <b>Skill</b> Brier gegen die Basisrate &mdash; über 0 heißt besser als raten.

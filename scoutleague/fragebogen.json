@@ -1,60 +1,395 @@
 {
-  "version": "0.1",
-  "hinweis": "Fragen und Prognosen stehen als Daten hier, nicht im Code. Aendern ohne Python anzufassen. Schluessel (key) sind stabil - wer einen key umbenennt, trennt bestehende Bewertungen von ihrer Frage.",
-
-  "bewertung": {
-    "skala": {"min": 1, "max": 5, "schritt": 1},
+  "version": "0.2",
+  "hinweis": [
+    "Fragen, Skalen und Attribut-Sets stehen als Daten hier, nicht im Code.",
+    "Aendern ohne Python anzufassen. Stabil bleiben muessen die 'key'-Werte -",
+    "wer einen key umbenennt, trennt bestehende Bewertungen von ihrer Frage.",
+    "",
+    "Rev. 0.2 setzt den Scout Rating Audit (Juni 2026) um: Level Rating statt",
+    "abstrakter Gesamtnote, Performance und Ceiling getrennt verankert,",
+    "verpflichtende Attribut-Sets je Position."
+  ],
+  "skalen_richtung": "Auf allen Skalen dieses Fragebogens ist der hoehere Wert der bessere - Level 10 wie Attribut 5. Das laeuft absichtlich gleich mit dem Daten-Perzentil (100 = Spitze) und bewusst NICHT wie die Schulnote im alten internen Formular (1 = sehr gut). Die Richtungs-Umkehr war laut Audit die haeufigste Fehlerquelle; hier gibt es nur eine Richtung.",
+  "level": {
+    "min": 1,
+    "max": 10,
+    "titel": "Level Rating",
+    "quelle": "Strykerlabs Level Rating, Skala aus dem Scout Rating Audit (Juni 2026)",
+    "stufen": [
+      {
+        "wert": 10,
+        "ligen": "Premier League",
+        "kontext": "England, top flight",
+        "marktwert": "€20–80m"
+      },
+      {
+        "wert": 9,
+        "ligen": "La Liga · Bundesliga · Serie A · Ligue 1",
+        "kontext": "Top-5-Ligen",
+        "marktwert": "€10–40m"
+      },
+      {
+        "wert": 8,
+        "ligen": "Championship · Eredivisie · Primeira",
+        "kontext": "Starke 1. Ligen & ENG 2",
+        "marktwert": "€3–15m"
+      },
+      {
+        "wert": 7,
+        "ligen": "Belgian Pro League · 2. Bundesliga · Süper Lig",
+        "kontext": "Starke 2. Ligen & mittlere 1. Ligen",
+        "marktwert": "€1.5–7m"
+      },
+      {
+        "wert": 6,
+        "ligen": "Österreich Bundesliga · starke 2. Ligen",
+        "kontext": "Ausgewählte 1. Ligen",
+        "marktwert": "€0.5–3m"
+      },
+      {
+        "wert": 5,
+        "ligen": "Slowenien 1. SNL · Georgien · weitere 1. Ligen",
+        "kontext": "Breitere europäische 1. Ligen",
+        "marktwert": "€120–900k"
+      },
+      {
+        "wert": 4,
+        "ligen": "Österreich 2. Liga · untere 2. Ligen",
+        "kontext": "Untere 2. Ligen",
+        "marktwert": "€60–300k"
+      },
+      {
+        "wert": 3,
+        "ligen": "Regionalliga · Top-Amateur",
+        "kontext": "Semi-pro / Top-Amateur",
+        "marktwert": "€25–120k"
+      },
+      {
+        "wert": 2,
+        "ligen": "Untere Amateurligen",
+        "kontext": "Amateur",
+        "marktwert": "€10–50k"
+      },
+      {
+        "wert": 1,
+        "ligen": "Amateur (niedrig)",
+        "kontext": "Low amateur",
+        "marktwert": "< €20k"
+      }
+    ],
     "fragen": [
-      {"key": "technik",         "label": "Technik unter Druck",
-       "anker1": "verliert den Ball bei erstem Gegnerkontakt",
-       "anker5": "löst Drucksituationen sauber und beidfüßig",
-       "gruppe": "Ist-Niveau"},
-      {"key": "spielintelligenz","label": "Spielintelligenz & Entscheidungen",
-       "anker1": "wählt regelmäßig die zweitbeste Option",
-       "anker5": "erkennt Räume vor dem Ballempfang",
-       "gruppe": "Ist-Niveau"},
-      {"key": "athletik",        "label": "Athletik & Robustheit",
-       "anker1": "fällt körperlich und im Tempo ab",
-       "anker5": "athletisch ligaüberdurchschnittlich",
-       "gruppe": "Ist-Niveau"},
-      {"key": "zweikampf",       "label": "Zweikampf & Arbeit gegen den Ball",
-       "anker1": "vermeidet Duelle, lässt Wege offen",
-       "anker5": "gewinnt Duelle und verteidigt vorausschauend",
-       "gruppe": "Ist-Niveau"},
-      {"key": "offensivwirkung", "label": "Offensivwirkung (Torgefahr / Kreation)",
-       "anker1": "ohne messbaren Anteil an Chancen",
-       "anker5": "erzeugt Chancen eigenständig und wiederholbar",
-       "gruppe": "Ist-Niveau"},
-      {"key": "mentalitaet",     "label": "Mentalität & Körpersprache",
-       "anker1": "bricht nach Fehlern ein",
-       "anker5": "trägt das Spiel auch gegen den Verlauf",
-       "gruppe": "Ist-Niveau"},
-      {"key": "gesamt",          "label": "Gesamteinschätzung heute",
-       "anker1": "unter Ligadurchschnitt",
-       "anker5": "sofort eine Liga höher einsetzbar",
-       "gruppe": "Zusammenfassung", "leitfrage": true},
-      {"key": "potenzial",       "label": "Erwartetes Niveau in drei Jahren",
-       "anker1": "bleibt unter dem heutigen Niveau",
-       "anker5": "Top-5-Liga-Stammspieler",
-       "gruppe": "Zusammenfassung"}
+      {
+        "key": "level_heute",
+        "label": "Bewiesenes Niveau",
+        "frage": "Auf welchem Niveau hat er bewiesen, dass er spielt?",
+        "erlaeuterung": "Nicht was er koennte - was er real gezeigt hat.",
+        "leitfrage": true
+      },
+      {
+        "key": "level_ceiling",
+        "label": "Realistisches Ceiling",
+        "frage": "Auf welchem Niveau spielt er realistisch in zwei bis drei Jahren?",
+        "erlaeuterung": "Eigenstaendig beantworten, nicht als Aufschlag auf das bewiesene Niveau."
+      }
     ]
   },
-
+  "bewertung": {
+    "skala": {
+      "min": 1,
+      "max": 5,
+      "schritt": 1
+    },
+    "kern": [
+      {
+        "key": "technik",
+        "label": "Technik unter Druck",
+        "anker1": "verliert den Ball bei erstem Gegnerkontakt",
+        "anker5": "löst Drucksituationen sauber und beidfüßig"
+      },
+      {
+        "key": "spielintelligenz",
+        "label": "Spielintelligenz & Entscheidungen",
+        "anker1": "wählt regelmäßig die zweitbeste Option",
+        "anker5": "erkennt Räume vor dem Ballempfang"
+      },
+      {
+        "key": "athletik",
+        "label": "Athletik & Robustheit",
+        "anker1": "fällt körperlich und im Tempo ab",
+        "anker5": "athletisch ligaüberdurchschnittlich"
+      },
+      {
+        "key": "mentalitaet",
+        "label": "Mentalität & Körpersprache",
+        "anker1": "bricht nach Fehlern ein",
+        "anker5": "trägt das Spiel auch gegen den Verlauf"
+      }
+    ],
+    "positionen": {
+      "CB": {
+        "label": "Innenverteidiger",
+        "attribute": [
+          {
+            "key": "verteidigen_duell",
+            "label": "Verteidigen im Duell",
+            "anker1": "lässt sich im Eins-gegen-eins ausspielen",
+            "anker5": "gewinnt das Duell vorne wie hinten"
+          },
+          {
+            "key": "kopfball",
+            "label": "Kopfball & Strafraumverteidigung",
+            "anker1": "verliert Kopfbälle gegen Gleichgroße",
+            "anker5": "beherrscht den eigenen Strafraum in der Luft"
+          },
+          {
+            "key": "spieleroeffnung",
+            "label": "Spieleröffnung unter Druck",
+            "anker1": "spielt unter Druck nur den Rückpass",
+            "anker5": "öffnet das Spiel mit gebrochenen Linien"
+          },
+          {
+            "key": "raumverteidigung",
+            "label": "Absicherung & Positionsspiel",
+            "anker1": "steht wiederholt falsch zur Restverteidigung",
+            "anker5": "verteidigt Räume, bevor sie entstehen"
+          }
+        ]
+      },
+      "WB": {
+        "label": "Außenverteidiger",
+        "attribute": [
+          {
+            "key": "vorstoss",
+            "label": "Vorstoßbereitschaft",
+            "anker1": "bleibt auch bei Ballbesitz tief",
+            "anker5": "schiebt konsequent und richtig getimt auf"
+          },
+          {
+            "key": "flanke",
+            "label": "Hereingabe & letzter Pass von außen",
+            "anker1": "Hereingaben ohne Adressat",
+            "anker5": "findet den Adressaten aus verschiedenen Höhen"
+          },
+          {
+            "key": "eins_gegen_eins_def",
+            "label": "Eins-gegen-eins defensiv",
+            "anker1": "wird auf der Außenbahn regelmäßig überlaufen",
+            "anker5": "verteidigt die Außenbahn allein"
+          },
+          {
+            "key": "wiederholungslauf",
+            "label": "Wiederholte Läufe über die Bahn",
+            "anker1": "bricht nach der ersten Halbzeit ein",
+            "anker5": "wiederholt Läufe bis zum Schluss"
+          }
+        ]
+      },
+      "CM": {
+        "label": "Zentrales Mittelfeld",
+        "attribute": [
+          {
+            "key": "ballzirkulation",
+            "label": "Ballzirkulation & Rhythmus",
+            "anker1": "verlangsamt das Spiel bei jedem Kontakt",
+            "anker5": "gibt dem Spiel Takt und Richtung"
+          },
+          {
+            "key": "pressingresistenz",
+            "label": "Pressingresistenz",
+            "anker1": "verliert den Ball im Aufdrehen",
+            "anker5": "dreht unter Druck auf und löst die Situation"
+          },
+          {
+            "key": "vertikalpass",
+            "label": "Raumgewinn durch Pässe",
+            "anker1": "spielt fast nur quer und zurück",
+            "anker5": "findet regelmäßig den Pass hinter die Linie"
+          },
+          {
+            "key": "arbeit_gegen_ball",
+            "label": "Arbeit gegen den Ball",
+            "anker1": "lässt Wege und Räume offen",
+            "anker5": "verteidigt das Zentrum aktiv und vorausschauend"
+          }
+        ]
+      },
+      "WF": {
+        "label": "Flügelspieler",
+        "attribute": [
+          {
+            "key": "eins_gegen_eins_off",
+            "label": "Eins-gegen-eins offensiv",
+            "anker1": "kommt am Gegenspieler nicht vorbei",
+            "anker5": "löst das Eins-gegen-eins wiederholbar auf"
+          },
+          {
+            "key": "tiefenlauf",
+            "label": "Tiefenläufe & Timing",
+            "anker1": "startet zu früh oder gar nicht",
+            "anker5": "attackiert die Tiefe wiederholt richtig getimt"
+          },
+          {
+            "key": "hereingabe",
+            "label": "Hereingabe & letzter Pass",
+            "anker1": "Hereingaben ohne Adressat",
+            "anker5": "bedient den Strafraum präzise"
+          },
+          {
+            "key": "abschluss",
+            "label": "Abschluss",
+            "anker1": "vergibt aus aussichtsreichen Lagen",
+            "anker5": "verwertet Chancen überdurchschnittlich"
+          }
+        ]
+      },
+      "AM": {
+        "label": "Offensives Mittelfeld",
+        "attribute": [
+          {
+            "key": "zwischenraeume",
+            "label": "Bewegung zwischen den Linien",
+            "anker1": "wird von der gegnerischen Kette gedeckt gehalten",
+            "anker5": "findet den Zwischenraum immer wieder"
+          },
+          {
+            "key": "letzter_pass",
+            "label": "Letzter Pass",
+            "anker1": "sucht den einfachen Pass statt den entscheidenden",
+            "anker5": "erzeugt Chancen mit dem letzten Pass"
+          },
+          {
+            "key": "abschluss",
+            "label": "Abschluss",
+            "anker1": "vergibt aus aussichtsreichen Lagen",
+            "anker5": "verwertet Chancen überdurchschnittlich"
+          },
+          {
+            "key": "gegenpressing",
+            "label": "Gegenpressing nach Ballverlust",
+            "anker1": "geht nach Ballverlust nicht nach",
+            "anker5": "erobert Bälle unmittelbar zurück"
+          }
+        ]
+      },
+      "CF": {
+        "label": "Mittelstürmer",
+        "attribute": [
+          {
+            "key": "abschluss",
+            "label": "Abschluss",
+            "anker1": "vergibt aus aussichtsreichen Lagen",
+            "anker5": "verwertet Chancen überdurchschnittlich"
+          },
+          {
+            "key": "strafraumbewegung",
+            "label": "Bewegung im Strafraum",
+            "anker1": "steht dort, wo der Ball nicht hinkommt",
+            "anker5": "löst sich wiederholt in die richtige Zone"
+          },
+          {
+            "key": "wandspiel",
+            "label": "Wandspiel & Ballhalten",
+            "anker1": "verliert Bälle mit dem Rücken zum Tor",
+            "anker5": "behauptet Bälle und bindet Mitspieler ein"
+          },
+          {
+            "key": "pressingauslösung",
+            "label": "Anlaufen & Pressingauslösung",
+            "anker1": "läuft ziellos oder gar nicht an",
+            "anker5": "steuert das gegnerische Aufbauspiel"
+          }
+        ]
+      }
+    },
+    "gruppen_zuordnung": {
+      "CB": [
+        "CB",
+        "IV",
+        "LIV",
+        "RIV",
+        "DEF",
+        "CENTRE-BACK"
+      ],
+      "WB": [
+        "WB",
+        "LV",
+        "RV",
+        "LAV",
+        "RAV",
+        "LB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "CM": [
+        "CM",
+        "ZM",
+        "ZDM",
+        "DM",
+        "DMF",
+        "CMF",
+        "SECHS",
+        "ACHT"
+      ],
+      "WF": [
+        "WF",
+        "LA",
+        "RA",
+        "LM",
+        "RM",
+        "LW",
+        "RW",
+        "LAMF",
+        "RAMF",
+        "FLUEGEL"
+      ],
+      "AM": [
+        "AM",
+        "ZOM",
+        "AMF",
+        "ZEHN"
+      ],
+      "CF": [
+        "CF",
+        "ST",
+        "MS",
+        "STUERMER",
+        "FORWARD"
+      ]
+    },
+    "standardgruppe": "CM"
+  },
   "prognosen": [
-    {"key": "top5_12m",
-     "label": "Wechsel in eine Top-5-Liga binnen 12 Monaten",
-     "erlaeuterung": "Vereinswechsel mit Registrierung in ENG/ESP/GER/ITA/FRA, erste oder zweite Liga.",
-     "horizont_monate": 12},
-    {"key": "marktwert_ueber",
-     "label": "Marktwert in 12 Monaten über Schwelle",
-     "erlaeuterung": "Schwelle steht je Fall im Case Pack.",
-     "horizont_monate": 12,
-     "parameter": "marktwert_schwelle"},
-    {"key": "minuten_1500",
-     "label": "Mindestens 1.500 Pflichtspielminuten in der kommenden Saison",
-     "erlaeuterung": "Liga, Pokal und Europacup zusammen, Verein und Liga egal.",
-     "horizont_monate": 12}
+    {
+      "key": "top5_12m",
+      "label": "Wechsel in eine Top-5-Liga binnen 12 Monaten",
+      "erlaeuterung": "Vereinswechsel mit Registrierung in ENG/ESP/GER/ITA/FRA, erste oder zweite Liga.",
+      "horizont_monate": 12
+    },
+    {
+      "key": "marktwert_ueber",
+      "label": "Marktwert in 12 Monaten über Schwelle",
+      "erlaeuterung": "Schwelle steht je Fall im Case Pack.",
+      "horizont_monate": 12,
+      "parameter": "marktwert_schwelle"
+    },
+    {
+      "key": "minuten_1500",
+      "label": "Mindestens 1.500 Pflichtspielminuten in der kommenden Saison",
+      "erlaeuterung": "Liga, Pokal und Europacup zusammen, Verein und Liga egal.",
+      "horizont_monate": 12
+    }
   ],
-
-  "notiz": {"label": "Kurznotiz (optional)", "max_zeichen": 400}
+  "notiz": {
+    "label": "Kurznotiz (optional)",
+    "max_zeichen": 400
+  },
+  "schwellen": {
+    "zentraltendenz_max": 0.35,
+    "tote_attribute_sigma": 0.4,
+    "halo_warnung": 0.75,
+    "entkopplung_warnung": 0.55,
+    "konflikt_level_abstand": 2,
+    "mindest_faelle_diagnose": 5
+  }
 }

@@ -116,6 +116,55 @@ def test_metriken():
     skill = metriken.skill_gesamt(m["_paare_je_frage"], metriken.basisraten(aufl))
     pruefe(skill > 0.8, "guter Prognostiker hat hohen Skill")
 
+    # ---- Audit-Block
+    z = metriken.zentraltendenz([3, 3, 3, 3, 3, 3, 4, 5])
+    pruefe(z["modalwert"] == 3 and nah(z["anteil"], 0.75),
+           "Zentraltendenz findet Modalwert und Anteil")
+    pruefe(z["genutzte_stufen"] == 3, "Zentraltendenz zaehlt genutzte Stufen")
+    pruefe(metriken.zentraltendenz([]) is None, "Zentraltendenz ohne Werte")
+
+    st = metriken.rater_strenge({"streng": [2, 3, 2, 3], "mild": [4, 5, 4, 5]})
+    pruefe(nah(st["spanne"], 2.0), "Rater-Strenge misst die Spanne")
+    pruefe(st["strengster"] == "streng" and st["mildester"] == "mild",
+           "Rater-Strenge benennt strengsten und mildesten Scout")
+    pruefe(metriken.rater_strenge({"nur_einer": [3, 4]})["spanne"] is None,
+           "Rater-Strenge braucht zwei Scouts")
+
+    pruefe(nah(metriken.pearson([1, 2, 3, 4], [2, 4, 6, 8]), 1.0),
+           "Pearson = 1 bei linearem Zusammenhang")
+    pruefe(metriken.pearson([3, 3, 3, 3], [1, 2, 3, 4]) is None,
+           "Pearson = None bei konstanter Seite")
+    pruefe(nah(metriken.halo([1, 2, 3, 4, 5], [1, 2, 3, 4, 5]), 1.0),
+           "Halo = 1, wenn das Urteil das Attribut-Mittel spiegelt")
+
+    zs = metriken.z_werte([2, 4, 6])
+    pruefe(zs is not None and nah(sum(zs), 0.0, 1e-9),
+           "z-Werte mitteln sich zu null")
+    pruefe(metriken.z_werte([3, 3, 3]) is None,
+           "z-Werte ohne Streuung nicht definiert")
+
+    at = metriken.attribut_trennschaerfe(
+        {"lebendig": [1, 3, 5, 2, 4], "tot": [3, 3, 3, 3, 3]}, 0.4)
+    pruefe(at["tot"]["tot"] is True and at["lebendig"]["tot"] is False,
+           "tote Attribute werden erkannt")
+
+    pruefe(metriken.konflikt(8, 5, 2)["richtung"] == "scout_hoeher",
+           "Konflikt: Scout hoeher")
+    pruefe(metriken.konflikt(4, 7, 2)["richtung"] == "modell_hoeher",
+           "Konflikt: Modell hoeher")
+    pruefe(metriken.konflikt(6, 5, 2) is None,
+           "kein Konflikt unter dem Schwellenabstand")
+
+    # Bruecke Perzentil -> Level (Audit, Kapitel 9)
+    pruefe(metriken.perzentil_zu_level(95, 6) == 7.0,
+           "Perzentil 95 hebt das Liga-Niveau um eine Stufe")
+    pruefe(metriken.perzentil_zu_level(60, 6) == 6.0,
+           "Perzentil im Mittelfeld laesst das Niveau stehen")
+    pruefe(metriken.perzentil_zu_level(5, 6) == 5.0,
+           "Perzentil 5 senkt das Niveau um eine Stufe")
+    pruefe(metriken.perzentil_zu_level(99, 10) == 10.0,
+           "Bruecke bleibt in der Skala")
+
     # Der Scout, der ueberall die 3 vergibt
     flach = [{"fall_id": i, "antworten": {"gesamt": 3}, "prognosen": {},
               "modell": {"bewertung": {"gesamt": i}, "prognose": {}}}
@@ -157,6 +206,63 @@ class Klient:
                 return e.code, text
 
 
+def test_kleine_stichprobe():
+    """Unter der Mindestzahl darf der Report nichts diagnostizieren - ein Scout
+    mit einer Bewertung hat per Konstruktion 100 % auf einer Stufe, und das
+    als Zentraltendenz zu melden waere Rauschen als Befund verkauft."""
+    print("\nKleine Stichprobe")
+    tmp = tempfile.mkdtemp(prefix="scoutleague-klein-")
+    umgebung = dict(os.environ, SCOUTLEAGUE_DB=os.path.join(tmp, "k.db"),
+                    SCOUTLEAGUE_ADMIN_TOKEN="t")
+    cli = [sys.executable, os.path.join(HIER, "cli.py")]
+    subprocess.run(cli + ["pack", "--datei", os.path.join(HIER, "pakete", "demo.json")],
+                   env=umgebung, check=True, capture_output=True)
+    aus = subprocess.run(cli + ["scouts", "--namen", "Solo"],
+                         env=umgebung, check=True, capture_output=True, text=True)
+    code = aus.stdout.split()[0]
+
+    port = 8932
+    server = subprocess.Popen(
+        [sys.executable, os.path.join(HIER, "serve.py"), "--port", str(port),
+         "--host", "127.0.0.1"],
+        env=umgebung, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    k = Klient(f"http://127.0.0.1:{port}")
+    try:
+        for _ in range(60):
+            try:
+                if k.hole("/api/fragebogen")[0] == 200:
+                    break
+            except Exception:
+                time.sleep(0.1)
+        _st, pack = k.hole("/api/pack", code=code)
+        lk = [q["key"] for q in pack["fragebogen"]["level"]["fragen"]]
+        prognosen = [p["key"] for p in pack["fragebogen"]["prognosen"]]
+        f0 = pack["faelle"][0]
+        k.sende("/api/bewertung", {
+            "fall_id": f0["id"], "level": {lk[0]: 7, lk[1]: 8},
+            "antworten": {a["key"]: 3 for a in f0["attribute"]},
+            "prognosen": {p: 0.5 for p in prognosen}, "abgeben": True}, code=code)
+
+        _st, kr = k.hole("/api/admin/kalibrierung", admin="t")
+        pruefe(kr["n_bewertungen"] == 1, "eine Bewertung im Report")
+        pruefe(any("Momentaufnahme" in w for w in kr["warnungen"]),
+               "Report weist die duenne Datenlage aus")
+        pruefe(len(kr["warnungen"]) == 1,
+               "und diagnostiziert sonst nichts (100 % auf einer Stufe waere "
+               "hier kein Befund)")
+
+        _st, prof = k.hole("/api/profil", code=code)
+        pruefe(prof["zentraltendenz"]["anteil"] == 1.0,
+               "die Rohzahl steht trotzdem da")
+        pruefe(prof["halo"] is None and prof["entkopplung"] is None,
+               "Halo und Entkopplung bleiben leer statt geraten")
+        pruefe(prof["schwellen"]["mindest_faelle_diagnose"] >= 3,
+               "das Frontend bekommt die Mindestzahl mitgeliefert")
+    finally:
+        server.terminate()
+        server.wait(timeout=5)
+
+
 def test_ende_zu_ende():
     print("\nEnde zu Ende")
     tmp = tempfile.mkdtemp(prefix="scoutleague-test-")
@@ -164,7 +270,6 @@ def test_ende_zu_ende():
     umgebung = dict(os.environ, SCOUTLEAGUE_DB=dbpfad,
                     SCOUTLEAGUE_ADMIN_TOKEN="testtoken")
 
-    # Scouts und Pack ueber die CLI - derselbe Weg wie im Betrieb
     cli = [sys.executable, os.path.join(HIER, "cli.py")]
     subprocess.run(cli + ["pack", "--datei", os.path.join(HIER, "pakete", "demo.json")],
                    env=umgebung, check=True, capture_output=True)
@@ -189,7 +294,7 @@ def test_ende_zu_ende():
         else:
             raise RuntimeError("Server ist nicht hochgekommen")
 
-        # Anmeldung
+        # ---------------------------------------------------------- Anmeldung
         pruefe(k.sende("/api/anmelden", {"code": "GIBTSNICHT"})[0] == 401,
                "unbekannter Code wird abgewiesen")
         st, a = k.sende("/api/anmelden", {"code": codes[0]})
@@ -197,107 +302,212 @@ def test_ende_zu_ende():
         pruefe(k.hole("/api/pack")[0] == 401, "Pack ohne Code gesperrt")
 
         st, pack = k.hole("/api/pack", code=codes[0])
-        pruefe(st == 200 and len(pack["faelle"]) == 5, "Pack liefert fuenf Faelle")
+        pruefe(st == 200 and len(pack["faelle"]) == 6, "Pack liefert sechs Faelle")
         pruefe(all("modell" not in f for f in pack["faelle"]),
                "Modell bleibt vor der Abgabe verborgen")
-        pruefe(len(pack["fragebogen"]["bewertung"]["fragen"]) == 8,
-               "Fragebogen kommt mit")
 
-        fall = pack["faelle"][0]
-        fragen = [q["key"] for q in pack["fragebogen"]["bewertung"]["fragen"]]
+        # ------------------------------------------------- Positions-Sets
+        gruppen = {f["positionsgruppe"] for f in pack["faelle"]}
+        pruefe(gruppen == {"CB", "WB", "CM", "WF", "AM", "CF"},
+               f"alle sechs Positionsgruppen im Pack (hat {sorted(gruppen)})")
+        cb = next(f for f in pack["faelle"] if f["positionsgruppe"] == "CB")
+        cf = next(f for f in pack["faelle"] if f["positionsgruppe"] == "CF")
+        cb_keys = {a["key"] for a in cb["attribute"]}
+        cf_keys = {a["key"] for a in cf["attribute"]}
+        pruefe(len(cb["attribute"]) == 8 and len(cf["attribute"]) == 8,
+               "jede Position bekommt acht Attribute")
+        pruefe("kopfball" in cb_keys and "kopfball" not in cf_keys,
+               "Positions-Set trennt: kopfball nur beim Innenverteidiger")
+        pruefe({"technik", "spielintelligenz", "athletik", "mentalitaet"}
+               <= cb_keys & cf_keys, "Kern-Set gilt fuer alle Positionen")
+
+        # ------------------------------------------------------ Level-Skala
+        stufen = pack["fragebogen"]["level"]["stufen"]
+        pruefe(len(stufen) == 10, "Level-Skala hat zehn Stufen")
+        pruefe(all(s_.get("ligen") and s_.get("marktwert") for s_ in stufen),
+               "jede Level-Stufe traegt Liga-Anker und Marktwertband")
+        pruefe(len(pack["fragebogen"]["level"]["fragen"]) == 2,
+               "zwei getrennte Level-Fragen")
+
+        level_keys = [q["key"] for q in pack["fragebogen"]["level"]["fragen"]]
         prognosen = [p["key"] for p in pack["fragebogen"]["prognosen"]]
+        fall = pack["faelle"][0]
+        fall_keys = [a["key"] for a in fall["attribute"]]
 
-        # Validierung
+        # ------------------------------------------------------ Validierung
         st, a = k.sende("/api/bewertung",
-                        {"fall_id": fall["id"], "antworten": {fragen[0]: 9},
-                         "prognosen": {}}, code=codes[0])
-        pruefe(st == 400 and "Skala" in a["fehler"], "Bewertung ausserhalb der Skala")
+                        {"fall_id": fall["id"], "level": {level_keys[0]: 11}},
+                        code=codes[0])
+        pruefe(st == 400 and "Skala" in a["fehler"], "Level ausserhalb 1-10")
         st, a = k.sende("/api/bewertung",
-                        {"fall_id": fall["id"], "antworten": {},
-                         "prognosen": {prognosen[0]: 1.4}}, code=codes[0])
+                        {"fall_id": fall["id"], "antworten": {fall_keys[0]: 9}},
+                        code=codes[0])
+        pruefe(st == 400 and "Skala" in a["fehler"], "Attribut ausserhalb 1-5")
+        fremd = "kopfball" if fall["positionsgruppe"] != "CB" else "abschluss"
+        st, a = k.sende("/api/bewertung",
+                        {"fall_id": fall["id"], "antworten": {fremd: 3}},
+                        code=codes[0])
+        pruefe(st == 400 and "Position" in a["fehler"],
+               "Attribut fremder Position wird abgelehnt")
+        st, a = k.sende("/api/bewertung",
+                        {"fall_id": fall["id"], "prognosen": {prognosen[0]: 1.4}},
+                        code=codes[0])
         pruefe(st == 400, "Prognose ausserhalb 0-1")
         st, a = k.sende("/api/bewertung",
-                        {"fall_id": fall["id"], "antworten": {fragen[0]: 3},
-                         "prognosen": {}, "abgeben": True}, code=codes[0])
+                        {"fall_id": fall["id"], "level": {level_keys[0]: 6},
+                         "abgeben": True}, code=codes[0])
         pruefe(st == 400 and "fehlen" in a["fehler"],
                "unvollstaendige Abgabe wird abgelehnt")
 
-        # Zwischenstand
         st, a = k.sende("/api/bewertung",
-                        {"fall_id": fall["id"], "antworten": {fragen[0]: 3},
-                         "prognosen": {}}, code=codes[0])
+                        {"fall_id": fall["id"], "level": {level_keys[0]: 6}},
+                        code=codes[0])
         pruefe(st == 200 and a["abgegeben"] is False, "Zwischenstand wird gesichert")
         st, pack2 = k.hole("/api/pack", code=codes[0])
-        pruefe(pack2["faelle"][0]["eigene_bewertung"]["antworten"][fragen[0]] == 3,
+        pruefe(pack2["faelle"][0]["eigene_bewertung"]["level"][level_keys[0]] == 6,
                "Zwischenstand kommt zurueck")
 
-        # Vollstaendige Abgaben: vier Scouts, jeder mit eigenem Muster
-        muster = {
-            codes[0]: [5, 4, 3, 2, 1],   # gut gespreizt
-            codes[1]: [3, 3, 3, 3, 3],   # der flache Scout
-            codes[2]: [1, 2, 3, 4, 5],   # gespreizt, andere Reihenfolge
-            codes[3]: [4, 4, 2, 5, 3],
-        }
-        wahrscheinlichkeiten = {
-            codes[0]: [0.9, 0.8, 0.2, 0.1, 0.7],
-            codes[1]: [0.5, 0.5, 0.5, 0.5, 0.5],
-            codes[2]: [0.1, 0.2, 0.8, 0.9, 0.3],
-            codes[3]: [0.6, 0.6, 0.4, 0.4, 0.6],
-        }
-        for code, noten in muster.items():
-            for i, fall_ in enumerate(pack["faelle"]):
+        # --------------------------------------------------------- Abgaben
+        # Anna spreizt und trifft, Bela klumpt auf Level 5, Cem liegt daneben,
+        # Dora liegt dazwischen. Das erzeugt genau die Muster, die der Audit
+        # diagnostiziert.
+        levels = {codes[0]: [8, 4, 7, 3, 6, 5],
+                  codes[1]: [5, 5, 5, 5, 5, 5],
+                  codes[2]: [3, 8, 2, 9, 4, 7],
+                  codes[3]: [6, 5, 7, 4, 6, 5]}
+        attr = {codes[0]: [5, 2, 4, 1, 3, 3],
+                codes[1]: [3, 3, 3, 3, 3, 3],
+                codes[2]: [2, 5, 1, 5, 2, 4],
+                codes[3]: [4, 3, 4, 2, 3, 3]}
+        wahrsch = {codes[0]: [0.9, 0.8, 0.2, 0.1, 0.7, 0.6],
+                   codes[1]: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                   codes[2]: [0.1, 0.2, 0.8, 0.9, 0.3, 0.4],
+                   codes[3]: [0.6, 0.6, 0.4, 0.4, 0.6, 0.5]}
+        for code in levels:
+            for i, f_ in enumerate(pack["faelle"]):
+                keys = [a["key"] for a in f_["attribute"]]
                 st, a = k.sende("/api/bewertung", {
-                    "fall_id": fall_["id"],
-                    "antworten": {q: noten[i] for q in fragen},
-                    "prognosen": {p: wahrscheinlichkeiten[code][i] for p in prognosen},
+                    "fall_id": f_["id"],
+                    "level": {level_keys[0]: levels[code][i],
+                              level_keys[1]: min(10, levels[code][i] + 1)},
+                    "antworten": {q: attr[code][i] for q in keys},
+                    "prognosen": {p: wahrsch[code][i] for p in prognosen},
                     "notiz": "Test", "sekunden": 42, "abgeben": True,
                 }, code=code)
                 if st != 200:
-                    pruefe(False, f"Abgabe {code}/{fall_['id']}: {a}")
+                    pruefe(False, f"Abgabe {code}/{f_['id']}: {a}")
                     break
         else:
-            pruefe(True, "alle 20 Abgaben angenommen")
+            pruefe(True, "alle 24 Abgaben angenommen")
 
         st, a = k.sende("/api/bewertung", {
             "fall_id": pack["faelle"][0]["id"],
-            "antworten": {q: 2 for q in fragen},
+            "level": {q: 5 for q in level_keys},
+            "antworten": {q: 2 for q in fall_keys},
             "prognosen": {p: 0.5 for p in prognosen}, "abgeben": True},
             code=codes[0])
         pruefe(st == 409, "abgegebener Fall bleibt gesperrt")
 
+        # ------------------------------------------------- Sofort-Rueckmeldung
         st, pack3 = k.hole("/api/pack", code=codes[0])
         f0 = pack3["faelle"][0]
+        r = f0["rueckmeldung"]
         pruefe("modell" in f0, "nach Abgabe wird das Modell sichtbar")
-        pruefe(f0["rueckmeldung"]["modell_naehe"] is not None,
-               "Sofort-Rueckmeldung enthaelt die Modell-Naehe")
-        pruefe(f0["rueckmeldung"]["kohorte"]["n"] == 4,
-               "Feldvergleich zaehlt alle vier Abgaben")
+        pruefe(r["modell_naehe"] is not None, "Rueckmeldung traegt die Modell-Naehe")
+        pruefe(r["attribut_mittel"] is not None, "Rueckmeldung traegt das Attribut-Mittel")
+        pruefe(r["level_abstand"] is not None, "Rueckmeldung traegt den Level-Abstand")
+        pruefe(r["kohorte"]["n"] == 4, "Feldvergleich zaehlt alle vier Abgaben")
+        pruefe("mittel_bereinigt" in r["kohorte"],
+               "Feldvergleich weist den rater-bereinigten Schnitt aus")
 
-        # Profil
-        st, prof = k.hole("/api/profil", code=codes[1])
-        pruefe(prof["spreizung"] == 0.0, "flacher Scout hat Spreizung 0")
-        pruefe(prof["verteilung"]["3"] == 5, "Verteilung zaehlt fuenf Dreier")
-        st, prof0 = k.hole("/api/profil", code=codes[0])
-        pruefe(prof0["spreizung"] > 1.0, "gespreizter Scout hat Spreizung > 1")
-        pruefe(prof0["bias"] is not None, "Bias gegen das Feld wird gerechnet")
+        # Anna sagt Level 8, das Modell 6.5 -> Abstand 1.5, kein Konflikt.
+        # Cem sagt 3 -> Abstand -3.5, das ist einer.
+        st, packc = k.hole("/api/pack", code=codes[2])
+        kf = packc["faelle"][0]["rueckmeldung"]["konflikt"]
+        pruefe(kf is not None and kf["richtung"] == "modell_hoeher",
+               "Konfliktfall wird im Frontend markiert")
 
-        # Leaderboard vor der Aufloesung
+        # -------------------------------------------------------- Profil
+        st, prof_flach = k.hole("/api/profil", code=codes[1])
+        pruefe(prof_flach["spreizung"] == 0.0, "flacher Scout hat Spreizung 0")
+        pruefe(prof_flach["zentraltendenz"]["anteil"] == 1.0,
+               "flacher Scout: 100 % auf einer Stufe")
+        pruefe(prof_flach["verteilung"]["5"] == 6,
+               "Verteilung laeuft ueber die Level-Skala")
+        st, prof_anna = k.hole("/api/profil", code=codes[0])
+        pruefe(prof_anna["spreizung"] > 1.5, "gespreizter Scout hat hohe Spreizung")
+        pruefe(prof_anna["halo"] is not None, "Profil weist den Halo aus")
+        pruefe(prof_anna["entkopplung"] is not None,
+               "Profil weist die Entkopplung aus")
+        pruefe(prof_anna["zentraltendenz"]["genutzte_stufen"] == 6,
+               "gespreizter Scout nutzt sechs Stufen")
+
+        # Annas Attribute laufen mit ihren Leveln -> hoher Halo.
+        pruefe(prof_anna["halo"] > 0.9,
+               f"Halo entlarvt das Echo-Urteil (r={prof_anna['halo']})")
+
+        # ------------------------------------------------------ Leaderboard
         st, lb = k.hole("/api/leaderboard", code=codes[0])
         pruefe(lb["aufgeloest"] is False, "vor Aufloesung: vorlaeufige Rangfolge")
         pruefe(len(lb["zeilen"]) == 4, "Leaderboard listet vier Scouts")
-        pruefe([z["rang"] for z in lb["zeilen"]] == [1, 2, 3, 4], "Raenge sind gesetzt")
-        flach_zeile = next(z for z in lb["zeilen"] if z["name"] == "Bela")
-        pruefe(flach_zeile["rang"] == 4, "der flache Scout steht hinten")
+        pruefe(all("halo" in z for z in lb["zeilen"]),
+               "Leaderboard traegt den Halo je Scout")
+        flach = next(z for z in lb["zeilen"] if z["name"] == "Bela")
+        pruefe(flach["rang"] == 4, "der flache Scout steht hinten")
 
-        # Admin
+        # ----------------------------------------------------------- Admin
         pruefe(k.hole("/api/admin/uebersicht")[0] == 401, "Admin ohne Token gesperrt")
         st, u = k.hole("/api/admin/uebersicht", admin="testtoken")
-        pruefe(st == 200 and len(u["scouts"]) == 4, "Admin-Uebersicht listet Scouts")
-        pruefe(all(s["abgegeben"] == 5 for s in u["scouts"]),
-               "Admin sieht fuenf Abgaben je Scout")
+        pruefe(st == 200 and all(s_["abgegeben"] == 6 for s_ in u["scouts"]),
+               "Admin sieht sechs Abgaben je Scout")
 
-        # Aufloesen: Faelle 1, 2, 5 treten ein, 3 und 4 nicht
-        for i, erg in enumerate([1, 1, 0, 0, 1]):
+        # -------------------------------------------------- Kalibrier-Report
+        pruefe(k.hole("/api/admin/kalibrierung")[0] == 401,
+               "Kalibrier-Report ohne Token gesperrt")
+        st, kr = k.hole("/api/admin/kalibrierung", admin="testtoken")
+        pruefe(st == 200 and kr["n_bewertungen"] == 24,
+               "Kalibrier-Report rechnet auf allen 24 Bewertungen")
+        pruefe(kr["n_scouts"] == 4, "Kalibrier-Report kennt vier Scouts")
+
+        zt = kr["zentraltendenz"][level_keys[0]]
+        pruefe(zt["n"] == 24 and 0 < zt["anteil"] <= 1,
+               "Zentraltendenz im Report ist plausibel")
+        pruefe(kr["rater_strenge"]["spanne"] is not None,
+               "Rater-Strenge im Report hat eine Spanne")
+        pruefe(kr["halo"]["gesamt"] is not None
+               and len(kr["halo"]["je_scout"]) == 4,
+               "Halo gesamt und je Scout")
+        pruefe(kr["entkopplung"]["gesamt"] is not None,
+               "Entkopplung wird gerechnet")
+        pruefe(set(kr["attribute"]) == {"CB", "WB", "CM", "WF", "AM", "CF"},
+               "Attribut-Trennschaerfe je Positionsgruppe")
+        pruefe(all(v["n"] == 4 for g in kr["attribute"].values()
+                   for v in g.values()),
+               "jedes Attribut traegt vier Bewertungen")
+        svm = kr["scout_vs_modell"]
+        pruefe(svm["gesamt"] is not None, "Scout gegen Modell wird gerechnet")
+        pruefe(all(v == 1 for v in svm["n_faelle_je_gruppe"].values()),
+               "Report weist die Fallzahl je Gruppe aus")
+        pruefe(all(r is None for r in svm["je_gruppe"].values()),
+               "bei einem Fall je Gruppe bleibt die Korrelation leer statt zu "
+               "raten")
+        pruefe(len(kr["konflikte"]) > 0, "Konfliktliste ist gefuellt")
+        pruefe(all(abs(c["differenz"]) >= 2 for c in kr["konflikte"]),
+               "jeder Konflikt liegt ueber dem Schwellenabstand")
+        pruefe(abs(kr["konflikte"][0]["differenz"])
+               >= abs(kr["konflikte"][-1]["differenz"]),
+               "Konflikte sind nach Abstand sortiert")
+        pruefe(isinstance(kr["warnungen"], list) and len(kr["warnungen"]) > 0,
+               "Report formuliert Warnungen im Klartext")
+        pruefe(not any("Momentaufnahme" in w for w in kr["warnungen"]),
+               "bei 24 Bewertungen keine Momentaufnahme-Warnung")
+
+        # Bela klumpt auf eine Stufe -> muss als Zentraltendenz auffallen
+        pruefe(kr["rater_strenge"]["je_scout"]["Bela"] == 5.0,
+               "Rater-Strenge weist Belas Klumpen bei 5 aus")
+
+        # -------------------------------------------------------- Aufloesen
+        for i, erg in enumerate([1, 1, 0, 0, 1, 1]):
             for p in prognosen:
                 st, _ = k.sende("/api/admin/aufloesen",
                                 {"fall_id": pack["faelle"][i]["id"], "frage": p,
@@ -305,41 +515,43 @@ def test_ende_zu_ende():
                                 admin="testtoken")
                 if st != 200:
                     pruefe(False, f"Aufloesung {i}/{p} fehlgeschlagen")
-        pruefe(True, "alle 15 Aufloesungen angenommen")
+        pruefe(True, "alle 18 Aufloesungen angenommen")
 
         st, lb2 = k.hole("/api/leaderboard", code=codes[0])
         pruefe(lb2["aufgeloest"] is True, "nach Aufloesung: endgueltige Rangfolge")
-        namen = [z["name"] for z in lb2["zeilen"]]
-        pruefe(namen[0] == "Anna",
-               f"der treffsichere Scout fuehrt (Reihenfolge: {namen})")
+        pruefe(lb2["zeilen"][0]["name"] == "Anna",
+               f"der treffsichere Scout fuehrt "
+               f"({[z['name'] for z in lb2['zeilen']]})")
         anna = lb2["zeilen"][0]
         cem = next(z for z in lb2["zeilen"] if z["name"] == "Cem")
         pruefe(anna["brier"] < cem["brier"],
                "wer richtig lag, hat den kleineren Brier")
         pruefe(anna["brier_skill"] > 0 > cem["brier_skill"],
                "Skill trennt besser-als-Basisrate von schlechter")
-        pruefe(lb2["basisraten"][prognosen[0]] == 0.6,
-               "Basisrate = 3 von 5 Faellen")
 
-        # Export
+        # ---------------------------------------------------------- Export
         st, csv = k.hole("/api/admin/export.csv", admin="testtoken", roh=True)
         zeilen = csv.strip().split("\n")
-        pruefe(st == 200 and len(zeilen) == 1 + 4 * 5 * 3,
-               f"CSV hat Kopf + 60 Zeilen (hat {len(zeilen) - 1})")
-        pruefe("prognose_wahrscheinlichkeit" in zeilen[0] and "ergebnis" in zeilen[0],
-               "CSV enthaelt Prognose und Ergebnis")
-        pruefe(all(z.split(";")[15] in ("0", "1") for z in zeilen[1:]),
+        pruefe(st == 200 and len(zeilen) == 1 + 4 * 6 * 3,
+               f"CSV hat Kopf + 72 Zeilen (hat {len(zeilen) - 1})")
+        kopf = zeilen[0].split(";")
+        for spalte in ("level_heute", "level_ceiling", "modell_level",
+                       "positionsgruppe", "ergebnis"):
+            pruefe(spalte in kopf, f"CSV traegt die Spalte {spalte}")
+        i_erg = kopf.index("ergebnis")
+        i_lvl = kopf.index("level_heute")
+        pruefe(all(z.split(";")[i_erg] in ("0", "1") for z in zeilen[1:]),
                "jede CSV-Zeile traegt ein Outcome-Label")
+        pruefe(all(1 <= int(z.split(";")[i_lvl]) <= 10 for z in zeilen[1:]),
+               "jede CSV-Zeile traegt ein Level in der Skala")
 
-        # Pack schliessen sperrt weitere Abgaben
+        # ------------------------------------------------------- Pack zu
         k.sende("/api/admin/pack_status", {"slug": "demo", "status": "geschlossen"},
                 admin="testtoken")
-        st, a = k.sende("/api/bewertung", {
-            "fall_id": pack["faelle"][0]["id"], "antworten": {}, "prognosen": {}},
-            code=codes[2])
+        st, a = k.sende("/api/bewertung", {"fall_id": pack["faelle"][0]["id"]},
+                        code=codes[2])
         pruefe(st == 409, "geschlossenes Pack nimmt nichts mehr an")
 
-        # Statische Auslieferung
         st, _ = k.hole("/", roh=True)
         pruefe(st == 200, "Startseite wird ausgeliefert")
         pruefe(k.hole("/../db.py", roh=True)[0] == 404,
@@ -353,6 +565,7 @@ def test_ende_zu_ende():
 if __name__ == "__main__":
     test_metriken()
     test_ende_zu_ende()
+    test_kleine_stichprobe()
     print(f"\n{GEPRUEFT[0]} Pruefungen, {len(FEHLER)} Fehler")
     if FEHLER:
         for f in FEHLER:

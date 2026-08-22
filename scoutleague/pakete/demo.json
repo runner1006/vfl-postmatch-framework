@@ -1,5 +1,5 @@
 {
-  "_hinweis": "Erfundene Spieler zum Ausprobieren der Mechanik. Keine echten Personen, keine echten Daten. Für den Pilotbetrieb durch einen echten Case Pack nach pakete/VORLAGE.json ersetzen.",
+  "_hinweis": "Erfundene Spieler zum Ausprobieren der Mechanik. Keine echten Personen, keine echten Daten. Deckt alle sechs Positionsgruppen ab. Für den Pilotbetrieb durch einen echten Case Pack nach pakete/VORLAGE.json ersetzen.",
   "slug": "demo",
   "titel": "Demo Case Pack (Testdaten)",
   "status": "offen",
@@ -13,16 +13,18 @@
       "verein": "Demo SV Nord",
       "liga": "Demo-Liga 1",
       "fuss": "links",
+      "liga_level": 6,
       "video_url": "",
       "indizes": {
         "technik": 68,
         "spielintelligenz": 55,
         "athletik": 81,
-        "zweikampf": 74,
-        "offensivwirkung": 41,
         "mentalitaet": 62,
-        "gesamt": 63,
-        "potenzial": 72
+        "vorstoss": 74,
+        "flanke": 58,
+        "eins_gegen_eins_def": 66,
+        "wiederholungslauf": 83,
+        "profile_percentile": 71
       },
       "modell": {
         "prognose": {
@@ -43,16 +45,18 @@
       "verein": "Demo FC Ost",
       "liga": "Demo-Liga 1",
       "fuss": "rechts",
+      "liga_level": 6,
       "video_url": "",
       "indizes": {
         "technik": 84,
         "spielintelligenz": 79,
         "athletik": 48,
-        "zweikampf": 37,
-        "offensivwirkung": 77,
         "mentalitaet": 58,
-        "gesamt": 71,
-        "potenzial": 80
+        "zwischenraeume": 81,
+        "letzter_pass": 77,
+        "abschluss": 63,
+        "gegenpressing": 41,
+        "profile_percentile": 88
       },
       "modell": {
         "prognose": {
@@ -73,16 +77,18 @@
       "verein": "Demo United",
       "liga": "Demo-Liga 2",
       "fuss": "rechts",
+      "liga_level": 4,
       "video_url": "",
       "indizes": {
         "technik": 52,
         "spielintelligenz": 49,
         "athletik": 88,
-        "zweikampf": 63,
-        "offensivwirkung": 69,
         "mentalitaet": 71,
-        "gesamt": 58,
-        "potenzial": 74
+        "abschluss": 69,
+        "strafraumbewegung": 57,
+        "wandspiel": 74,
+        "pressingauslösung": 66,
+        "profile_percentile": 62
       },
       "modell": {
         "prognose": {
@@ -103,16 +109,18 @@
       "verein": "Demo Rangers",
       "liga": "Demo-Liga 1",
       "fuss": "beidfüßig",
+      "liga_level": 6,
       "video_url": "",
       "indizes": {
         "technik": 61,
         "spielintelligenz": 83,
         "athletik": 57,
-        "zweikampf": 80,
-        "offensivwirkung": 29,
         "mentalitaet": 86,
-        "gesamt": 69,
-        "potenzial": 66
+        "ballzirkulation": 72,
+        "pressingresistenz": 68,
+        "vertikalpass": 54,
+        "arbeit_gegen_ball": 80,
+        "profile_percentile": 79
       },
       "modell": {
         "prognose": {
@@ -133,16 +141,18 @@
       "verein": "Demo IF Süd",
       "liga": "Demo-Liga 3",
       "fuss": "links",
+      "liga_level": 5,
       "video_url": "",
       "indizes": {
         "technik": 75,
         "spielintelligenz": 58,
         "athletik": 72,
-        "zweikampf": 44,
-        "offensivwirkung": 81,
         "mentalitaet": 54,
-        "gesamt": 66,
-        "potenzial": 77
+        "eins_gegen_eins_off": 83,
+        "tiefenlauf": 66,
+        "hereingabe": 61,
+        "abschluss": 49,
+        "profile_percentile": 74
       },
       "modell": {
         "prognose": {
@@ -153,6 +163,38 @@
       },
       "parameter": {
         "marktwert_schwelle": "2,5 Mio. EUR"
+      }
+    },
+    {
+      "ext_id": "DEMO-06",
+      "name": "Demo F. Okonkwo",
+      "position": "IV",
+      "jahrgang": 2005,
+      "verein": "Demo SV Nord",
+      "liga": "Demo-Liga 1",
+      "fuss": "rechts",
+      "liga_level": 6,
+      "video_url": "",
+      "indizes": {
+        "technik": 49,
+        "spielintelligenz": 66,
+        "athletik": 79,
+        "mentalitaet": 73,
+        "verteidigen_duell": 77,
+        "kopfball": 85,
+        "spieleroeffnung": 44,
+        "raumverteidigung": 62,
+        "profile_percentile": 55
+      },
+      "modell": {
+        "prognose": {
+          "top5_12m": 0.07,
+          "marktwert_ueber": 0.35,
+          "minuten_1500": 0.69
+        }
+      },
+      "parameter": {
+        "marktwert_schwelle": "1,0 Mio. EUR"
       }
     }
   ]

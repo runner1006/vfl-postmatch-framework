@@ -10,6 +10,11 @@ Der MVP deckt Stufe 0 und Stufe 1 aus dem One-Pager ab: das interne
 Kalibrierungs-Feature und die Closed Beta. Kein Infrastruktur-Invest — reine
 Python-Standardbibliothek, eine SQLite-Datei, ein Prozess.
 
+Rev. 0.2 setzt den **Scout Rating Audit (Juni 2026)** um. Der Audit hat die
+interne Skala an 187 Bewertungen vermessen und sechs Empfehlungen ausgesprochen;
+alle sechs stecken jetzt im Produkt statt in einer Präsentation — siehe
+[Was der Audit geändert hat](#was-der-audit-geändert-hat).
+
 ## In drei Minuten ausprobieren
 
 ```bash
@@ -52,6 +57,42 @@ einen echten Case Pack ersetzt.
    Ab der ersten Auflösung sortiert das Leaderboard nach Brier-Skill.
 7. **Labels exportieren:** `python3 scoutleague/cli.py export > labels.csv`
 
+## Was der Audit geändert hat
+
+| Audit-Befund | Empfehlung | Umsetzung |
+|---|---|---|
+| 58 % aller Noten sind eine „3" | Zentraltendenz aufbrechen, notfalls direkt auf 1–10 | **Level Rating 1–10** als Leitfrage, jede Stufe mit realem Liga-Anker und Marktwertband. Die abstrakte Gesamtnote ist weg. |
+| 0,56 Punkte Strenge-Gap zwischen Scouts | pro Scout z-standardisieren | Der Feldvergleich weist **beides** aus: rohen Schnitt und rater-bereinigten Schnitt, jeder Scout an seinen eigenen Abgaben z-standardisiert. |
+| Halo r = 0,78 (Final ≈ Attribut-Mittel) | Performance und Development entkoppeln | Zwei **getrennt verankerte** Level-Fragen: bewiesenes Niveau vs. realistisches Ceiling. Halo und Entkopplung werden je Scout gemessen und im Profil angezeigt. |
+| ρ = 0,23 Scout ↔ Daten, stark positionsabhängig | Daten als Korrektiv, Konfliktfälle markieren | **Konfliktliste** im Report und Konfliktmarkierung direkt in der Sofort-Rückmeldung, in beide Richtungen gelesen. |
+| Attribut-Sets nicht standardisiert, tote Felder mit σ < 0,4 | verpflichtendes Kern-Set je Position | **Sechs Positionsgruppen** (CB, WB, CM, WF, AM, CF), je 4 Kern- plus 4 Positionsattribute, alle mit Verhaltensankern. Der Import lehnt Modellwerte ab, die nicht zum Set der Position gehören. |
+| Note und Perzentil stehen nebeneinander | eine gemeinsame Endskala | Die **Brücke** aus Kapitel 9: `liga_level` plus `profile_percentile` ergeben beim Import das Modell-Level, verschoben um höchstens eine Stufe. |
+
+### Skalenrichtung
+
+Der Audit nennt die Richtungs-Umkehr die häufigste Fehlerquelle: das interne
+Formular folgt der Schulnote (1 = sehr gut), das Daten-Perzentil läuft
+andersherum (100 = Spitze). **In der Scout League gibt es nur eine Richtung:
+höher ist besser** — Level 10 wie Attribut 5, gleichlaufend mit dem Perzentil.
+Das steht als `skalen_richtung` in `fragebogen.json` und an jeder Skala im
+Frontend.
+
+Die Attribute bleiben bei 1–5, nicht bei den 1–6 des Audits: der One-Pager
+beschreibt das neue interne System ausdrücklich als „Mehrfragen-Bewertungssystem
+(1–5-Skalen)". Der Audit hat die *alte* 1–6-Skala vermessen.
+
+### Der Kalibrier-Report
+
+`/admin` → *Kalibrier-Report* rechnet die fünf Audit-Diagnosen fortlaufend auf
+allem, was die Liga abgegeben hat — Zentraltendenz je Frage, Rater-Strenge je
+Scout, Halo und Entkopplung, Attribut-Trennschärfe je Positionsgruppe, Scout
+gegen Modell — und formuliert die Befunde als Klartext-Warnungen.
+
+Unterhalb von `mindest_faelle_diagnose` (Vorgabe: 5 Bewertungen) diagnostiziert
+er bewusst nichts und sagt das auch: wer einen Spieler bewertet hat, hat per
+Konstruktion 100 % auf einer Stufe, und das als Zentraltendenz zu melden wäre
+Rauschen als Befund verkauft.
+
 ## Was gemessen wird
 
 Zwei Blöcke, die bewusst getrennt bleiben statt zu einer Note zu verschmelzen —
@@ -64,8 +105,11 @@ dieselbe Logik wie im Post-Match-Framework nebenan.
 | Spreizung | Streuung der Gesamteinschätzung über alle Fälle. Nahe 0 heißt: immer dieselbe Note, also keine Information. |
 | Spreizungs-Index | dieselbe Zahl im Verhältnis zum Median des Felds. |
 | Bias | Abstand zum Feldmittel — positiv heißt milder als das Feld. |
-| Trennschärfe | Rangkorrelation der eigenen Note mit der Modellerwartung. |
-| Modell-Nähe | 0–100 auf der Bewertungsskala. **Kein Gütemaß** — Abweichung mit Recht ist der Punkt der Übung. |
+| Trennschärfe | Rangkorrelation des eigenen Levels mit der Modellerwartung. |
+| Modell-Nähe | 0–100 auf der Attributskala. **Kein Gütemaß** — Abweichung mit Recht ist der Punkt der Übung. |
+| Halo | Korrelation Level ↔ Attribut-Mittel. Nahe 1 heißt: das Gesamturteil ist nur ein Echo der Einzelnoten. |
+| Entkopplung | Korrelation bewiesenes Niveau ↔ Ceiling. Hoch heißt: das Ceiling ist ein Aufschlag, keine eigene Schätzung. |
+| Zentraltendenz | Anteil der häufigsten Stufe. Über 35 % kann die Skala nicht mehr ranken. |
 
 **Erst nach Auflösung:**
 
@@ -87,16 +131,23 @@ metriken.py        die Rechnung: Brier, Kalibrierung, Spreizung, Spearman
 db.py              SQLite-Schema, idempotent bei jedem Start
 export.py          Admin-Übersicht, Auflösung, CSV
 cli.py             Betriebswerkzeug (scouts, pack, status, aufloesen, export, stand)
-tests.py           71 Prüfungen: Metrik-Mathematik + End-to-End gegen echten Server
-fragebogen.json    Fragen und Prognosen als Daten, nicht im Code
+tests.py           133 Prüfungen: Metrik-Mathematik + End-to-End gegen echten Server
+fragebogen.json    Level-Skala, Attribut-Sets je Position, Prognosen und
+                   Schwellenwerte als Daten, nicht im Code
 pakete/            Case Packs (VORLAGE.json, demo.json)
 static/            Frontend: index.html, admin.html, app.js, stil.css
 ```
 
-Fragen und Prognosen lassen sich in `fragebogen.json` tauschen, ohne Python
-anzufassen — dieselbe Idee wie `kpi_varianten.json` im Framework nebenan.
-Stabil bleiben müssen die `key`-Werte: wer einen key umbenennt, trennt
-bestehende Bewertungen von ihrer Frage.
+Level-Stufen, Attribut-Sets, Prognosen und alle Schwellenwerte lassen sich in
+`fragebogen.json` tauschen, ohne Python anzufassen — dieselbe Idee wie
+`kpi_varianten.json` im Framework nebenan. Stabil bleiben müssen die
+`key`-Werte: wer einen key umbenennt, trennt bestehende Bewertungen von ihrer
+Frage.
+
+Die Attribut-Sets sind fachlich plausibel besetzt, aber **nicht die internen
+Kern-Sets**. Sobald die echten 20 Attribute je Position vorliegen, gehören sie
+unter `bewertung.kern` und `bewertung.positionen` — Code muss dafür nicht
+angefasst werden.
 
 ## Betrieb
 
@@ -119,7 +170,8 @@ beliebiger kleiner Server; TLS gehört davor, nicht hier hinein.
 
 Prüfen: `python3 scoutleague/tests.py` — startet einen echten Server auf einer
 Wegwerf-Datenbank und geht den kompletten Ablauf durch, von der Anmeldung über
-zwanzig Abgaben und fünfzehn Auflösungen bis zum CSV.
+24 Abgaben und 18 Auflösungen bis zum CSV, inklusive Kalibrier-Report und dem
+Verhalten bei zu dünner Datenlage.
 
 ## Grenzen — bewusst offen ausgewiesen
 
@@ -136,7 +188,16 @@ zwanzig Abgaben und fünfzehn Auflösungen bis zum CSV.
 - **Kalibrierungskennzahlen brauchen Fälle.** Spreizung und Trennschärfe werden
   ab drei bewerteten Fällen aussagekräftig, der Kalibrierungsfehler erst ab
   deutlich mehr aufgelösten Prognosen. Nach einem Pack sind das Indizien, keine
-  Urteile.
+  Urteile. Der Report sagt das selbst, statt es den Zahlen zu überlassen.
+- **Die Rangkorrelation je Position braucht mehrere Fälle je Gruppe.** Zehn
+  Bewertungen zu einem einzigen Innenverteidiger ergeben keine Rangfolge — der
+  Report weist dann „zu wenige Fälle" aus statt einer Zahl. Für die
+  positionsweise Auswertung, die der Audit macht, braucht es Packs mit mehreren
+  Spielern je Gruppe.
+- **Die Attribut-Sets sind ein Vorschlag.** Sie folgen der Struktur, die der
+  Audit fordert (Kern plus verpflichtendes Positions-Set, Anker an beiden
+  Skalenenden), aber sie sind nicht aus den internen 20 Attributen abgeleitet —
+  die lagen nicht vor.
 - **Der Feldvergleich erscheint ab drei Abgaben** je Fall — darunter wäre der
   „Schnitt“ die Meinung von zwei Leuten mit Nachkommastelle.
 

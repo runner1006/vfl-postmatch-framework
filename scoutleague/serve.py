@@ -143,7 +143,7 @@ class Handler(BaseHTTPRequestHandler):
             if "fall_id" not in k:
                 raise logik.Fehler("fall_id fehlt.")
             return logik.bewertung_speichern(
-                con, self._scout(con), int(k["fall_id"]),
+                con, self._scout(con), int(k["fall_id"]), k.get("level"),
                 k.get("antworten"), k.get("prognosen"), k.get("notiz"),
                 k.get("sekunden"), bool(k.get("abgeben")))
 
@@ -175,6 +175,10 @@ class Handler(BaseHTTPRequestHandler):
                 con.execute("UPDATE packs SET status = ? WHERE slug = ?",
                             (status, k["slug"]))
             return {"slug": k["slug"], "status": status}
+
+        if pfad == "/api/admin/kalibrierung" and methode == "GET":
+            self._admin()
+            return logik.kalibrier_report(con, slug)
 
         if pfad == "/api/admin/export.csv" and methode == "GET":
             self._admin()

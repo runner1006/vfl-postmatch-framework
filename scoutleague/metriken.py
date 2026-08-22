@@ -11,6 +11,11 @@ Der Sofort-Block ist der eigentliche Zweck von Stufe 0. Scouts geben laut
 Diagnose gefuehlt gleiche Bewertungen ab; Spreizung und Trennschaerfe machen
 genau das sichtbar, lange bevor die erste Prognose aufloest.
 
+Dazu kommt der Audit-Block (Scout Rating Audit, Juni 2026): Zentraltendenz,
+Rater-Strenge, Halo, Entkopplung und Attribut-Trennschaerfe. Das sind genau
+die fuenf Groessen, die der Audit einmalig auf 187 Bewertungen gerechnet hat -
+hier laufen sie fortlaufend auf den Abgaben der Liga mit.
+
 Keine externen Abhaengigkeiten - alles Standardbibliothek.
 """
 import math
@@ -64,6 +69,31 @@ def spearman(xs, ys):
         return None
     cov = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
     return cov / math.sqrt(zx * zy)
+
+
+def pearson(xs, ys):
+    """Produkt-Moment-Korrelation. Der Audit misst Halo und Entkopplung damit;
+    None, wenn eine Seite konstant ist - ein Scout ohne Streuung hat keinen
+    messbaren Halo, und 0 waere die falsche Auskunft."""
+    if len(xs) != len(ys) or len(xs) < 3:
+        return None
+    mx, my = mittel(xs), mittel(ys)
+    zx = sum((a - mx) ** 2 for a in xs)
+    zy = sum((b - my) ** 2 for b in ys)
+    if zx == 0 or zy == 0:
+        return None
+    return sum((a - mx) * (b - my) for a, b in zip(xs, ys)) / math.sqrt(zx * zy)
+
+
+def z_werte(xs):
+    """Werte relativ zum eigenen Mittel und der eigenen Streuung. Der
+    Strenge-Gap von 0,56 Notenpunkten zwischen zwei Scouts verschwindet
+    dadurch; was bleibt, ist die Rangfolge innerhalb des Scouts."""
+    s = stdabw(xs)
+    if s is None or s == 0:
+        return None
+    m = mittel(xs)
+    return [(x - m) / s for x in xs]
 
 
 # --------------------------------------------------------------- Sofort-Metrik
@@ -257,3 +287,105 @@ def skill_gesamt(paare_je_frage, raten):
     if nenner <= 0:
         return None
     return round(1.0 - zaehler / nenner, 3)
+
+
+# ------------------------------------------------------------------ Audit-Block
+# Die fuenf Diagnosen aus dem Scout Rating Audit, fortlaufend statt einmalig.
+
+def zentraltendenz(werte):
+    """Anteil des haeufigsten Werts. Der Audit fand 58 % Dreier auf der
+    1-6-Skala und setzt als Ziel: keine Auspraegung ueber 35 %."""
+    werte = [w for w in werte if w is not None]
+    if not werte:
+        return None
+    haeufigkeit = {}
+    for w in werte:
+        haeufigkeit[w] = haeufigkeit.get(w, 0) + 1
+    modal, n = max(haeufigkeit.items(), key=lambda kv: (kv[1], -kv[0]))
+    return {
+        "n": len(werte),
+        "modalwert": modal,
+        "anteil": round(n / len(werte), 3),
+        "genutzte_stufen": len(haeufigkeit),
+    }
+
+
+def rater_strenge(werte_je_scout):
+    """Mittelwert je Scout und die Spannweite dazwischen. Der Audit misst hier
+    0,56 Notenpunkte zwischen Zoran und Miguel - bei identischer Skala."""
+    mittel_je = {s: mittel(w) for s, w in werte_je_scout.items()
+                 if [x for x in w if x is not None]}
+    if len(mittel_je) < 2:
+        return {"je_scout": {s: round(m, 2) for s, m in mittel_je.items()},
+                "spanne": None}
+    werte = list(mittel_je.values())
+    return {
+        "je_scout": {s: round(m, 2) for s, m in mittel_je.items()},
+        "spanne": round(max(werte) - min(werte), 2),
+        "strengster": min(mittel_je, key=mittel_je.get),
+        "mildester": max(mittel_je, key=mittel_je.get),
+    }
+
+
+def halo(leitwerte, attribut_mittel):
+    """Korrelation zwischen dem Leiturteil und dem Mittel der Attribute. Nahe 1
+    heisst: das Gesamturteil ist nur ein Echo der Einzelnoten und traegt keine
+    eigene Information. Der Audit misst r = 0,78."""
+    return pearson(leitwerte, attribut_mittel)
+
+
+def entkopplung(heute, ceiling):
+    """Korrelation zwischen bewiesenem Niveau und Ceiling. Beide sollen
+    Verschiedenes messen; der Audit findet r = 0,55 Gleichlauf."""
+    return pearson(heute, ceiling)
+
+
+def attribut_trennschaerfe(werte_je_attribut, sigma_grenze=0.4):
+    """Streuung je Attribut ueber alle bewerteten Spieler. Unter der Grenze ist
+    ein Attribut tot: es kostet Zeit und liefert keine Unterscheidung."""
+    aus = {}
+    for key, werte in werte_je_attribut.items():
+        werte = [w for w in werte if w is not None]
+        s = stdabw(werte)
+        aus[key] = {
+            "n": len(werte),
+            "sigma": round(s, 2) if s is not None else None,
+            "mittel": round(mittel(werte), 2) if werte else None,
+            "tot": bool(s is not None and s < sigma_grenze),
+        }
+    return aus
+
+
+def konflikt(scout_level, modell_level, abstand=2):
+    """Scout und Modell sind sich uneinig. Der Audit nennt diese Faelle die
+    wertvollste Review-Liste - dort steckt der meiste Erkenntnisgewinn."""
+    if scout_level is None or modell_level is None:
+        return None
+    d = float(scout_level) - float(modell_level)
+    if abs(d) < abstand:
+        return None
+    return {"differenz": round(d, 1),
+            "richtung": "scout_hoeher" if d > 0 else "modell_hoeher"}
+
+
+def perzentil_zu_level(perzentil, basis_level):
+    """Die Bruecke aus dem Audit: das Daten-Perzentil verschiebt das bewiesene
+    Liga-Niveau um hoechstens eine Stufe nach oben oder unten.
+
+    Ausgangspunkt bleibt die Liga, in der der Spieler real gespielt hat -
+    das Perzentil sagt nur, ob er dort ueber oder unter dem Schnitt liegt.
+    """
+    if perzentil is None or basis_level is None:
+        return None
+    p = float(perzentil)
+    if p >= 90:
+        v = 1.0
+    elif p >= 70:
+        v = 0.5
+    elif p >= 50:
+        v = 0.0
+    elif p >= 30:
+        v = -0.5
+    else:
+        v = -1.0
+    return max(1.0, min(10.0, round(float(basis_level) + v, 1)))

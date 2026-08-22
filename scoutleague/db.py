@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS bewertungen (
   id             INTEGER PRIMARY KEY,
   scout_id       INTEGER NOT NULL REFERENCES scouts(id) ON DELETE CASCADE,
   fall_id        INTEGER NOT NULL REFERENCES faelle(id) ON DELETE CASCADE,
+  level_json     TEXT NOT NULL DEFAULT '{}',
   antworten_json TEXT NOT NULL DEFAULT '{}',
   prognosen_json TEXT NOT NULL DEFAULT '{}',
   notiz          TEXT NOT NULL DEFAULT '',
@@ -100,10 +101,22 @@ def verbinden(pfad=None):
     return con
 
 
+# Nachtraeglich hinzugekommene Spalten. SQLite kennt kein "ADD COLUMN IF NOT
+# EXISTS", deshalb erst nachsehen, dann anlegen.
+NACHTRAEGLICH = [
+    ("bewertungen", "level_json", "TEXT NOT NULL DEFAULT '{}'"),
+]
+
+
 def schema(pfad=None):
     con = verbinden(pfad)
     with con:
         con.executescript(SCHEMA)
+        for tabelle, spalte, typ in NACHTRAEGLICH:
+            vorhanden = {r["name"] for r in
+                         con.execute(f"PRAGMA table_info({tabelle})")}
+            if spalte not in vorhanden:
+                con.execute(f"ALTER TABLE {tabelle} ADD COLUMN {spalte} {typ}")
     con.close()
 
 

@@ -10,6 +10,7 @@ import io
 import json
 
 import db
+import logik
 
 
 def uebersicht(con, pack_slug=None):
@@ -65,8 +66,9 @@ def aufloesen(con, fall_id, frage, ergebnis, quelle=""):
 
 
 SPALTEN = [
-    "pack", "fall_id", "ext_id", "spieler", "position", "jahrgang", "verein",
-    "liga", "scout", "scout_code", "abgegeben_am", "sekunden",
+    "pack", "fall_id", "ext_id", "spieler", "position", "positionsgruppe",
+    "jahrgang", "verein", "liga", "scout", "scout_code", "abgegeben_am",
+    "sekunden", "level_heute", "level_ceiling", "modell_level",
     "prognose_frage", "prognose_wahrscheinlichkeit", "modell_wahrscheinlichkeit",
     "ergebnis", "aufgeloest_am", "quelle", "notiz",
 ]
@@ -96,6 +98,9 @@ def bewertungen_csv(con, pack_slug=None):
 
     fragen = sorted({k for b in bew for k in json.loads(b["antworten_json"])})
     kopf = SPALTEN + [f"bew_{k}" for k in fragen]
+    leit = logik.leitfrage()
+    zweit = next((f["key"] for f in logik.fragebogen()["level"]["fragen"]
+                  if f["key"] != leit), None)
 
     puffer = io.StringIO()
     w = csv.writer(puffer, delimiter=";", lineterminator="\n")
@@ -105,15 +110,20 @@ def bewertungen_csv(con, pack_slug=None):
         f = faelle[b["fall_id"]]
         s = scouts.get(b["scout_id"])
         antw = json.loads(b["antworten_json"])
+        lvl = json.loads(b["level_json"])
         prog = json.loads(b["prognosen_json"])
-        modell = (json.loads(f["modell_json"]) or {}).get("prognose", {})
+        modell_alles = json.loads(f["modell_json"]) or {}
+        modell = modell_alles.get("prognose", {})
+        m_level = (modell_alles.get("level") or {}).get(leit, "")
         for frage, p in sorted(prog.items()):
             a = aufl.get((f["id"], frage))
             w.writerow([
                 f["pack_slug"], f["id"], f["ext_id"], f["name"], f["position"],
+                logik.positionsgruppe(f["position"]),
                 f["jahrgang"], f["verein"], f["liga"],
                 s["name"] if s else "", s["code"] if s else "",
                 b["geaendert_am"], b["sekunden"],
+                lvl.get(leit, ""), lvl.get(zweit, "") if zweit else "", m_level,
                 frage, p, modell.get(frage, ""),
                 a["ergebnis"] if a else "", a["aufgeloest_am"] if a else "",
                 a["quelle"] if a else "",
