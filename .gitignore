@@ -13,3 +13,8 @@ ergebnisse/outcome_alignment.csv
 __pycache__/
 *.pyc
 .DS_Store
+
+# Laufzeit-Datenbank der Scout League. Entsteht beim ersten Serverstart.
+scoutleague/*.db
+scoutleague/*.db-wal
+scoutleague/*.db-shm

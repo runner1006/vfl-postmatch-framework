@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Scout League · Admin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%232a78d6%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-family=%22system-ui,sans-serif%22 font-size=%2216%22 font-weight=%22700%22 fill=%22white%22 text-anchor=%22middle%22%3ESL%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/stil.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Scout League &middot; Admin</h1>
+  <p class="sub">Abgabestand, Auflösung, Export.</p>
+
+  <div class="karte" id="tokenkarte">
+    <label class="klein muted" for="token">Admin-Token</label>
+    <input type="password" id="token" style="margin:6px 0 12px"
+           autocomplete="off" spellcheck="false">
+    <button class="knopf" id="laden">Laden</button>
+    <div id="tokenfehler"></div>
+  </div>
+
+  <div id="reiter" hidden style="margin:0 0 14px">
+    <button class="knopf leise" data-ansicht="uebersicht">Übersicht</button>
+    <button class="knopf leise" data-ansicht="kalibrierung">Kalibrier-Report</button>
+  </div>
+
+  <div id="inhalt"></div>
+</div>
+
+<script>
+"use strict";
+const el = (s) => document.getElementById(s);
+const esc = (t) => String(t == null ? "" : t).replace(/[&<>"']/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* Sitzungsspeicher kann werfen, nicht nur leer sein. */
+const merke = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} };
+const hole = (k) => { try { return sessionStorage.getItem(k) || ""; } catch (e) { return ""; } };
+
+let TOKEN = hole("sl_admin");
+let FRAGEN = [];      // [{key, label}] aus dem Fragebogen
+let ANSICHT = "uebersicht";
+
+const zahl = (v, n = 2, f = "–") =>
+  (v === null || v === undefined || Number.isNaN(v)) ? f : Number(v).toFixed(n);
+
+async function api(pfad, optionen = {}) {
+  const kopf = Object.assign({ "Content-Type": "application/json",
+                               "X-Admin-Token": TOKEN }, optionen.headers || {});
+  const r = await fetch(pfad, Object.assign({}, optionen, { headers: kopf }));
+  const text = await r.text();
+  let d = null;
+  try { d = text ? JSON.parse(text) : null; } catch (e) { d = text; }
+  if (!r.ok) throw new Error((d && d.fehler) || `Fehler ${r.status}`);
+  return d;
+}
+
+el("laden").addEventListener("click", () => {
+  TOKEN = el("token").value.trim();
+  merke("sl_admin", TOKEN);
+  laden();
+});
+
+document.querySelectorAll("[data-ansicht]").forEach((b) => {
+  b.addEventListener("click", () => { ANSICHT = b.dataset.ansicht; laden(); });
+});
+
+async function laden() {
+  el("tokenfehler").innerHTML = "";
+  let u, fb;
+  try {
+    [u, fb] = await Promise.all([
+      api("/api/admin/uebersicht"),
+      fetch("/api/fragebogen").then((r) => r.ok ? r.json() : null).catch(() => null),
+    ]);
+  } catch (err) {
+    el("tokenfehler").innerHTML =
+      `<div class="meldung fehler">${esc(err.message)}</div>`;
+    return;
+  }
+  el("tokenkarte").hidden = true;
+  el("reiter").hidden = false;
+  document.querySelectorAll("[data-ansicht]").forEach((b) => {
+    b.style.background = b.dataset.ansicht === ANSICHT ? "var(--surface-2)" : "";
+  });
+  FRAGEN = (fb && fb.prognosen ? fb.prognosen : [])
+    .map((p) => ({ key: p.key, label: p.label }));
+
+  if (ANSICHT === "kalibrierung") return kalibrierungZeichnen();
+
+  if (!u.pack) {
+    el("inhalt").innerHTML = `<div class="karte">Kein Case Pack vorhanden.
+      Import über <code>python3 scoutleague/cli.py pack --datei …</code></div>`;
+    return;
+  }
+
+  el("inhalt").innerHTML = `
+    <div class="karte">
+      <h2 style="margin-top:0">${esc(u.pack.titel)}
+        <span class="abzeichen ${u.pack.status === "offen" ? "offen" : "gut"}">
+          ${esc(u.pack.status)}</span></h2>
+      <div class="reihe">
+        <button class="knopf leise" id="umschalten">
+          ${u.pack.status === "offen" ? "Pack schließen" : "Pack öffnen"}</button>
+        <button class="knopf leise" id="csv">CSV exportieren</button>
+      </div>
+    </div>
+
+    <div class="karte scroll">
+      <h2 style="margin-top:0">Scouts</h2>
+      <table class="tab">
+        <tr><th>Code</th><th>Name</th><th class="zahl">abgegeben</th>
+            <th class="zahl">offen</th></tr>
+        ${u.scouts.map((s) => `<tr><td class="mono">${esc(s.code)}</td>
+          <td>${esc(s.name)}</td><td class="zahl">${s.abgegeben}</td>
+          <td class="zahl">${s.offen}</td></tr>`).join("")}
+      </table>
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">Fälle und Auflösung</h2>
+      <p class="klein muted">Auflösen heißt: die Realität hat geantwortet.
+      Jede Auflösung erzeugt Outcome-Labels für alle Scouts, die zu diesem Fall
+      abgegeben haben.</p>
+      ${u.faelle.map((f) => `
+        <div style="border-top:1px solid var(--border);padding:12px 0">
+          <div class="reihe">
+            <b>${esc(f.name)}</b>
+            <span class="muted klein">${esc(f.verein)} · Fall ${f.id}</span>
+            <span class="abzeichen">${f.abgaben} Abgaben</span>
+          </div>
+          <div style="margin-top:6px">
+            ${FRAGEN.map((q) => {
+              const a = f.aufloesungen[q.key];
+              const stil = (an, farbe) => "padding:4px 10px;margin-left:4px"
+                + (an ? `;background:var(${farbe});color:#fff;border-color:transparent` : "");
+              return `<div class="klein" style="display:flex;align-items:center;
+                        gap:6px;margin:5px 0">
+                <span style="flex:1;min-width:0">${esc(q.label)}</span>
+                <button class="knopf leise" style="${stil(a === 1, "--gut")}"
+                  data-fall="${f.id}" data-frage="${esc(q.key)}" data-erg="1">ja</button>
+                <button class="knopf leise" style="${stil(a === 0, "--schlecht")}"
+                  data-fall="${f.id}" data-frage="${esc(q.key)}" data-erg="0">nein</button>
+                <span class="muted" style="width:52px;text-align:right">${
+                  a === undefined ? "offen" : "gelöst"}</span>
+              </div>`;
+            }).join("")}
+          </div>
+        </div>`).join("")}
+    </div>`;
+
+  el("umschalten").addEventListener("click", async () => {
+    await api("/api/admin/pack_status", {
+      method: "POST",
+      body: JSON.stringify({ slug: u.pack.slug,
+        status: u.pack.status === "offen" ? "geschlossen" : "offen" }),
+    });
+    laden();
+  });
+
+  el("csv").addEventListener("click", async () => {
+    const r = await fetch("/api/admin/export.csv", {
+      headers: { "X-Admin-Token": TOKEN } });
+    const blob = await r.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "scoutleague.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.querySelectorAll("[data-frage]").forEach((b) => {
+    b.addEventListener("click", async () => {
+      await api("/api/admin/aufloesen", {
+        method: "POST",
+        body: JSON.stringify({ fall_id: Number(b.dataset.fall),
+          frage: b.dataset.frage, ergebnis: Number(b.dataset.erg),
+          quelle: "admin-ui" }),
+      });
+      laden();
+    });
+  });
+}
+
+/* Der Scout Rating Audit als laufendes Dashboard. Dieselben fuenf Diagnosen,
+   die im Juni einmalig auf 187 Bewertungen gerechnet wurden - hier auf allem,
+   was die Liga bisher abgegeben hat. */
+async function kalibrierungZeichnen() {
+  el("inhalt").innerHTML = `<p class="muted">Lädt …</p>`;
+  let r;
+  try { r = await api("/api/admin/kalibrierung"); }
+  catch (err) {
+    return el("inhalt").innerHTML =
+      `<div class="meldung fehler">${esc(err.message)}</div>`;
+  }
+  if (!r.n_bewertungen) {
+    return el("inhalt").innerHTML =
+      `<div class="karte"><p class="muted">Noch keine Abgaben.</p></div>`;
+  }
+
+  const sw = r.schwellen || {};
+
+  const warnungen = r.warnungen.length
+    ? r.warnungen.map((w) => `<div class="meldung warn">${esc(w)}</div>`).join("")
+    : `<div class="meldung ok">Keine der fünf Audit-Diagnosen schlägt an.</div>`;
+
+  const zt = Object.entries(r.zentraltendenz).map(([k, z]) => `
+    <tr><td>${esc(z.label)}</td>
+      <td>${z.modalwert}</td>
+      <td class="${z.ueber_ziel ? "zelle-tot" : "zelle-gut"}">
+        ${Math.round(z.anteil * 100)}%</td>
+      <td>${z.genutzte_stufen}</td>
+      <td>${z.n}</td></tr>`).join("");
+
+  const strenge = r.rater_strenge || {};
+  const strengeZeilen = Object.entries(strenge.je_scout || {})
+    .sort((a, b) => a[1] - b[1])
+    .map(([n, m]) => `<tr><td>${esc(n)}</td><td>${zahl(m, 2)}</td></tr>`).join("");
+
+  const haloZeilen = Object.keys(r.halo.je_scout).sort().map((n) => `
+    <tr><td>${esc(n)}</td>
+      <td class="${r.halo.je_scout[n] >= (sw.halo_warnung || .75) ? "zelle-tot" : ""}">
+        ${zahl(r.halo.je_scout[n])}</td>
+      <td class="${r.entkopplung.je_scout[n] >= (sw.entkopplung_warnung || .55)
+        ? "zelle-tot" : ""}">${zahl(r.entkopplung.je_scout[n])}</td></tr>`).join("");
+
+  const svm = r.scout_vs_modell;
+  const svmZeilen = Object.keys(svm.je_gruppe).map((g) => {
+    const faelle = (svm.n_faelle_je_gruppe || {})[g];
+    const zuWenig = svm.je_gruppe[g] === null
+      && faelle !== undefined && faelle < (svm.mindest_faelle || 3);
+    return `<tr><td>${esc(g)}</td>
+      <td class="${svm.je_gruppe[g] === null ? "" :
+        svm.je_gruppe[g] >= 0.3 ? "zelle-gut" : "zelle-tot"}">
+        ${zuWenig ? '<span class="muted">zu wenige Fälle</span>'
+                  : zahl(svm.je_gruppe[g])}</td>
+      <td>${faelle === undefined ? "–" : faelle}</td>
+      <td>${svm.n_je_gruppe[g]}</td></tr>`;
+  }).join("");
+
+  const attrBloecke = Object.entries(r.attribute).map(([gruppe, attrs]) => `
+    <h3>${esc(gruppe)}</h3>
+    <div class="scroll"><table class="matrix">
+      <tr><th>Attribut</th><th>σ</th><th>Ø</th><th>n</th></tr>
+      ${Object.entries(attrs).sort((a, b) => (a[1].sigma || 0) - (b[1].sigma || 0))
+        .map(([k, v]) => `<tr>
+          <td>${esc(k)}</td>
+          <td class="${v.tot ? "zelle-tot" : "zelle-gut"}">${zahl(v.sigma)}</td>
+          <td>${zahl(v.mittel)}</td><td>${v.n}</td></tr>`).join("")}
+    </table></div>`).join("");
+
+  const konflikte = r.konflikte.length ? `
+    <div class="scroll"><table class="matrix">
+      <tr><th>Spieler</th><th style="text-align:left">Pos</th>
+          <th style="text-align:left">Scout</th>
+          <th>Scout</th><th>Modell</th><th>Δ</th>
+          <th style="text-align:left">Lesart</th></tr>
+      ${r.konflikte.map((k) => `<tr>
+        <td>${esc(k.spieler)}</td><td style="text-align:left">${esc(k.position)}</td>
+        <td style="text-align:left">${esc(k.scout)}</td>
+        <td>${k.scout_level}</td><td>${zahl(k.modell_level, 1)}</td>
+        <td class="zelle-tot">${k.differenz > 0 ? "+" : ""}${zahl(k.differenz, 1)}</td>
+        <td style="text-align:left">${k.richtung === "scout_hoeher"
+          ? "Bauchgefühl ohne Datenstütze" : "möglicher Übersehener"}</td>
+      </tr>`).join("")}
+    </table></div>` : `<p class="muted">Keine Konfliktfälle über
+      ${sw.konflikt_level_abstand} Stufen Abstand.</p>`;
+
+  el("inhalt").innerHTML = `
+    <div class="karte">
+      <h2 style="margin-top:0">Kalibrier-Report</h2>
+      <p class="klein muted">${r.n_bewertungen} Bewertungen von ${r.n_scouts}
+      Scouts. Die fünf Diagnosen aus dem Scout Rating Audit, gerechnet auf dem,
+      was die Liga bisher abgegeben hat.</p>
+      ${warnungen}
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">1 · Zentraltendenz</h2>
+      <p class="klein muted">Anteil der häufigsten Stufe. Ziel:
+      höchstens ${Math.round((sw.zentraltendenz_max || .35) * 100)}&nbsp;%
+      — darüber kann die Skala nicht ranken.</p>
+      <div class="scroll"><table class="matrix">
+        <tr><th>Frage</th><th>Modalwert</th><th>Anteil</th>
+            <th>Stufen genutzt</th><th>n</th></tr>
+        ${zt}
+      </table></div>
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">2 · Rater-Strenge</h2>
+      <p class="klein muted">Mittleres vergebenes Level je Scout.
+      ${strenge.spanne !== null && strenge.spanne !== undefined
+        ? `Spanne: <b>${zahl(strenge.spanne, 2)}</b> Level zwischen
+           ${esc(strenge.strengster || "")} und ${esc(strenge.mildester || "")}.`
+        : "Für einen Vergleich braucht es mindestens zwei Scouts."}</p>
+      <div class="scroll"><table class="matrix">
+        <tr><th>Scout</th><th>Ø Level</th></tr>${strengeZeilen}
+      </table></div>
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">3 · Halo und Entkopplung</h2>
+      <p class="klein muted">Halo = wie stark das Level dem Attribut-Mittel folgt
+      (Warnung ab ${sw.halo_warnung}). Entkopplung = Gleichlauf von bewiesenem
+      Niveau und Ceiling (Warnung ab ${sw.entkopplung_warnung}).
+      Gesamt: Halo <b>${zahl(r.halo.gesamt)}</b>,
+      Entkopplung <b>${zahl(r.entkopplung.gesamt)}</b>.</p>
+      <div class="scroll"><table class="matrix">
+        <tr><th>Scout</th><th>Halo r</th><th>Entkopplung r</th></tr>${haloZeilen}
+      </table></div>
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">4 · Attribut-Trennschärfe</h2>
+      <p class="klein muted">Streuung je Attribut. Unter σ =
+      ${sw.tote_attribute_sigma} ist ein Attribut tot: es kostet Zeit und
+      unterscheidet nichts.</p>
+      ${attrBloecke}
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">5 · Scout gegen Modell</h2>
+      <p class="klein muted">Rangkorrelation des Levels, gesamt
+      <b>${zahl(svm.gesamt)}</b>. Wo der Zusammenhang niedrig ist, lohnt der
+      Daten-Input als Korrektiv am meisten. Je Gruppe braucht die Korrelation
+      mindestens ${svm.mindest_faelle || 3} verschiedene Fälle &mdash; viele
+      Bewertungen zu einem einzigen Spieler ergeben keine Rangfolge.</p>
+      <div class="scroll"><table class="matrix">
+        <tr><th>Gruppe</th><th>ρ</th><th>Fälle</th><th>Bewertungen</th></tr>
+        ${svmZeilen}
+      </table></div>
+    </div>
+
+    <div class="karte">
+      <h2 style="margin-top:0">6 · Konfliktfälle</h2>
+      <p class="klein muted">Scout und Modell mindestens
+      ${sw.konflikt_level_abstand} Stufen auseinander. Laut Audit die wertvollste
+      Review-Liste — dort steckt der meiste Erkenntnisgewinn.</p>
+      ${konflikte}
+    </div>`;
+}
+
+if (TOKEN) { el("token").value = TOKEN; laden(); }
+</script>
+</body>
+</html>

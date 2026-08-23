@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Scout League</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%232a78d6%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-family=%22system-ui,sans-serif%22 font-size=%2216%22 font-weight=%22700%22 fill=%22white%22 text-anchor=%22middle%22%3ESL%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/stil.css">
+</head>
+<body>
+
+<header class="kopf" id="kopf" hidden>
+  <div class="inner">
+    <div class="marke">Scout League <span id="wer"></span></div>
+    <nav>
+      <button data-tab="pack" aria-current="true">Case Pack</button>
+      <button data-tab="profil">Mein Profil</button>
+      <button data-tab="liga">Liga</button>
+      <button data-tab="abmelden">Abmelden</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ------------------------------------------------------------ Anmeldung -->
+  <section id="anmeldung">
+    <h1>Scout League</h1>
+    <p class="sub">Closed Beta &middot; Stufe 0 &middot; intern</p>
+    <div class="karte">
+      <p>Du bewertest fünf Talente auf unseren Skalen und gibst zu jedem drei
+      Prognosen ab. Die Bewertung wird sofort gegen unser Modell gespiegelt,
+      die Prognosen später gegen die Realität.</p>
+      <p class="klein muted">Rechne mit etwa 15 Minuten für das ganze Pack.
+      Zwischenstände werden gespeichert, du kannst jederzeit aufhören.</p>
+      <form id="anmeldeform" autocomplete="off">
+        <label class="klein muted" for="code">Dein persönlicher Scout-Code</label>
+        <input type="text" id="code" name="code" placeholder="z. B. K7M2QP"
+               maxlength="12" autocapitalize="characters" spellcheck="false"
+               style="margin:6px 0 12px;letter-spacing:.12em;font-weight:600">
+        <button class="knopf" type="submit">Anmelden</button>
+      </form>
+      <div id="anmeldefehler"></div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------ Case Pack -->
+  <section id="tab-pack" hidden>
+    <h1 id="packtitel">Case Pack</h1>
+    <p class="sub" id="packsub"></p>
+    <div id="packmeldung"></div>
+    <div id="falliste"></div>
+    <div class="fusszeile klein">
+      Angezeigt werden ausschließlich eigene, aggregierte Indizes &mdash; keine
+      Rohdaten des Datenlieferanten.
+    </div>
+  </section>
+
+  <!-- ----------------------------------------------------------- Ein Fall -->
+  <section id="tab-fall" hidden>
+    <button class="knopf leise" id="zurueck" style="margin-bottom:14px">&larr; Zum Pack</button>
+    <div id="fallinhalt"></div>
+  </section>
+
+  <!-- -------------------------------------------------------------- Profil -->
+  <section id="tab-profil" hidden>
+    <h1>Mein Profil</h1>
+    <p class="sub">Wie du bewertest &mdash; und ob du recht behältst.</p>
+    <div id="profilinhalt"></div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- Liga -->
+  <section id="tab-liga" hidden>
+    <h1>Liga</h1>
+    <p class="sub" id="ligasub"></p>
+    <div id="ligainhalt"></div>
+  </section>
+
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
