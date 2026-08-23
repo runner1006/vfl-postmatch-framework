@@ -118,6 +118,35 @@ er bewusst nichts und sagt das auch: wer einen Spieler bewertet hat, hat per
 Konstruktion 100 % auf einer Stufe, und das als Zentraltendenz zu melden wäre
 Rauschen als Befund verkauft.
 
+## Was der Scout wann sieht
+
+Die wichtigste Grenze im ganzen Produkt läuft zwischen beschreibendem Kontext
+und bewertenden Daten.
+
+| Vor der Abgabe | Erst nach der Abgabe |
+|---|---|
+| Video-Highlight | Aggregierte Indizes |
+| Position, Rolle, Jahrgang, Verein, Fuß | Modellerwartung (Level und Attribute) |
+| **Liga** | Feldvergleich, roh und rater-bereinigt |
+| Marktwertschwelle der Prognosefrage | Konfliktmarkierung |
+
+Die Liga bleibt sichtbar, und zwar zwingend: sie ist der Anker der Level-Frage
+— das Level ist die Liga-Stufe, um höchstens eine Stufe verschoben. Ohne sie
+wäre die Frage nicht zu beantworten. Die Marktwertschwelle gehört zur Frage,
+nicht zu den Belegen.
+
+Die Indizes liegen dagegen hinter der Abgabe, und das ist kein Detail: die
+Modellerwartung wird **aus ihnen gerechnet**. Wer Technik 84 und Athletik 48
+vorher sieht, vergibt 4 und 2 — und dann misst die Trennschärfe nur noch, ob
+jemand Balken in Noten übersetzen kann. Die Konfliktliste bliebe leer, weil
+niemand Grund hätte zu widersprechen, und ein Brier-Score auf abgelesenen
+Werten belegt keinen Track Record.
+
+Daraus folgt: **das Video ist der einzige Beleg, den der Scout vor seinem
+Urteil hat.** Ein Fall ohne Video ist nicht beurteilbar. Der Import warnt
+deshalb bei jedem Fall ohne `video_url`, und die Oberfläche sagt es dem Scout
+statt ihm ein leeres Formular hinzustellen.
+
 ## Woher die Modellerwartung kommt
 
 Der Case Pack braucht je Spieler ein Level 1–10, eine Erwartung je Attribut und

@@ -95,6 +95,9 @@ function abgabe(koerper) {
     .filter(Number.isFinite);
 
   fall.modell = modell;
+  // Erst mit der Abgabe - vorher haelt die Attrappe sie genauso zurueck wie
+  // der Server.
+  fall.indizes = DATEN.indizes[String(koerper.fall_id)] || {};
   fall.rueckmeldung = {
     modell_naehe: naehe(koerper.antworten || {}, modell.bewertung, 4),
     prognose_naehe: naehe(koerper.prognosen || {}, modell.prognose, 1),
@@ -106,7 +109,7 @@ function abgabe(koerper) {
     kohorte: DATEN.kohorten[String(koerper.fall_id)] || null,
   };
   return { gespeichert: true, abgegeben: true, modell: modell,
-           rueckmeldung: fall.rueckmeldung };
+           indizes: fall.indizes, rueckmeldung: fall.rueckmeldung };
 }
 
 const ROUTEN = {

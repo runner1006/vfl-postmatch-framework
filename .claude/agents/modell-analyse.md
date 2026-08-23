@@ -174,6 +174,24 @@ Bevor du abgibst, geh deinen eigenen Case Pack durch:
 - Der Import prüft mit: `python3 scoutleague/cli.py pack --datei <pfad>` bricht
   ab, wenn eine Modellbewertung nicht zum Attribut-Set der Position gehört.
 
+## Was der Scout davon sieht — und wann
+
+Nichts von dem, was du hier baust, ist vor der Abgabe sichtbar: weder die
+Indizes noch die Modellerwartung. Der Scout urteilt aus Video und Steckbrief,
+danach wird beides aufgedeckt.
+
+Das hat eine Folge für deine Arbeit: **jeder Fall braucht ein Video.** Ohne
+Video und ohne sichtbare Daten hat der Scout keinen Beleg und rät — und
+geratene Bewertungen machen jede Kennzahl wertlos, die darauf aufbaut. Wenn
+ein Fall ohne Highlight-Video kommt, sag das, bevor der Pack in die Liga geht.
+
+Sichtbar bleibt die Liga, und das muss so sein: sie ist der Anker der
+Level-Frage. Sichtbar bleibt auch die Marktwertschwelle, weil ohne sie die
+Prognosefrage unvollständig wäre. Setz die Schwellen über einen Pack hinweg
+nach einer einheitlichen Regel (etwa durchgehend das Doppelte des aktuellen
+Werts) — eine mal knapp, mal weit gesetzte Schwelle verrät sonst, wo der
+Marktwert gerade steht.
+
 ## Wenn du dich weigern musst
 
 Sag es klar und nenne, was fehlt. Formuliere es so, dass die Gegenseite

@@ -234,3 +234,10 @@ input[type=range]{width:100%;margin:10px 0 0;accent-color:var(--s1)}
 .matrix th{font-weight:600;color:var(--ink-2);font-size:12px}
 .zelle-tot{color:var(--schlecht);font-weight:600}
 .zelle-gut{color:var(--gut)}
+
+.kein-video{
+  background:var(--surface-2);border:1px dashed var(--border);border-radius:9px;
+  padding:14px 15px;margin:12px 0;font-size:13px;line-height:1.5;
+  color:var(--ink-2)
+}
+.kein-video b{display:block;color:var(--ink);margin-bottom:2px}

@@ -456,6 +456,13 @@ def test_ende_zu_ende():
         pruefe(st == 200 and len(pack["faelle"]) == 6, "Pack liefert sechs Faelle")
         pruefe(all("modell" not in f for f in pack["faelle"]),
                "Modell bleibt vor der Abgabe verborgen")
+        pruefe(all("indizes" not in f for f in pack["faelle"]),
+               "auch die Indizes bleiben verborgen - aus ihnen wird das Modell "
+               "gerechnet, sie sind die Antwort und nicht das Beiwerk")
+        pruefe(all(f.get("liga") for f in pack["faelle"]),
+               "die Liga bleibt sichtbar: sie ist der Anker der Level-Frage")
+        pruefe(any(f.get("parameter") for f in pack["faelle"]),
+               "die Marktwertschwelle bleibt sichtbar: sie gehoert zur Frage")
 
         # ------------------------------------------------- Positions-Sets
         gruppen = {f["positionsgruppe"] for f in pack["faelle"]}
@@ -551,6 +558,17 @@ def test_ende_zu_ende():
         else:
             pruefe(True, "alle 24 Abgaben angenommen")
 
+        # Die Antwort auf die Abgabe traegt die Indizes direkt mit - sonst
+        # muesste das Frontend das Pack neu laden, um sie zu zeigen.
+        st_i, a_i = k.sende("/api/bewertung", {
+            "fall_id": pack["faelle"][1]["id"],
+            "level": {q: 6 for q in level_keys},
+            "antworten": {at["key"]: 3 for at in pack["faelle"][1]["attribute"]},
+            "prognosen": {p: 0.5 for p in prognosen}, "abgeben": True},
+            code=codes[3])
+        pruefe(st_i == 409 or (st_i == 200 and a_i.get("indizes")),
+               "die Abgabeantwort liefert die Indizes mit")
+
         st, a = k.sende("/api/bewertung", {
             "fall_id": pack["faelle"][0]["id"],
             "level": {q: 5 for q in level_keys},
@@ -564,6 +582,8 @@ def test_ende_zu_ende():
         f0 = pack3["faelle"][0]
         r = f0["rueckmeldung"]
         pruefe("modell" in f0, "nach Abgabe wird das Modell sichtbar")
+        pruefe("indizes" in f0 and f0["indizes"],
+               "und die Indizes dazu, als Rechengrundlage des Modells")
         pruefe(r["modell_naehe"] is not None, "Rueckmeldung traegt die Modell-Naehe")
         pruefe(r["attribut_mittel"] is not None, "Rueckmeldung traegt das Attribut-Mittel")
         pruefe(r["level_abstand"] is not None, "Rueckmeldung traegt den Level-Abstand")

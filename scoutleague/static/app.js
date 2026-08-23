@@ -165,8 +165,19 @@ function fallOeffnen(id) {
   zeige("fall");
 }
 
+/* Ohne Video und ohne Indizes hat der Scout nichts, woran er urteilen kann.
+   Das gehoert gesagt statt verschwiegen - ein leeres Formular ohne Beleg ist
+   eine Aufforderung zum Raten, und geratene Bewertungen sind schlimmer als
+   keine. */
 function videoBlock(url) {
-  if (!url || !/^https:\/\//i.test(url)) return "";
+  if (!url || !/^https:\/\//i.test(url)) {
+    return `<div class="kein-video">
+      <b>Kein Video hinterlegt.</b>
+      Im Betrieb steht hier das Highlight-Video, auf dem dein Urteil beruht.
+      In dieser Demo fehlt es &mdash; die Bewertung lässt sich ausprobieren,
+      begründen lässt sie sich nicht.
+    </div>`;
+  }
   const sicher = esc(url);
   if (/\.(mp4|webm|mov)(\?|$)/i.test(url)) {
     return `<div class="video"><video controls preload="metadata"
@@ -184,6 +195,8 @@ function indexBlock(indizes, attribute) {
     .map((q) => ({ label: q.label, wert: Number(indizes[q.key]) }));
   if (!eintraege.length) return "";
   return `<h3>Aggregierte Indizes</h3>
+    <p class="klein muted" style="margin:-4px 0 8px">Die Rechengrundlage der
+    Modellerwartung oben.</p>
     <div class="indizes">${eintraege.map((e) => `
       <div class="indexzeile">
         <span class="muted">${esc(e.label)}</span>
@@ -276,7 +289,6 @@ function fallZeichnen() {
     <div class="karte">
       <dl class="steckbrief" style="margin-top:0">${steckbrief}</dl>
       ${videoBlock(f.video_url)}
-      ${indexBlock(f.indizes, f.attribute)}
     </div>
 
     <div id="rueckmeldung"></div>
@@ -323,8 +335,10 @@ function fallZeichnen() {
            <span class="klein muted" id="fortschritt"></span>
          </div>
          <p class="klein muted" style="margin-top:10px">Nach der Abgabe siehst du
-         die Modellerwartung. Vorher bleibt sie verborgen &mdash; sonst wäre die
-         Modell-Nähe kein Maß, sondern eine Vorlage.</p>`}
+         die aggregierten Indizes, die Modellerwartung und den Feldvergleich.
+         Vorher bleiben sie verborgen: die Modellerwartung wird aus den Indizes
+         gerechnet &mdash; wer sie vorher sieht, liest die Antwort ab statt zu
+         urteilen.</p>`}
   `;
 
   if (f.eigene_bewertung.abgegeben) rueckmeldungZeichnen(f.rueckmeldung, f.modell);
@@ -427,6 +441,7 @@ async function senden(abgeben) {
     S.fall.eigene_bewertung.abgegeben = true;
     S.fall.eigene_bewertung.geaendert_am = new Date().toISOString();
     S.fall.modell = r.modell;
+    S.fall.indizes = r.indizes;
     S.fall.rueckmeldung = r.rueckmeldung;
     fallZeichnen();
     meldung("fallmeldung", "Abgegeben.", "ok");
@@ -522,6 +537,7 @@ function rueckmeldungZeichnen(r, modell) {
             <th class="zahl" style="padding-top:14px">Realität</th></tr>
         ${progZeilen}
       </table></div>
+      ${indexBlock(S.fall.indizes || {}, S.fall.attribute)}
       ${koh ? `<p class="klein muted">Feld = Mittel aus ${koh.n} Abgaben.${
           koh.mittel_bereinigt !== undefined
             ? ` Rater-bereinigt (jeder Scout an seinen eigenen Abgaben

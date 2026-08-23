@@ -153,6 +153,15 @@ def pack_importieren(con, pfad):
             print(f"  Hinweis: {wo} ohne Modell-Level - Trennschaerfe und "
                   f"Konfliktliste lassen diesen Fall aus.", file=sys.stderr)
 
+        # Seit die Indizes hinter der Abgabe liegen, ist das Video der einzige
+        # Beleg, den der Scout vor seinem Urteil hat. Fehlt es, ist der Fall
+        # nicht beurteilbar - das soll beim Import auffallen, nicht erst dem
+        # Scout vor einem leeren Formular.
+        if not (fall.get("video_url") or "").strip():
+            print(f"  WARNUNG: {wo} ohne Video. Die Indizes sieht der Scout "
+                  f"erst nach der Abgabe - ohne Video hat er keinen Beleg und "
+                  f"raet.", file=sys.stderr)
+
         params = fall.get("parameter") or {}
         for p in param_pflicht:
             if p not in params:

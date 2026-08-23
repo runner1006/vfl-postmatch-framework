@@ -40,6 +40,11 @@ def main():
     p.add_argument("--codes", required=True,
                    help="Datei mit den Scout-Codes, eine Zeile je Scout")
     p.add_argument("--ziel", default="vorschau_daten.json")
+    p.add_argument("--pack", default=None,
+                   help="Case-Pack-JSON. Wird nur gebraucht, um plausible "
+                        "Testbewertungen zu erzeugen - ueber die API sind die "
+                        "Indizes vor der Abgabe nicht zu sehen, und das ist "
+                        "Absicht.")
     p.add_argument("--seed", type=int, default=12)
     a = p.parse_args()
 
@@ -54,11 +59,22 @@ def main():
     leit, ceiling = [q["key"] for q in pack["fragebogen"]["level"]["fragen"]]
     prognosen = [q["key"] for q in pack["fragebogen"]["prognosen"]]
 
+    # Indizes je Fall, nur fuer die Erzeugung plausibler Testbewertungen.
+    # Ueber die API kaeme man vor der Abgabe nicht heran - das Skript ist ein
+    # Fixture-Generator mit Zugriff auf die Quelle, kein Scout.
+    quelle = {}
+    if a.pack:
+        with open(a.pack, encoding="utf-8") as f:
+            for i, roh in enumerate(json.load(f)["faelle"]):
+                if i < len(pack["faelle"]):
+                    quelle[pack["faelle"][i]["id"]] = roh.get("indizes") or {}
+
     def abgeben(code, fall, level, ceil, streuung):
+        idx = quelle.get(fall["id"], {})
         ruf("/api/bewertung", {
             "fall_id": fall["id"], "level": {leit: level, ceiling: ceil},
             "antworten": {at["key"]: max(1, min(5, round(
-                fall["indizes"].get(at["key"], 60) / 20
+                idx.get(at["key"], 60) / 20
                 + random.gauss(0, streuung)))) for at in fall["attribute"]},
             "prognosen": {q: round(min(.95, max(.05, random.random())), 2)
                           for q in prognosen},
@@ -70,7 +86,7 @@ def main():
     # zu zeigen.
     for i, code in enumerate(codes[1:]):
         for fall in pack["faelle"]:
-            basis = fall["indizes"].get("profile_percentile", 60) / 12
+            basis = quelle.get(fall["id"], {}).get("profile_percentile", 60) / 12
             if i == 1:
                 level = 5
             elif i == 2:
@@ -96,10 +112,12 @@ def main():
         "kalibrierung": ruf("/api/admin/kalibrierung", admin=a.token),
         "fragebogen": ruf("/api/fragebogen"),
         "csv": ruf("/api/admin/export.csv", admin=a.token, roh=True),
-        # Modelle und Feldschnitte aller Faelle, gesehen von einem Scout, der
-        # alles abgegeben hat - die Attrappe braucht sie fuer die Rueckmeldung
-        # auf Faelle, die in der Vorschau erst noch abgegeben werden.
+        # Modelle, Indizes und Feldschnitte aller Faelle, gesehen von einem
+        # Scout, der alles abgegeben hat - die Attrappe braucht sie fuer die
+        # Rueckmeldung auf Faelle, die in der Vorschau erst noch abgegeben
+        # werden. Vor der Abgabe reicht sie davon nichts heraus.
         "modelle": {str(f["id"]): f["modell"] for f in voll["faelle"]},
+        "indizes": {str(f["id"]): f["indizes"] for f in voll["faelle"]},
         "kohorten": {str(f["id"]): f["rueckmeldung"]["kohorte"]
                      for f in voll["faelle"]},
     }

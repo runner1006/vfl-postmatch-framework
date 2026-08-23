@@ -102,7 +102,7 @@ def pack_fuer_scout(con, scout, slug=None):
     for f in faelle:
         b = eigene.get(f["id"])
         abgegeben = bool(b and b["abgegeben"])
-        d = db.fall_dict(f, mit_modell=abgegeben)
+        d = db.fall_dict(f, nach_abgabe=abgegeben)
         gruppe = positionsgruppe(f["position"], fb)
         d["positionsgruppe"] = gruppe
         d["positionsgruppe_label"] = fb["bewertung"]["positionen"][gruppe]["label"]
@@ -305,6 +305,9 @@ def bewertung_speichern(con, scout, fall_id, level, antworten, prognosen, notiz,
         "gespeichert": True,
         "abgegeben": True,
         "modell": modell,
+        # Erst jetzt: die Indizes sind die Rechengrundlage des Modells, nicht
+        # Beiwerk. Vorher gezeigt waeren sie die Antwort auf den Fragebogen.
+        "indizes": json.loads(fall["indizes_json"]),
         "rueckmeldung": rueckmeldung(con, fall, eigene, modell, fb),
     }
 

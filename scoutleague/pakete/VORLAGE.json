@@ -26,8 +26,13 @@
     "laesst der Kalibrier-Report den Fall aus - die Bewertung funktioniert",
     "trotzdem.",
     "",
-    "VIDEO_URL zeigt auf ein Highlight-Video. Der Player wird als iframe",
-    "eingebettet; YouTube-, Vimeo- und direkte mp4-Links funktionieren."
+    "VIDEO_URL ist Pflicht, auch wenn der Import ohne sie durchlaeuft. Die",
+    "Indizes sieht der Scout erst NACH der Abgabe - aus ihnen wird die",
+    "Modellerwartung gerechnet, wer sie vorher sieht liest die Antwort ab.",
+    "Damit ist das Video der einzige Beleg vor dem Urteil. Ein Fall ohne Video",
+    "ist nicht beurteilbar; der Import warnt entsprechend.",
+    "Der Player wird als iframe eingebettet; YouTube-, Vimeo- und direkte",
+    "mp4-Links funktionieren."
   ],
 
   "slug": "kw35-2026",

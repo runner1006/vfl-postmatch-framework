@@ -151,9 +151,22 @@ def faelle_von(con, pack_id):
     ).fetchall()
 
 
-def fall_dict(row, mit_modell=False):
-    """Fall fuer die Scout-Ansicht. Das Modell bleibt verborgen, bis abgegeben
-    wurde - sonst waere die Modell-Naehe kein Mass, sondern eine Vorlage."""
+def fall_dict(row, nach_abgabe=False):
+    """Fall fuer die Scout-Ansicht.
+
+    Die Trennlinie laeuft zwischen beschreibendem Kontext und bewertenden
+    Daten. Position, Jahrgang, Verein sagen *wer* jemand ist, nicht *wie gut* -
+    sie bleiben sichtbar. Die Liga muss sichtbar bleiben, sie ist der Anker der
+    Level-Frage: das Level ist die Liga-Stufe, um hoechstens eine Stufe
+    verschoben, und ohne die Liga waere die Frage nicht zu beantworten.
+
+    Indizes und Modellerwartung liegen dagegen hinter der Abgabe. Die Indizes
+    sind nicht Beiwerk zum Modell - das Modell wird aus ihnen gerechnet. Wer
+    sie vorher sieht, liest die Antwort ab, und dann misst die Trennschaerfe
+    nur noch, ob jemand Balken in Noten uebersetzen kann. Die Konfliktliste,
+    laut Audit die wertvollste Review-Liste, bliebe leer, weil niemand Grund
+    haette zu widersprechen.
+    """
     d = {
         "id": row["id"],
         "ext_id": row["ext_id"],
@@ -164,9 +177,11 @@ def fall_dict(row, mit_modell=False):
         "liga": row["liga"],
         "fuss": row["fuss"],
         "video_url": row["video_url"],
-        "indizes": json.loads(row["indizes_json"]),
+        # Die Schwelle gehoert zur Prognosefrage, nicht zu den Belegen -
+        # ohne sie waere "Marktwert ueber X" nicht beantwortbar.
         "parameter": json.loads(row["parameter_json"]),
     }
-    if mit_modell:
+    if nach_abgabe:
+        d["indizes"] = json.loads(row["indizes_json"])
         d["modell"] = json.loads(row["modell_json"])
     return d
