@@ -99,6 +99,7 @@ class Spiel:
         if len(heim) != 11 or len(gast) != 11:
             raise ValueError("beide Mannschaften brauchen genau 11 Spieler")
         self.rng = random.Random(seed)
+        self.seed = seed
         self.dt = dt
         self.lage = Lage()
         self.lage.ball = B.Ball()
@@ -122,7 +123,9 @@ class Spiel:
         self.ereignisse = []
         self.standard = None
         self.abseits_marke = {}       # spieler -> True, gesetzt beim Abspiel
-        self.bahn = []                # Aufzeichnung
+        self.bahn = []                # Positionsaufzeichnung
+        self.stat = []                # Statistikstand je aufgezeichnetem Bild
+        self.dist = []                # Laufdistanz je Spieler und Bild
         self.aufzeichnen = aufzeichnen
         self.rate = max(1, int(aufzeichnungsrate))
         self._frame = 0
@@ -433,10 +436,25 @@ class Spiel:
                 best = g
         return best
 
+    def _im_gegnerischen_strafraum(self, s, punkt=None):
+        r = self.lage.richtung[s.team]
+        p = punkt or s.pos
+        return ((p[0] * r) > (K.HALB_L - K.STRAFRAUM_TIEFE)
+                and abs(p[1]) < K.STRAFRAUM_HALB_BREITE)
+
+    def _im_letzten_drittel(self, s, punkt=None):
+        r = self.lage.richtung[s.team]
+        p = punkt or s.pos
+        return (p[0] * r) > (K.HALB_L - K.FELD_LAENGE / 3.0)
+
     def _am_ball(self, s):
         opt = E.waehlen(s, self.lage, self.rng)
         if opt is None:
             return
+        # Jede ausgefuehrte Aktion im gegnerischen Strafraum ist ein Kontakt
+        # dort - Annahme, Pass, Dribbling, Abschluss.
+        if self._im_gegnerischen_strafraum(s):
+            self.statistik["boxkontakte"][s.team] += 1
         art = E.ausfuehren(s, opt, self.lage, self.rng)
         if art in ("pass", "klaerung", "schuss"):
             s.am_ball = False
@@ -597,7 +615,14 @@ class Spiel:
                 geber, zeit0, opt = self._pass_start
                 if geber.team == s.team and opt.art == "pass":
                     self.statistik["paesse_an"][s.team] += 1
+                    # Pass ins letzte Drittel: aus dem eigenen Bereich hinein,
+                    # nicht innerhalb des Drittels weitergeschoben.
+                    if (not self._im_letzten_drittel(geber)
+                            and self._im_letzten_drittel(s)):
+                        self.statistik["drittelpaesse"][s.team] += 1
                 self._pass_start = None
+            if self._im_gegnerischen_strafraum(s):
+                self.statistik["boxkontakte"][s.team] += 1
             # Ballan- und -mitnahme kostet Zeit. Ohne diese Pause spielt die
             # Simulation Direktpassketten im Viertelsekundentakt und landet bei
             # der dreifachen realen Passzahl.
@@ -1044,6 +1069,32 @@ class Spiel:
         rahmen.append(-1 if lage.ballbesitz is None else lage.ballbesitz)
         self.bahn.append(rahmen)
 
+        # Statistikspur: derselbe Takt wie die Bahn, damit die Anzeige zu
+        # jedem Bild den Stand *zu diesem Zeitpunkt* zeigt und nicht den
+        # Endstand. Ohne diese Spur laesst sich ein Spiel nur nacherzaehlen,
+        # nicht mitverfolgen.
+        st = self.statistik
+        z = self._taktik
+        hoehe = [round(z["linie_summe"][i] / max(1, z["linie_n"][i]), 1)
+                 for i in (0, 1)]
+        ppda = [round(z["gegnerpaesse"][i] / max(1, z["defensivaktionen"][i]), 2)
+                for i in (0, 1)]
+        besitz = sum(self._besitz_frames) or 1
+        self.stat.append([
+            self.tore[0], self.tore[1],
+            round(st["xg"][0], 3), round(st["xg"][1], 3),
+            st["schuesse"][0], st["schuesse"][1],
+            st["boxkontakte"][0], st["boxkontakte"][1],
+            st["drittelpaesse"][0], st["drittelpaesse"][1],
+            hoehe[0], hoehe[1], ppda[0], ppda[1],
+            st["paesse"][0], st["paesse"][1],
+            st["paesse_an"][0], st["paesse_an"][1],
+            round(self._besitz_frames[0] / besitz, 3),
+            z["strafraumeintritte"][0], z["strafraumeintritte"][1],
+        ])
+        self.dist.append([int(s.laufdistanz)
+                          for elf in lage.mannschaft for s in elf])
+
     # -------------------------------------------------------------- Auswertung
     def bericht(self):
         lage = self.lage
@@ -1115,6 +1166,7 @@ def _leere_statistik():
     z = {k: [0, 0] for k in (
         "schuesse", "paesse", "paesse_an", "zweikaempfe", "zweikaempfe_gew",
         "fouls", "abseits", "standards", "paraden", "klaerungen", "dribblings",
+        "boxkontakte", "drittelpaesse",
     )}
     z["xg"] = [0.0, 0.0]
     return z

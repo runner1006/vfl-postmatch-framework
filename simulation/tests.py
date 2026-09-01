@@ -498,6 +498,51 @@ def teil_aggregate(laeufe=3, dauer=1800.0):
          mittel("zweikaempfe", f), 60, 160)
 
 
+# ================================================== 11 - Aufzeichnung und Anzeige
+def teil_ausgabe():
+    """Die Anzeige darf nichts behaupten, was die Engine nicht gerechnet hat."""
+    import os
+    import tempfile
+    import visual
+
+    sp = _spiel(seed=21, aufzeichnen=True)
+    sp.laufen(240.0)
+    b = sp.bericht()
+
+    pruefe(74, "HART", "Positions-, Statistik- und Distanzspur sind gleich lang",
+           len(sp.bahn) == len(sp.stat) == len(sp.dist),
+           "%d / %d / %d" % (len(sp.bahn), len(sp.stat), len(sp.dist)))
+    letzte = sp.stat[-1]
+    pruefe(75, "HART", "Statistikspur endet auf dem Stand des Berichts",
+           [letzte[0], letzte[1]] == list(b["tore"])
+           and letzte[4] == b["schuesse"][0] and letzte[5] == b["schuesse"][1],
+           "Tore %d:%d, Schuesse %d:%d" % (letzte[0], letzte[1], letzte[4], letzte[5]))
+    # Die Spur muss monoton sein - ein Zaehler, der zurueckgeht, waere ein Fehler
+    monoton = all(sp.stat[i][j] <= sp.stat[i + 1][j]
+                  for i in range(len(sp.stat) - 1)
+                  for j in (0, 1, 4, 5, 6, 7, 8, 9, 14, 15, 19, 20))
+    pruefe(76, "HART", "Alle gezaehlten Groessen der Statistikspur wachsen monoton",
+           monoton)
+    # Das letzte aufgezeichnete Bild liegt bis zu `rate` Zeitschritte vor dem
+    # Ende des Laufs - die Spur darf also knapp darunter liegen, nie darueber.
+    spieler_m = [int(s.laufdistanz) for elf in sp.lage.mannschaft for s in elf]
+    abweichung = [a - b for a, b in zip(spieler_m, sp.dist[-1])]
+    pruefe(77, "HART", "Distanzspur trifft die Laufwerte der Spieler",
+           all(0 <= d <= 3 for d in abweichung),
+           "groesste Abweichung %d m bei %.2f s Aufzeichnungstakt"
+           % (max(abweichung), sp.dt * sp.rate))
+
+    pfad = os.path.join(tempfile.gettempdir(), "sim_pruefung.html")
+    visual.html_bauen(sp, pfad, heim_name="A", gast_name="B")
+    seite = open(pfad, encoding="utf-8").read()
+    os.remove(pfad)
+    pruefe(78, "HART", "HTML enthaelt keine externen Requests",
+           "http://" not in seite and "https://" not in seite)
+    pruefe(79, "HART", "Keine unersetzten Platzhalter in der Anzeige",
+           "__" not in seite.replace("__DATEN__", ""),
+           "Datei %d KB" % (len(seite) // 1024))
+
+
 # ================================================================== Ausgabe
 def laufen(schnell=False):
     t0 = time.time()
@@ -508,6 +553,7 @@ def laufen(schnell=False):
     teil_regeln()
     teil_zwilling()
     teil_determinismus()
+    teil_ausgabe()
     if not schnell:
         teil_symmetrie()
         teil_wirkung()

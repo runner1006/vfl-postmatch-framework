@@ -28,12 +28,24 @@ cd simulation
 python3 cli.py spiel --minuten 90 --html spiel.html    # Spiel + Animation
 python3 cli.py kontrafaktisch --frage schneller_iv --n 20
 python3 cli.py situation --ab 12 --n 60 --marken 5,10
-python3 cli.py tests                                    # 73 Prüfungen
+python3 cli.py tests                                    # 79 Prüfungen
 ```
 
 `spiel.html` ist eine einzelne Datei ohne externe Requests — Doppelklick genügt.
-Sie zeigt die Bahnen aller 22 Agenten, den Ball mit Höhe, zuschaltbar die
-Raumkontrolle und eine anklickbare Ereignisliste.
+Sie zeigt die Bahnen aller 22 Agenten und den Ball mit Höhe, zuschaltbar die
+Raumkontrolle, dazu eine anklickbare Ereignisliste.
+
+Links oben stehen Paarung, Stand und die vollständige Parametrisierung des
+Laufs — ohne sie ist eine Aufzeichnung nicht nachvollziehbar. Rechts läuft die
+Statistik **zum angezeigten Zeitpunkt** mit, nicht der Endstand: Tore, xG,
+Schüsse, Kontakte im Strafraum, Pässe ins letzte Drittel, Strafraumeintritte,
+Passquote, Ballbesitz, Abwehrhöhe, PPDA, Raumkontrolle und gefährlicher Raum.
+Darunter die Laufdistanz je Mannschaft in Kilometern und in Metern je Minute
+und Spieler, aufklappbar bis auf den einzelnen Spieler.
+
+Raumkontrolle und gefährlicher Raum werden im Browser aus denselben
+Ankunftszeiten berechnet wie in der Engine — Bild und Modell laufen nicht
+auseinander.
 
 ## Was modelliert ist
 
@@ -129,7 +141,9 @@ und gefährlicher Fläche nach 5 und 10 Sekunden aus.
 Die Engine ist gegen messbare Größen kalibriert, nicht gegen Bauchgefühl. Was
 stimmt und was nicht, steht hier vollständig — `python3 cli.py tests` gibt
 dieselben Zahlen aus und markiert Abweichungen als solche, statt sie zu
-verstecken.
+verstecken. **57 harte und 8 Richtungsprüfungen bestehen**, 7 der 14
+Kalibrierungsprüfungen liegen außerhalb ihrer Bandbreite und werden als
+bekannte Abweichung ausgegeben.
 
 **Belastbar kalibriert:**
 
@@ -158,9 +172,17 @@ Gemessen als Mittel über drei Läufe à 30 Minuten, hochgerechnet auf 90:
 | Tore je Team und Spiel | 14 | ~1,5 | 9× |
 | Passquote | 0,53 | ~0,78 | −25 Punkte |
 | Zweikämpfe je Team und Spiel | 430 | ~100 | 4,3× |
+| Kontakte im Strafraum je Team | ~400 | ~28 | 14× |
+| Pässe ins letzte Drittel je Team | ~20 | ~45 | 0,4× |
 | Laufdistanz je Spieler | 14,0 km | ~10,5 km | 1,3× |
 | Sprintdistanz je Spieler | 870 m | ~250 m | 3,5× |
 | Strafraumeintritte je Spiel | ~200 | ~50 | 4× |
+
+Die beiden letzten Zeilen zeigen dieselbe Ursache von zwei Seiten: Der Ball
+kommt zu selten **durch einen gespielten Pass** ins letzte Drittel und dafür zu
+oft über zweite Bälle und Dribblings — und dort bleibt er dann in einem
+Gewühl aus Kontakten hängen, statt dass die Situation nach zwei, drei Aktionen
+entschieden ist.
 
 Die Ursache ist bekannt und benannt: Das letzte Drittel ist zu chaotisch. Eine
 Passquote von 55 statt 78 Prozent halbiert die Länge jedes Ballbesitzes,
@@ -209,10 +231,10 @@ spiel.py            Simulationsschleife, Regeln, Standards, Kennzahlen
 zwilling.py         Digital Twin: reale Messwerte → Agentenattribute
 kalibrierung.json   Ankerwerte dieser Abbildung (Daten, nicht Code)
 kontrafaktisch.py   gepaarte Vergleiche mit gemeinsamen Zufallszahlen
-visual.py           eigenständige HTML-Animation
+visual.py           eigenständige HTML-Animation mit mitlaufender Statistik
 cli.py              Kommandozeile
 beispiele.md        fuenf durchgerechnete Fragen samt Lesart
-tests.py            73 Prüfungen: HART, RICHTUNG, KALIBRIERUNG
+tests.py            79 Prüfungen: HART, RICHTUNG, KALIBRIERUNG
 ```
 
 Rechenzeit: rund 30 Sekunden für ein volles Spiel auf einem Kern, rund

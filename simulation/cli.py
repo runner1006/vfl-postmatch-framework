@@ -46,6 +46,8 @@ def _gemeinsame_argumente(p, aufzeichnen=False):
     p.add_argument("--heim-stufe", type=float, default=0.50,
                    help="Niveau der Heimelf, 0.5 = Ligadurchschnitt")
     p.add_argument("--gast-stufe", type=float, default=0.50)
+    p.add_argument("--heim-name", default="Heim")
+    p.add_argument("--gast-name", default="Gast")
     p.add_argument("--seed", type=int, default=0)
     p.set_defaults(aufzeichnen=aufzeichnen, aufzeichnungsrate=5)
 
@@ -96,8 +98,8 @@ def befehl_spiel(args):
                 z["laufdistanz_km"], z["sprint_m"], z["spitzentempo"], z["energie"]))
 
     if args.html:
-        visual.html_bauen(sp, args.html,
-                          titel="Simuliertes Spiel  %d:%d" % tuple(b["tore"]))
+        visual.html_bauen(sp, args.html, heim_name=args.heim_name,
+                          gast_name=args.gast_name)
         print("\nAnimation geschrieben: %s" % args.html)
     if args.bahn:
         visual.bahn_schreiben(sp, args.bahn)
