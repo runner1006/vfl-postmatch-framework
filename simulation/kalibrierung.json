@@ -1,0 +1,42 @@
+{
+  "hinweis": "Ankerwerte fuer die Abbildung realer Messgroessen auf Agentenattribute. Physische Werte in SI, alles andere auf [0,1] mit 0.5 = Ligadurchschnitt. p05/p50/p95 sind die Perzentile der Bezugsliga; die Abbildung ist stueckweise linear zwischen den drei Ankern. Wer eigene Ligawerte hat, ersetzt diese Datei - der Code bleibt unberuehrt.",
+  "physisch": {
+    "v_max":    {"p05": 7.30, "p50": 8.40, "p95": 9.50, "einheit": "m/s",   "quelle": "Spitzengeschwindigkeit aus Tracking"},
+    "a_max":    {"p05": 8.60, "p50": 10.00, "p95": 11.40, "einheit": "m/s^2", "quelle": "Perzentil der Beschleunigungen > 3 m/s^2 je 90"},
+    "brems":    {"p05": 7.40, "p50": 8.60, "p95": 9.80, "einheit": "m/s^2", "quelle": "Perzentil der Dezelerationen je 90"},
+    "quer":     {"p05": 6.20, "p50": 7.20, "p95": 8.30, "einheit": "m/s^2", "quelle": "abgeleitet aus Beschleunigungsprofil"},
+    "reaktion": {"p05": 0.280, "p50": 0.220, "p95": 0.160, "einheit": "s",  "quelle": "nicht direkt messbar - Perzentil aus Abfangquote"},
+    "drehrate": {"p05": 6.80, "p50": 8.00, "p95": 9.20, "einheit": "rad/s", "quelle": "nicht direkt messbar"}
+  },
+  "technisch": {
+    "passgenauigkeit":  {"messgroesse": "Passquote", "guete": "gut"},
+    "passtempo":        {"messgroesse": "Anteil progressiver und langer Paesse", "guete": "mittel"},
+    "erste_beruehrung": {"messgroesse": "Ballverluste je Ballkontakt (invers)", "guete": "mittel"},
+    "dribbling":        {"messgroesse": "erfolgreiche Dribblings je 90", "guete": "gut"},
+    "abschluss":        {"messgroesse": "Tore minus xG je Schuss", "guete": "schwach, kleine Fallzahl"},
+    "zweikampf":        {"messgroesse": "Zweikampfquote am Boden", "guete": "gut"},
+    "kopfball":         {"messgroesse": "Kopfballquote", "guete": "gut"},
+    "ausdauer":         {"messgroesse": "Laufdistanz je 90 und HI-Anteil im letzten Spielviertel", "guete": "gut"}
+  },
+  "kognitiv": {
+    "hinweis": "Diese vier Attribute sind aus Ereignisdaten NICHT identifizierbar. Ohne Tracking- oder Scoutingurteil bleiben sie auf 0.5 und werden im Bericht als gesetzt statt gemessen ausgewiesen.",
+    "entscheidung":    {"messgroesse": null, "guete": "nicht identifizierbar"},
+    "uebersicht":      {"messgroesse": null, "guete": "nicht identifizierbar"},
+    "antizipation":    {"messgroesse": "Abfangbaelle je 90 (schwacher Proxy)", "guete": "schwach"},
+    "positionsspiel":  {"messgroesse": null, "guete": "nicht identifizierbar"}
+  },
+  "positionsprofile": {
+    "TW": {"v_max": -0.35, "ausdauer": -0.30, "kopfball": 0.10, "zweikampf": 0.15, "passgenauigkeit": -0.05, "dribbling": -0.35, "abschluss": -0.45},
+    "IV": {"v_max": -0.05, "kopfball": 0.30, "zweikampf": 0.28, "antizipation": 0.22, "dribbling": -0.22, "abschluss": -0.28, "passgenauigkeit": 0.08},
+    "LV": {"v_max": 0.18, "ausdauer": 0.25, "kopfball": -0.10, "zweikampf": 0.10, "dribbling": 0.05},
+    "RV": {"v_max": 0.18, "ausdauer": 0.25, "kopfball": -0.10, "zweikampf": 0.10, "dribbling": 0.05},
+    "DM": {"antizipation": 0.25, "positionsspiel": 0.22, "passgenauigkeit": 0.15, "zweikampf": 0.15, "v_max": -0.08},
+    "ZM": {"ausdauer": 0.28, "uebersicht": 0.18, "passgenauigkeit": 0.12, "entscheidung": 0.10},
+    "LM": {"v_max": 0.15, "ausdauer": 0.25, "dribbling": 0.15},
+    "RM": {"v_max": 0.15, "ausdauer": 0.25, "dribbling": 0.15},
+    "OM": {"uebersicht": 0.25, "entscheidung": 0.15, "dribbling": 0.20, "passgenauigkeit": 0.10, "zweikampf": -0.12},
+    "LA": {"v_max": 0.28, "dribbling": 0.30, "abschluss": 0.12, "zweikampf": -0.15, "kopfball": -0.15},
+    "RA": {"v_max": 0.28, "dribbling": 0.30, "abschluss": 0.12, "zweikampf": -0.15, "kopfball": -0.15},
+    "ST": {"abschluss": 0.35, "kopfball": 0.18, "v_max": 0.12, "passgenauigkeit": -0.12, "antizipation": 0.10}
+  }
+}

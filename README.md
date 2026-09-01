@@ -50,7 +50,31 @@ dashboard.html            in sich geschlossen, keine externen Requests — Doppe
 framework_spec.md         Methodik, Validierung, Grenzen
 ergebnisse/               gerechnete Befunde + SCHEMA.md
 skripte/                  die Pipeline
+simulation/               agentenbasierte 11-gegen-11-Simulation (eigenständig)
+scoutleague/              Scout-League-Bewertungssystem (eigenständig)
 ```
+
+## Simulation
+
+Neben der Analyse liegt in [`simulation/`](simulation/README.md) eine
+agentenbasierte 11-gegen-11-Simulation: 22 Spieler als dynamische physische und
+taktische Agenten, Ballphysik mit Flugbahn und Drall, Regelwerk, in Schritten
+von 40 Millisekunden. Sie beantwortet die andere Hälfte der Frage — nicht *was
+war*, sondern *was wäre passiert, wenn*:
+
+| Frage | Befehl |
+|---|---|
+| Was ändert ein schnellerer Innenverteidiger an der Abwehrhöhe? | `cli.py kontrafaktisch --frage schneller_iv` |
+| Was ändert 3-4-3 statt 4-2-3-1? | `cli.py kontrafaktisch --frage formation` |
+| Welche Räume entstehen nach 5–10 Sekunden dieser Lage? | `cli.py situation --marken 5,10` |
+
+Verglichen wird immer **gepaart mit gemeinsamen Zufallszahlen** und mit
+Unsicherheitsintervall. Reine Standardbibliothek, keine Abhängigkeiten.
+
+Der Kalibrierungsstand ist in der Modul-README vollständig ausgewiesen —
+einschließlich der Größen, die noch deutlich neben der Wirklichkeit liegen
+(Schuss- und Torzahlen, Passquote). Absolute Werte eines einzelnen Laufs sind
+nicht belastbar; die gepaarten Differenzen sind es eher.
 
 ### Pipeline
 
