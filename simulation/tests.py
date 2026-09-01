@@ -542,6 +542,34 @@ def teil_ausgabe():
            "__" not in seite.replace("__DATEN__", ""),
            "Datei %d KB" % (len(seite) // 1024))
 
+    # --- Gestaltungsregeln, die sonst beim naechsten Umbau verlorengehen
+    ohne_anker = [p[1] for p in visual.PARAMETER if not (p[6] and p[7])]
+    pruefe(80, "HART",
+           "Jede Einstellung steht auf einer Skala mit beschrifteten Enden",
+           not ohne_anker,
+           "ohne Anker: %s" % (", ".join(ohne_anker) or "keine"))
+
+    # Nicht selbsterklaerende Kennzahlen brauchen sichtbaren Klartext - nicht
+    # Tooltip, nicht Aufklapper: auf Touch gibt es kein Hover.
+    braucht_klartext = {"PPDA", "Abwehrhöhe", "Kontakte im Strafraum",
+                        "Strafraumeintritte", "Rückeroberung binnen 5 s",
+                        "davon gefährlicher Raum", "Raumkontrolle",
+                        "Pässe ins letzte Drittel"}
+    fehlend = [name for _, zeilen in visual.METRIKEN for (name, klartext, *_) in zeilen
+               if name in braucht_klartext and not klartext]
+    pruefe(81, "HART",
+           "Erklärungsbedürftige Kennzahlen tragen sichtbaren Klartext",
+           not fehlend, "ohne Klartext: %s" % (", ".join(fehlend) or "keine"))
+
+    fuer_alle = ["Was hier läuft", "Wofür die Ansicht taugt", "Wofür nicht",
+                 "Einstellungen dieses Laufs"]
+    pruefe(82, "HART", "Zweck und Grenzen stehen sichtbar auf der Seite",
+           all(x in seite for x in fuer_alle) and "<details" not in
+           seite.split("Was hier läuft")[0])
+
+    pruefe(83, "HART", "Die Anzeige nutzt die geprüfte Palette des Dashboards",
+           "#2a78d6" in seite and "#eb6834" in seite)
+
 
 # ================================================================== Ausgabe
 def laufen(schnell=False):

@@ -1091,6 +1091,8 @@ class Spiel:
             st["paesse_an"][0], st["paesse_an"][1],
             round(self._besitz_frames[0] / besitz, 3),
             z["strafraumeintritte"][0], z["strafraumeintritte"][1],
+            round(z["rueckeroberung_5s"][0] / max(1, z["ballverluste"][0]), 3),
+            round(z["rueckeroberung_5s"][1] / max(1, z["ballverluste"][1]), 3),
         ])
         self.dist.append([int(s.laufdistanz)
                           for elf in lage.mannschaft for s in elf])

@@ -71,6 +71,11 @@ war*, sondern *was wäre passiert, wenn*:
 Verglichen wird immer **gepaart mit gemeinsamen Zufallszahlen** und mit
 Unsicherheitsintervall. Reine Standardbibliothek, keine Abhängigkeiten.
 
+Die Ansicht dazu ist eine einzelne HTML-Datei ohne externe Requests, in
+derselben Gestaltungssprache wie das Dashboard: Spielfeld mit Zeitstrahl,
+mitlaufende Statistik zum angezeigten Zeitpunkt und die Einstellungen des
+Laufs auf beschrifteten Skalen.
+
 Der Kalibrierungsstand ist in der Modul-README vollständig ausgewiesen —
 einschließlich der Größen, die noch deutlich neben der Wirklichkeit liegen
 (Schuss- und Torzahlen, Passquote). Absolute Werte eines einzelnen Laufs sind

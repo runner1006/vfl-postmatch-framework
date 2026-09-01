@@ -28,20 +28,48 @@ cd simulation
 python3 cli.py spiel --minuten 90 --html spiel.html    # Spiel + Animation
 python3 cli.py kontrafaktisch --frage schneller_iv --n 20
 python3 cli.py situation --ab 12 --n 60 --marken 5,10
-python3 cli.py tests                                    # 79 Prüfungen
+python3 cli.py tests                                    # 83 Prüfungen
 ```
 
 `spiel.html` ist eine einzelne Datei ohne externe Requests — Doppelklick genügt.
-Sie zeigt die Bahnen aller 22 Agenten und den Ball mit Höhe, zuschaltbar die
-Raumkontrolle, dazu eine anklickbare Ereignisliste.
+Sie ist in derselben Gestaltungssprache gebaut wie das Dashboard des
+Analyseteils: helle Grundfläche, umschaltbares dunkles Thema, dieselben
+Farbtoken.
 
-Links oben stehen Paarung, Stand und die vollständige Parametrisierung des
-Laufs — ohne sie ist eine Aufzeichnung nicht nachvollziehbar. Rechts läuft die
-Statistik **zum angezeigten Zeitpunkt** mit, nicht der Endstand: Tore, xG,
-Schüsse, Kontakte im Strafraum, Pässe ins letzte Drittel, Strafraumeintritte,
-Passquote, Ballbesitz, Abwehrhöhe, PPDA, Raumkontrolle und gefährlicher Raum.
-Darunter die Laufdistanz je Mannschaft in Kilometern und in Metern je Minute
-und Spieler, aufklappbar bis auf den einzelnen Spieler.
+**Oben** steht in drei Sätzen, was hier läuft, wofür die Ansicht taugt und
+wofür nicht — sichtbar, nicht in einem Aufklapper.
+
+**In der Mitte** Spielstand, Spielfeld, Zeitstrahl mit Ereignismarken und die
+Bedienung als eine Einheit. Der Ballführende ist beringt, der Ball trägt Höhe
+und Schatten, Laufspuren blenden nach hinten aus. Zuschaltbar ist die
+Raumkontrolle als Fläche: wer einen Ort vor dem Gegner erreichen würde.
+Bedienbar mit <kbd>Leertaste</kbd> und Pfeiltasten.
+
+**Rechts** läuft die Statistik **zum angezeigten Zeitpunkt** mit, nicht der
+Endstand: Tore, xG, Schüsse, Kontakte im Strafraum, Strafraumeintritte,
+Ballbesitz, Pässe mit Quote, Pässe ins letzte Drittel, Abwehrhöhe, PPDA,
+Rückeroberung binnen fünf Sekunden, Raumkontrolle und gefährlicher Raum —
+jeweils mit Vergleichsbalken, dazu der xG-Verlauf als Kurve und die
+Laufdistanz bis auf den einzelnen Spieler.
+
+**Unten** die Einstellungen des Laufs. Nicht als Zahlenliste: jede Größe steht
+auf ihrer Spannweite mit beschrifteten Enden, beide Mannschaften als Punkt
+darauf. „Pressing 0.85" ist ohne Anker bedeutungslos — mit *abwarten (0)* links
+und *Vollangriff (1)* rechts ist es in einer Sekunde eingeordnet. Das kostet
+Platz und ist der Platz wert.
+
+Gestaltungsentscheidungen, die nicht offensichtlich sind:
+
+- **Das Spielfeld ist nicht grün.** Ein gesättigtes Rasengrün kämpft mit jeder
+  Datenfarbe, die daraufgelegt wird — besonders mit der Raumkontrolle, die
+  genau dort als Fläche erscheint. Die Spielfläche ist eine zurückhaltende
+  neutrale Fläche; die Farbe gehört den Mannschaften und den Daten.
+- **Zwei Mannschaftsfarben, nicht drei.** Blau und Orange der Hauspalette
+  bestehen alle sechs Palettenprüfungen in beiden Themen (schlechtestes Paar
+  ΔE 24,7 bei Protanopie, Normalsicht 33,6). Ein dritter kategorialer Farbton
+  fällt durch — der lose Ball wird deshalb neutral dargestellt.
+- **Zahlen tragen Textfarbe, nicht Mannschaftsfarbe.** Die Zugehörigkeit tragen
+  die Balken und die Farbpunkte in der Kopfzeile.
 
 Raumkontrolle und gefährlicher Raum werden im Browser aus denselben
 Ankunftszeiten berechnet wie in der Engine — Bild und Modell laufen nicht
@@ -141,7 +169,7 @@ und gefährlicher Fläche nach 5 und 10 Sekunden aus.
 Die Engine ist gegen messbare Größen kalibriert, nicht gegen Bauchgefühl. Was
 stimmt und was nicht, steht hier vollständig — `python3 cli.py tests` gibt
 dieselben Zahlen aus und markiert Abweichungen als solche, statt sie zu
-verstecken. **57 harte und 8 Richtungsprüfungen bestehen**, 7 der 14
+verstecken. **61 harte und 8 Richtungsprüfungen bestehen**, 7 der 14
 Kalibrierungsprüfungen liegen außerhalb ihrer Bandbreite und werden als
 bekannte Abweichung ausgegeben.
 
@@ -231,10 +259,10 @@ spiel.py            Simulationsschleife, Regeln, Standards, Kennzahlen
 zwilling.py         Digital Twin: reale Messwerte → Agentenattribute
 kalibrierung.json   Ankerwerte dieser Abbildung (Daten, nicht Code)
 kontrafaktisch.py   gepaarte Vergleiche mit gemeinsamen Zufallszahlen
-visual.py           eigenständige HTML-Animation mit mitlaufender Statistik
+visual.py           eigenständige HTML-Ansicht mit mitlaufender Statistik
 cli.py              Kommandozeile
 beispiele.md        fuenf durchgerechnete Fragen samt Lesart
-tests.py            79 Prüfungen: HART, RICHTUNG, KALIBRIERUNG
+tests.py            83 Prüfungen: HART, RICHTUNG, KALIBRIERUNG
 ```
 
 Rechenzeit: rund 30 Sekunden für ein volles Spiel auf einem Kern, rund
