@@ -107,6 +107,10 @@ abwehrhoehe_m          34.285     +3.739   [  +0.699,   +7.032]   deutlich
 laufdistanz_km         11.571     +1.384   [  +0.961,   +1.794]   deutlich
 ```
 
+Fünf durchgerechnete Beispiele samt Lesart stehen in
+[`beispiele.md`](beispiele.md) — inklusive der Fälle, in denen die Engine
+ausdrücklich *keine* belastbare Aussage liefert.
+
 Fertige Fragen: `abwehrhoehe`, `pressing`, `tiefer_block`, `formation`,
 `schneller_iv`, `besserer_stuermer`. Eigene Fragen sind drei Zeilen Code —
 `vergleiche(bauer, aenderung, ...)` nimmt jede Funktion, die genau eine Sache
@@ -138,21 +142,24 @@ verstecken.
 | Flanke 25 m/s bei 32° | Scheitel 6,9 m, Aufkommen 37 m | plausibel |
 | xG zentral aus 6 / 11 / 16 / 25 m | 0,45 / 0,26 / 0,13 / 0,04 | 0,45 / 0,29 / 0,12 / 0,035 |
 | Torausbeute im Schussdrill | stimmt im Rahmen mit dem eigenen xG-Modell | — |
-| Pässe je Team und Spiel | ~500 | ~450 |
+| Pässe je Team und Spiel | ~590 | ~450 |
 | Fouls je Team und Spiel | 8–12 | ~12 |
 | Ecken / Freistöße je Spiel | 10 / 26 | ~10 / ~25 |
 
 **Bekannte Abweichungen** — hier ist das Modell noch nicht dort, wo es sein
 müsste, und das ist keine Kleinigkeit:
 
+Gemessen als Mittel über drei Läufe à 30 Minuten, hochgerechnet auf 90:
+
 | Größe | Modell | real | Faktor |
 |---|---|---|---|
-| Schüsse je Team und Spiel | 55–95 | ~13 | 4–7× |
-| xG je Team und Spiel | 2,7–5,6 | ~1,4 | 2–4× |
-| Tore je Team und Spiel | 6–15 | ~1,5 | 4–10× |
-| Passquote | 0,50–0,55 | ~0,78 | −25 Punkte |
-| Zweikämpfe je Team und Spiel | ~400 | ~100 | 4× |
-| Laufdistanz je Spieler | 13,5 km | ~10,5 km | 1,3× |
+| Schüsse je Team und Spiel | 88 | ~13 | 6,8× |
+| xG je Team und Spiel | 5,5 | ~1,4 | 3,9× |
+| Tore je Team und Spiel | 14 | ~1,5 | 9× |
+| Passquote | 0,53 | ~0,78 | −25 Punkte |
+| Zweikämpfe je Team und Spiel | 430 | ~100 | 4,3× |
+| Laufdistanz je Spieler | 14,0 km | ~10,5 km | 1,3× |
+| Sprintdistanz je Spieler | 870 m | ~250 m | 3,5× |
 | Strafraumeintritte je Spiel | ~200 | ~50 | 4× |
 
 Die Ursache ist bekannt und benannt: Das letzte Drittel ist zu chaotisch. Eine
@@ -204,6 +211,7 @@ kalibrierung.json   Ankerwerte dieser Abbildung (Daten, nicht Code)
 kontrafaktisch.py   gepaarte Vergleiche mit gemeinsamen Zufallszahlen
 visual.py           eigenständige HTML-Animation
 cli.py              Kommandozeile
+beispiele.md        fuenf durchgerechnete Fragen samt Lesart
 tests.py            73 Prüfungen: HART, RICHTUNG, KALIBRIERUNG
 ```
 

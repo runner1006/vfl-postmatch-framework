@@ -350,15 +350,33 @@ def teil_wirkung():
            d3 < 0.0 and dr > -0.01,
            "PPDA %+.2f, Rueckeroberung < 5 s %+.3f" % (d3, dr))
 
-    # Bessere Entscheider spielen bessere Paesse
-    def besser(sp):
+    # Technik und Entscheidung im vollen Kontrast. Ein kleiner Unterschied
+    # waere bei sechs Wiederholungen nicht vom Rauschen zu trennen - genau
+    # deshalb ist der kontrafaktische Modus gepaart aufgebaut.
+    def schwach(seed):
+        sp = _spiel(seed=seed)
         for s in sp.lage.mannschaft[0]:
-            s.attribute = s.attribute.kopie(entscheidung=0.95, uebersicht=0.9,
-                                            passgenauigkeit=0.9)
-    v4 = KF.vergleiche(bauer, besser, n=6, dauer=420.0, name="bessere Entscheider")
-    d4 = sum(v4.differenz("passquote", 0)) / 6.0
-    pruefe(48, "RICHTUNG", "Bessere Technik und Entscheidung heben die Passquote",
-           d4 > 0.0, "Differenz %+.3f" % d4)
+            s.attribute = s.attribute.kopie(entscheidung=0.12, uebersicht=0.15,
+                                            passgenauigkeit=0.15,
+                                            erste_beruehrung=0.20)
+        return sp
+
+    def stark(sp):
+        for s in sp.lage.mannschaft[0]:
+            s.attribute = s.attribute.kopie(entscheidung=0.95, uebersicht=0.92,
+                                            passgenauigkeit=0.95,
+                                            erste_beruehrung=0.90)
+
+    v4 = KF.vergleiche(schwach, stark, n=12, dauer=420.0,
+                     name="Technik und Entscheidung: schwach -> stark")
+    zeilen = {z["metrik"]: z for z in v4.bericht(["passquote", "xg"])}
+    pq, xg = zeilen["passquote"], zeilen["xg"]
+    pruefe(48, "RICHTUNG",
+           "Technik und Entscheidung heben Passquote und xG deutlich",
+           pq["ki_unten"] > 0.0 and xg["ki_unten"] > 0.0,
+           "Passquote %+.3f [%+.3f, %+.3f], xG %+.2f [%+.2f, %+.2f]"
+           % (pq["differenz"], pq["ki_unten"], pq["ki_oben"],
+              xg["differenz"], xg["ki_unten"], xg["ki_oben"]))
 
 
 # ============================================================ 9 - Digital Twin
