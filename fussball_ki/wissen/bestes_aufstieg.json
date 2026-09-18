@@ -1,0 +1,90 @@
+{
+ "aufgabe": "aufstieg",
+ "endmodell": {
+  "aufgabe": "aufstieg",
+  "hypothese": {
+   "abgeleitet": [],
+   "begruendung": "Offline-Suche, Runde 6: Standardisierung auf global (Elternteil: xPoints (l2 halbiert))",
+   "erwartung": "Aehnlich stark wie die npxG-Differenz.",
+   "kennung": "cf37911395",
+   "merkmale": [
+    "xpoints"
+   ],
+   "modell": {
+    "l2": 0.25,
+    "typ": "logit"
+   },
+   "name": "xPoints (global-z)",
+   "standardisierung": "global"
+  },
+  "klassen": [
+   "nicht Top-3",
+   "Top-3"
+  ],
+  "koeffizienten": {
+   "Top-3": {
+    "achse": -2.8642,
+    "xpoints": 2.2953
+   }
+  },
+  "merkmale": [
+   "xpoints"
+  ],
+  "modell": {
+   "B": [
+    [
+     2.8642225925359415,
+     -2.2952570453028334
+    ]
+   ],
+   "K": 2,
+   "l2": 0.25,
+   "typ": "logit"
+  },
+  "standardisierer": {
+   "mittel": [
+    1.385188662221341
+   ],
+   "modus": "global",
+   "sd": [
+    0.22882371163693926
+   ]
+  }
+ },
+ "ergebnis": {
+  "dauer_s": 0.04,
+  "hauptmetrik": 0.2695,
+  "merkmale": [
+   "xpoints"
+  ],
+  "metriken": {
+   "auc_gesamt": 0.9122,
+   "auc_min": 0.8,
+   "auc_mittel": 0.9028,
+   "brier": 0.1757,
+   "logloss": 0.2695,
+   "logloss_basis": 0.4507,
+   "top3_treffer": 13,
+   "top3_von": 24
+  },
+  "n_falten": 8,
+  "n_lern": 144,
+  "n_pruef": 18,
+  "pruef": {
+   "auc_gesamt": 0.9778,
+   "auc_min": 0.9778,
+   "auc_mittel": 0.9778,
+   "brier": 0.0865,
+   "logloss": 0.1583,
+   "logloss_basis": 0.4506,
+   "top3_treffer": 2,
+   "top3_von": 3
+  },
+  "richtung": "min",
+  "warnungen": []
+ },
+ "forscher": "offline",
+ "hauptmetrik": 0.2695,
+ "runde": 6,
+ "zeit": null
+}

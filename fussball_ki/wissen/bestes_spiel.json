@@ -1,0 +1,113 @@
+{
+ "aufgabe": "spiel",
+ "endmodell": {
+  "aufgabe": "spiel",
+  "hypothese": {
+   "abgeleitet": [],
+   "begruendung": "Offline-Suche, Runde 6: Merkmal DT2_gefaehrl_verluste hinzugefuegt (Elternteil: npxG-Bilanz)",
+   "erwartung": "Nahe am Framework-Benchmark.",
+   "kennung": "390bc14910",
+   "merkmale": [
+    "npxg",
+    "npxg_geg",
+    "DT2_gefaehrl_verluste"
+   ],
+   "modell": {
+    "l2": 1.0,
+    "typ": "logit"
+   },
+   "name": "npxG-Bilanz + DT2_gefaehrl_verluste",
+   "standardisierung": "global"
+  },
+  "klassen": [
+   "Niederlage",
+   "Remis",
+   "Sieg"
+  ],
+  "koeffizienten": {
+   "Niederlage": {
+    "DT2_gefaehrl_verluste": 0.5135,
+    "achse": -0.994,
+    "npxg": -0.9662,
+    "npxg_geg": 1.2391
+   },
+   "Remis": {
+    "DT2_gefaehrl_verluste": 0.2318,
+    "achse": -0.699,
+    "npxg": -0.7446,
+    "npxg_geg": 0.4663
+   }
+  },
+  "merkmale": [
+   "npxg",
+   "npxg_geg",
+   "DT2_gefaehrl_verluste"
+  ],
+  "modell": {
+   "B": [
+    [
+     -0.9939809859013795,
+     -0.966194533823001,
+     1.2390963712357463,
+     0.5134519224299097
+    ],
+    [
+     -0.6990275165916869,
+     -0.744633350009692,
+     0.4662837063499245,
+     0.2317724450649562
+    ]
+   ],
+   "K": 3,
+   "l2": 1.0,
+   "typ": "logit"
+  },
+  "standardisierer": {
+   "mittel": [
+    1.5854362416107373,
+    1.228436241610737,
+    59.73859060402687
+   ],
+   "modus": "global",
+   "sd": [
+    0.7940070632304864,
+    0.7535697432049953,
+    28.571698825314733
+   ]
+  }
+ },
+ "ergebnis": {
+  "dauer_s": 0.13,
+  "hauptmetrik": 0.8616,
+  "merkmale": [
+   "npxg",
+   "npxg_geg",
+   "DT2_gefaehrl_verluste"
+  ],
+  "metriken": {
+   "brier": 0.5074,
+   "logloss": 0.8616,
+   "logloss_auf_frameworkzeilen": 0.8616,
+   "logloss_basis": 1.0334,
+   "logloss_framework": 0.8846,
+   "treffer": 0.5882
+  },
+  "n_falten": 10,
+  "n_lern": 238,
+  "n_pruef": 60,
+  "pruef": {
+   "brier": 0.6181,
+   "logloss": 1.0481,
+   "logloss_auf_frameworkzeilen": 1.0481,
+   "logloss_basis": 1.054,
+   "logloss_framework": 0.9959,
+   "treffer": 0.5333
+  },
+  "richtung": "min",
+  "warnungen": []
+ },
+ "forscher": "offline",
+ "hauptmetrik": 0.8616,
+ "runde": 6,
+ "zeit": null
+}

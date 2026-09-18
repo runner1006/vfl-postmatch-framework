@@ -1,0 +1,202 @@
+[
+ {
+  "runde": 1,
+  "zeit": "2026-09-18T18:25:29+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "spiel": {
+    "bestes": 0.8746,
+    "verbessert": true,
+    "ok": 3,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "aufstieg": {
+    "bestes": 0.2742,
+    "verbessert": true,
+    "ok": 3,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 2,
+  "zeit": "2026-09-18T18:25:36+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "spiel": {
+    "bestes": 0.8746,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "aufstieg": {
+    "bestes": 0.2742,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 3,
+  "zeit": "2026-09-18T18:25:48+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "spiel": {
+    "bestes": 0.8746,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "aufstieg": {
+    "bestes": 0.2731,
+    "verbessert": true,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 4,
+  "zeit": "2026-09-18T18:25:55+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "spiel": {
+    "bestes": 0.8746,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "aufstieg": {
+    "bestes": 0.2731,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 5,
+  "zeit": "2026-09-18T18:26:03+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "spiel": {
+    "bestes": 0.8746,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "aufstieg": {
+    "bestes": 0.2696,
+    "verbessert": true,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 6,
+  "zeit": "2026-09-18T18:26:04+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "spiel": {
+    "bestes": 0.8616,
+    "verbessert": true,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "aufstieg": {
+    "bestes": 0.2695,
+    "verbessert": true,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 7,
+  "zeit": "2026-09-18T18:26:10+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "spiel": {
+    "bestes": 0.8616,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "aufstieg": {
+    "bestes": 0.2695,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 8,
+  "zeit": "2026-09-18T18:26:14+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "spiel": {
+    "bestes": 0.8616,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "aufstieg": {
+    "bestes": 0.2695,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ }
+]
