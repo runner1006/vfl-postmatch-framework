@@ -43,23 +43,6 @@ Zwei Punkte, die bewusst offen ausgewiesen sind statt weggerechnet:
 Die vollständige Liste steht in [`framework_spec.md`](framework_spec.md), die
 Spaltendokumentation in [`ergebnisse/SCHEMA.md`](ergebnisse/SCHEMA.md).
 
-## Selbstlernende Fußball-KI
-
-In `fussball_ki/` baut sich eine KI aus diesen Daten selbst weiter: Ein Sprachmodell
-(Claude) schlägt Modellhypothesen vor, ein Rechenkern prüft sie per Kreuzvalidierung an
-den Spiel- und Saisondaten aus `ergebnisse/`, und aus dem Ergebnis schreibt das
-Sprachmodell die Erkenntnisse neu, mit denen es in der nächsten Runde arbeitet. Gelernt
-werden also die Fußballmodelle *und* das Wissen des LLM selbst — beides liegt als
-Klartext in `fussball_ki/wissen/`.
-
-```bash
-python3 -m fussball_ki lernen --runden 3        # ohne Schlüssel: Offline-Forscher
-python3 -m fussball_ki status --erkenntnisse
-python3 -m fussball_ki vorhersage --aufgabe spiel --id 5717436
-```
-
-Details, Aufgaben, Benchmarks und Grenzen: [`fussball_ki/README.md`](fussball_ki/README.md).
-
 ## Aufbau
 
 ```
@@ -67,7 +50,7 @@ dashboard.html            in sich geschlossen, keine externen Requests — Doppe
 framework_spec.md         Methodik, Validierung, Grenzen
 ergebnisse/               gerechnete Befunde + SCHEMA.md
 skripte/                  die Pipeline
-fussball_ki/              selbstlernende KI auf den Befunden (siehe oben)
+fussball-ki/              eigenständiges Projekt: selbstlernende Fußball-KI auf offenen Spieldaten (eigenes README)
 ```
 
 ### Pipeline

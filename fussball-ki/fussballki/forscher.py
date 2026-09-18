@@ -62,7 +62,7 @@ class OfflineForscher:
         """Suffixe frueherer Mutationen abstreifen, damit Namen lesbar bleiben."""
         import re
         n = re.sub(r"\s*\((l2[^)]*|global-z|gruppe-z)\)", "", name)
-        n = re.sub(r"\s+als (MLP|Logit)$", "", n)
+        n = re.sub(r"\s+als (MLP|Logit|Poisson)$", "", n)
         return n.strip()[:60]
 
     def _mutieren(self, basis, tabelle):
@@ -101,7 +101,12 @@ class OfflineForscher:
                 kind["name"] = "%s + %s" % (basis["name"], an[:30])
                 return kind, "abgeleitetes Merkmal %s = %s" % (an[:60], formel)
         if op == "typ":
-            if kind["modell"]["typ"] == "logit":
+            typ = kind["modell"]["typ"]
+            if typ == "logit":
+                kind["modell"] = {"typ": "poisson", "l2": 1.0}
+                kind["name"] = "%s als Poisson" % basis["name"]
+                return kind, "Modelltyp auf Poisson gewechselt"
+            if typ == "poisson":
                 kind["modell"] = {"typ": "mlp", "l2": 0.01, "versteckt": self.rnd.choice([4, 6, 8, 12]),
                                   "epochen": 150, "lernrate": 0.02}
                 kind["name"] = "%s als MLP" % basis["name"]
@@ -132,11 +137,9 @@ class OfflineForscher:
                 continue
             best = rang[0]
             r = best["ergebnis"]["metriken"]
-            teile.append("**Bestes Modell:** %s (Log-Loss CV %s, Basisrate %s%s)." % (
+            teile.append("**Bestes Modell:** %s (Log-Loss Vorwaertsvalidierung %s, Basisrate %s%s)." % (
                 best["hypothese"]["name"], best["ergebnis"]["hauptmetrik"], r.get("logloss_basis"),
-                (", Framework %s" % r["logloss_framework"]) if "logloss_framework" in r else ""))
-            if k.get("benchmark"):
-                teile.append("Benchmark des Frameworks: %s" % json.dumps(k["benchmark"], ensure_ascii=False))
+                (", Elo-Logit %s" % r["logloss_elo"]) if "logloss_elo" in r else ""))
             teile.append("")
             teile.append("### Was traegt")
             for m, delta, n in self._merkmalseffekte(rang)[:6]:
@@ -181,28 +184,36 @@ class OfflineForscher:
 
 
 # ================================================================= Claude
-SYSTEM_FORSCHER = """Du bist der Forscher einer selbstlernenden Fussball-KI. Du baust keine Modelle
-selbst - du schlaegst Hypothesen vor, ein Rechenkern prueft sie an echten Daten und
-traegt die Ergebnisse in eine Rangliste ein. Deine Erkenntnisse aus frueheren Runden
-hast du selbst geschrieben; sie sind dein einziges Gedaechtnis ueber die Rangliste hinaus.
+SYSTEM_FORSCHER = """Du bist der Forscher einer selbstlernenden Fussball-KI. Sie prognostiziert Spiele der
+Bundesliga und 2. Bundesliga VOR dem Anpfiff, ausschliesslich aus Ergebnissen frueherer
+Spiele (openfootball, seit 2010/11). Du baust keine Modelle selbst - du schlaegst
+Hypothesen vor, ein Rechenkern prueft sie per Vorwaertsvalidierung ueber Saisons (Modell
+auf allen Saisons bis S-1, Prognose fuer Saison S) und traegt die Ergebnisse in eine
+Rangliste ein. Deine Erkenntnisse aus frueheren Runden hast du selbst geschrieben; sie
+sind dein einziges Gedaechtnis ueber die Rangliste hinaus.
 
 Regeln:
 - Nur Merkmale aus dem Katalog. Abgeleitete Merkmale als Formel ueber Katalognamen:
   Arithmetik (+ - * / **), Klammern, Zahlen und die Funktionen abs, sqrt, log, log1p, exp,
   min, max. Keine anderen Namen, keine Zuweisungen.
-- Modelltypen: "logit" (multinomiales Logit, Newton, L2 = l2) oder "mlp" (ein verstecktes
-  tanh-Layer mit `versteckt` Neuronen, Adam, `epochen`, `lernrate`, L2 = l2). Fuer logit
-  trotzdem alle Felder fuellen (versteckt, epochen, lernrate werden ignoriert).
-- Standardisierung "global" (z ueber die Trainingsmenge) oder "gruppe" (z je Gruppe:
-  Saison bei aufstieg, Mannschaft bei spiel - loescht Mannschaftsniveau-Unterschiede).
+- Modelltypen: "logit" (multinomiales Logit, Newton, L2 = l2), "mlp" (ein verstecktes
+  tanh-Layer mit `versteckt` Neuronen, Adam, `epochen`, `lernrate`, L2 = l2) oder
+  "poisson" (zwei Poisson-Regressionen fuer Heim- und Gasttore mit log-Link, L2 = l2;
+  Ergebnis- bzw. Ueber/Unter-Wahrscheinlichkeiten aus der Faltung der Torverteilungen).
+  Immer alle Modellfelder fuellen; was der Typ nicht braucht, wird ignoriert.
+- Standardisierung "global" (z ueber die Trainingssaisons) oder "gruppe" (z je Saison).
 - Hoechstens 25 Merkmale je Hypothese. Fehlende Werte werden auf das Trainingsmittel gesetzt.
 - Keine Hypothese wiederholen, die in der Rangliste schon steht. Kleine, gezielte
   Aenderungen am besten Modell sind erwuenscht, aber mindestens eine Hypothese je Runde
-  soll etwas grundsaetzlich Neues pruefen.
-- Merkmale, die das Ergebnis selbst sind (Tore, Punkte), gibt es im Katalog absichtlich nicht.
+  soll etwas grundsaetzlich Neues pruefen (anderer Modelltyp, andere Merkmalsfamilie,
+  abgeleitetes Merkmal mit Fussballlogik).
+- Merkmale, die das Ergebnis selbst sind, gibt es im Katalog absichtlich nicht; alle
+  Merkmale stammen aus Spielen vor dem jeweiligen Anpfiff.
 - Jede Hypothese traegt eine fussballfachliche Begruendung und eine pruefbare Erwartung.
-- Hauptmetrik ist der Log-Loss der Kreuzvalidierung (kleiner ist besser). Zum Vergleich
-  stehen die Basisrate (Klassenhaeufigkeit) und der Framework-Benchmark in der Rangliste.
+- Hauptmetrik ist der Log-Loss der Vorwaertsvalidierung (kleiner ist besser). Zum Vergleich
+  stehen die Basisrate (Klassenhaeufigkeit) und ein Elo-Logit (elo_diff allein) in der
+  Rangliste. Ergebnisse aus nackten Resultaten sind schwer vorherzusagen: Gewinne von
+  0,002 Log-Loss gegenueber Elo sind real, wenn sie ueber Saisons stabil sind.
 
 Antworte ausschliesslich mit dem JSON-Objekt nach Schema.
 """
@@ -287,8 +298,10 @@ class ClaudeForscher:
             "Runde %d, Aufgabe: %s" % (kontext["runde"], tabelle.aufgabe),
             "Frage: %s" % tabelle.frage,
             "Klassen: %s" % ", ".join(tabelle.klassen),
-            "Zeilen: %d (davon Kreuzvalidierung auf %d)" % (len(tabelle), kontext.get("n_lern", len(tabelle))),
-            "Framework-Benchmark: %s" % json.dumps(tabelle.benchmark, ensure_ascii=False),
+            "Gespielte Spiele: %d; Vorwaertsvalidierung ueber die Testsaisons %s" % (
+                len(tabelle), ", ".join(kontext.get("testsaisons", []))),
+            "Benchmarks (gleiche Validierung): Basisrate %s, Elo-Logit %s" % (
+                tabelle.benchmark.get("logloss_basis"), tabelle.benchmark.get("logloss_elo")),
             "",
             "Deine Erkenntnisse aus frueheren Runden:",
             kontext["erkenntnisse"],
@@ -313,8 +326,9 @@ class ClaudeForscher:
         teile = ["Runde %d ist gerechnet." % kontext["runde"], "",
                  "Bisherige Fassung der Erkenntnisse:", kontext["erkenntnisse_alt"], ""]
         for aufgabe, k in kontext["je_aufgabe"].items():
+            b = k.get("benchmark", {})
             teile += ["## Aufgabe %s" % aufgabe,
-                      "Framework-Benchmark: %s" % json.dumps(k.get("benchmark", {}), ensure_ascii=False),
+                      "Benchmarks: Basisrate %s, Elo-Logit %s" % (b.get("logloss_basis"), b.get("logloss_elo")),
                       "Rangliste (Lernmenge):", k["rangliste_text"], ""]
             if k.get("neu"):
                 teile.append("In dieser Runde neu gerechnet:")

@@ -1,0 +1,173 @@
+{
+ "aufgabe": "tore",
+ "endmodell": {
+  "aufgabe": "tore",
+  "hypothese": {
+   "abgeleitet": [],
+   "begruendung": "Offline-Suche, Runde 8: Merkmal liga entfernt (Elternteil: Poisson Torraten + form5_gegentore_heim + spiele_gesamt_heim + form5_tordiff_hei)",
+   "erwartung": "Etwas besser als das Logit auf denselben Merkmalen.",
+   "kennung": "8d3dd79a42",
+   "merkmale": [
+    "elo_heim",
+    "elo_gast",
+    "form10_tordiff_heim",
+    "form10_tordiff_gast",
+    "form5_gegentore_heim",
+    "spiele_gesamt_heim",
+    "form5_tordiff_heim"
+   ],
+   "modell": {
+    "l2": 1.0,
+    "typ": "poisson"
+   },
+   "name": "Poisson Torraten + form5_gegentore_heim + spiele_gesamt_heim - liga",
+   "standardisierung": "global"
+  },
+  "klassen": [
+   "unter 2,5",
+   "ueber 2,5"
+  ],
+  "koeffizienten": {
+   "Gasttore (log-Rate)": {
+    "achse": 0.2411,
+    "elo_gast": 0.2007,
+    "elo_heim": -0.1822,
+    "form10_tordiff_gast": 0.0262,
+    "form10_tordiff_heim": -0.0111,
+    "form5_gegentore_heim": 0.019,
+    "form5_tordiff_heim": 0.0146,
+    "spiele_gesamt_heim": 0.0312
+   },
+   "Heimtore (log-Rate)": {
+    "achse": 0.4545,
+    "elo_gast": -0.1785,
+    "elo_heim": 0.219,
+    "form10_tordiff_gast": -0.0025,
+    "form10_tordiff_heim": 0.0269,
+    "form5_gegentore_heim": 0.0298,
+    "form5_tordiff_heim": 0.0268,
+    "spiele_gesamt_heim": 0.0307
+   }
+  },
+  "merkmale": [
+   "elo_heim",
+   "elo_gast",
+   "form10_tordiff_heim",
+   "form10_tordiff_gast",
+   "form5_gegentore_heim",
+   "spiele_gesamt_heim",
+   "form5_tordiff_heim"
+  ],
+  "modell": {
+   "K": 2,
+   "beta_gast": [
+    0.24114526825584714,
+    -0.18224973152229093,
+    0.20070348530117077,
+    -0.011058798890223258,
+    0.026164861348237,
+    0.01903136208266192,
+    0.03118989276976404,
+    0.014604979527492862
+   ],
+   "beta_heim": [
+    0.45448912695734345,
+    0.2189910151121888,
+    -0.1784959776546157,
+    0.02692183460317776,
+    -0.002525876119889292,
+    0.029849942365452492,
+    0.030688667077575484,
+    0.026780067342737544
+   ],
+   "l2": 1.0,
+   "typ": "poisson"
+  },
+  "n": 9000,
+  "stand": "2026-09-13",
+  "standardisierer": {
+   "mittel": [
+    1489.421157995122,
+    1489.382459474502,
+    -0.01369556256147878,
+    0.022143679258292748,
+    1.4776136870263061,
+    223.58422222222222,
+    -0.033831178481200666
+   ],
+   "modus": "global",
+   "sd": [
+    130.36423621947867,
+    130.54838560483222,
+    0.7916833267318238,
+    0.7938784438194835,
+    0.6110456249215823,
+    148.31218301017194,
+    0.9678315019956447
+   ]
+  }
+ },
+ "ergebnis": {
+  "dauer_s": 0.1,
+  "hauptmetrik": 0.6784,
+  "merkmale": [
+   "elo_heim",
+   "elo_gast",
+   "form10_tordiff_heim",
+   "form10_tordiff_gast",
+   "form5_gegentore_heim",
+   "spiele_gesamt_heim",
+   "form5_tordiff_heim"
+  ],
+  "metriken": {
+   "auc": 0.5603,
+   "brier": 0.4856,
+   "logloss": 0.6784,
+   "logloss_basis": 0.6842,
+   "logloss_elo": 0.6836,
+   "logloss_je_saison": {
+    "2015-16": 0.6864,
+    "2016-17": 0.6905,
+    "2017-18": 0.6859,
+    "2018-19": 0.6896,
+    "2019-20": 0.6726,
+    "2020-21": 0.6745,
+    "2021-22": 0.6695,
+    "2022-23": 0.678,
+    "2023-24": 0.668,
+    "2024-25": 0.6694
+   },
+   "treffer": 0.565
+  },
+  "n_falten": 10,
+  "n_lern": 6120,
+  "n_pruef": 405,
+  "pruef": {
+   "auc": 0.5288,
+   "brier": 0.4642,
+   "logloss": 0.6549,
+   "logloss_basis": 0.6703,
+   "logloss_elo": 0.6741,
+   "treffer": 0.6272
+  },
+  "pruefsaison": "2025-26",
+  "richtung": "min",
+  "testsaisons": [
+   "2015-16",
+   "2016-17",
+   "2017-18",
+   "2018-19",
+   "2019-20",
+   "2020-21",
+   "2021-22",
+   "2022-23",
+   "2023-24",
+   "2024-25"
+  ],
+  "warnungen": []
+ },
+ "forscher": "offline",
+ "hauptmetrik": 0.6784,
+ "runde": 8,
+ "zeit": null
+}

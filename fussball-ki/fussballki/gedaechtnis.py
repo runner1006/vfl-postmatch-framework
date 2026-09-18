@@ -13,7 +13,7 @@ import json
 import os
 
 HIER = os.path.dirname(os.path.abspath(__file__))
-WISSEN = os.path.join(HIER, "wissen")
+WISSEN = os.path.join(os.path.dirname(HIER), "wissen")   # Projektwurzel/wissen
 
 ERKENNTNISSE_LEER = """# Erkenntnisse
 
@@ -129,12 +129,12 @@ class Gedaechtnis:
             if e.get("runde", 0) >= letzte_runde - 2 and e["hypothese"]["kennung"] not in kennungen:
                 gezeigt.append(e)
                 kennungen.add(e["hypothese"]["kennung"])
-        zeilen = ["Rang | Runde | Name | Hauptmetrik (Log-Loss CV) | weitere Metriken | Merkmale | Modell"]
+        zeilen = ["Rang | Runde | Name | Hauptmetrik (Log-Loss Vorwaertsvalidierung) | weitere Metriken | Merkmale | Modell"]
         for i, e in enumerate(gezeigt):
             r = e["ergebnis"]
             hyp = e["hypothese"]
             weitere = ", ".join("%s=%s" % (k, v) for k, v in r["metriken"].items()
-                                if k not in ("logloss",) and not k.startswith("logloss_auf"))
+                                if k != "logloss" and isinstance(v, (int, float)))
             merk = ", ".join(hyp["merkmale"] + ["%s=%s" % (a["name"], a["formel"]) for a in hyp["abgeleitet"]])
             modell = json.dumps(hyp["modell"], sort_keys=True) + " / " + hyp["standardisierung"]
             rangnr = rang.index(e) + 1

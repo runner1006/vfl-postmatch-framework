@@ -1,8 +1,8 @@
 """Hypothesen: was der Forscher vorschlaegt und was der Rechenkern annimmt.
 
-Eine Hypothese ist ein Bauplan fuer ein Modell - Merkmale, abgeleitete
-Merkmale als Formeln, Modelltyp und Regularisierung - plus eine Begruendung
-in Worten. Der Forscher (Sprachmodell oder Offline-Suche) liefert sie als
+Eine Hypothese ist ein Bauplan fuer ein Prognosemodell - Merkmale,
+abgeleitete Merkmale als Formeln, Modelltyp (logit, mlp, poisson) und
+Regularisierung - plus eine Begruendung in Worten. Der Forscher (Sprachmodell oder Offline-Suche) liefert sie als
 JSON; `pruefen` normalisiert und weist alles ab, was nicht rechenbar ist.
 So kann das Sprachmodell nichts ausfuehren, nur vorschlagen.
 """
@@ -10,10 +10,11 @@ import hashlib
 import json
 import re
 
-from .daten import FormelFehler, formel_pruefen
+from .formeln import FormelFehler
+from .formeln import pruefen as formel_pruefen
 
 MAX_MERKMALE = 25
-MODELLTYPEN = ("logit", "mlp")
+MODELLTYPEN = ("logit", "mlp", "poisson")
 STANDARDISIERUNGEN = ("global", "gruppe")
 
 # JSON-Schema fuer die strukturierte Ausgabe des Sprachmodells
@@ -157,36 +158,37 @@ def kennung(hyp):
 
 def startpaket(aufgabe):
     """Erste Hypothesen, wenn das Gedaechtnis leer ist. Bewusst schlicht:
-    das Framework-Wissen als Ausgangspunkt, nicht als Ziel."""
-    if aufgabe == "spiel":
+    das Elo-Wissen als Ausgangspunkt, nicht als Ziel."""
+    logit = {"typ": "logit", "l2": 1.0}
+    if aufgabe == "ergebnis":
         return [
-            {"name": "npxG-Bilanz", "begruendung": "Das Framework erklaert Ergebnisse ueber npxG; "
-             "die Differenz ist der naheliegende Startpunkt.",
-             "merkmale": ["npxg", "npxg_geg"], "abgeleitet": [], "modell": {"typ": "logit", "l2": 1.0},
-             "standardisierung": "global", "erwartung": "Nahe am Framework-Benchmark."},
-            {"name": "Fuenf Phasen", "begruendung": "Die Phasenscores buendeln alle 15 KPIs; "
-             "reicht der Stil allein, um Ergebnisse zu erklaeren?",
-             "merkmale": ["ph_defensiv", "ph_def_umschalten", "ph_offensiv", "ph_off_umschalten",
-                          "ph_physisch", "heim"],
-             "abgeleitet": [], "modell": {"typ": "logit", "l2": 1.0},
-             "standardisierung": "global", "erwartung": "Deutlich schwaecher als npxG."},
-            {"name": "npxG plus Kontext", "begruendung": "Gegnerstaerke und Heimvorteil sollten "
-             "ueber npxG hinaus Information tragen.",
-             "merkmale": ["npxg", "npxg_geg", "heim", "geg_off", "geg_def", "blockhoehe"],
-             "abgeleitet": [{"name": "npxg_diff", "formel": "npxg - npxg_geg"}],
-             "modell": {"typ": "logit", "l2": 1.0}, "standardisierung": "global",
-             "erwartung": "Kleiner Gewinn gegenueber der reinen Bilanz."},
+            {"name": "Elo allein", "begruendung": "Elo buendelt die gesamte Ergebnishistorie in einer "
+             "Zahl; der klassische Ausgangspunkt jeder Ergebnisprognose.",
+             "merkmale": ["elo_diff"], "abgeleitet": [], "modell": logit,
+             "standardisierung": "global", "erwartung": "Deutlich unter der Basisrate, nahe am Elo-Benchmark."},
+            {"name": "Elo plus Form", "begruendung": "Kurzfristige Form traegt Information, die Elo "
+             "nur langsam aufnimmt.",
+             "merkmale": ["elo_diff", "form5_punkte_diff", "form10_tordiff_heim", "form10_tordiff_gast"],
+             "abgeleitet": [], "modell": logit, "standardisierung": "global",
+             "erwartung": "Kleiner Gewinn gegenueber Elo allein."},
+            {"name": "Poisson auf Elo und Saisonstand", "begruendung": "Torraten statt Klassen: "
+             "das Poisson-Modell nutzt die Tore beider Teams, nicht nur das Ergebnis.",
+             "merkmale": ["elo_heim", "elo_gast", "saison_tordiff_heim", "saison_tordiff_gast", "liga"],
+             "abgeleitet": [], "modell": {"typ": "poisson", "l2": 1.0}, "standardisierung": "global",
+             "erwartung": "Aehnlich wie das Logit, besser kalibrierte Unentschieden."},
         ]
     return [
-        {"name": "npxG-Differenz", "begruendung": "Die staerkste Einzelgroesse der Aufstiegsanalyse.",
-         "merkmale": ["npxg_diff"], "abgeleitet": [], "modell": {"typ": "logit", "l2": 1.0},
-         "standardisierung": "gruppe", "erwartung": "AUC nahe 0.90 wie im Framework."},
-        {"name": "Chance-Creation-Set", "begruendung": "Alle sechs CC-KPIs, wie im Framework validiert.",
-         "merkmale": ["npxg", "npxg_gegen", "box_zugriff", "box_zugriff_gegen",
-                      "abschlussqualitaet", "abschlussqualitaet_gegen"],
-         "abgeleitet": [], "modell": {"typ": "logit", "l2": 1.0}, "standardisierung": "gruppe",
-         "erwartung": "Mehr Merkmale, aber kaum mehr Trennschaerfe."},
-        {"name": "xPoints", "begruendung": "Erwartete Punkte aus der Schussliste als Einzelmerkmal.",
-         "merkmale": ["xpoints"], "abgeleitet": [], "modell": {"typ": "logit", "l2": 1.0},
-         "standardisierung": "gruppe", "erwartung": "Aehnlich stark wie die npxG-Differenz."},
+        {"name": "Torform beider Teams", "begruendung": "Viele Tore fallen, wenn beide Teams "
+         "zuletzt viele Tore erzielt und kassiert haben.",
+         "merkmale": ["form5_tore_heim", "form5_gegentore_heim", "form5_tore_gast", "form5_gegentore_gast", "liga"],
+         "abgeleitet": [], "modell": logit, "standardisierung": "global",
+         "erwartung": "Knapp unter der Basisrate."},
+        {"name": "Poisson Torraten", "begruendung": "Das Poisson-Modell rechnet die Summe beider "
+         "Torraten direkt in eine Ueber/Unter-Wahrscheinlichkeit um.",
+         "merkmale": ["elo_heim", "elo_gast", "form10_tordiff_heim", "form10_tordiff_gast", "liga"],
+         "abgeleitet": [], "modell": {"typ": "poisson", "l2": 1.0}, "standardisierung": "global",
+         "erwartung": "Etwas besser als das Logit auf denselben Merkmalen."},
+        {"name": "Elo-Gefaelle", "begruendung": "Ungleiche Paarungen bringen mehr Tore.",
+         "merkmale": ["elo_diff", "liga"], "abgeleitet": [{"name": "elo_abstand", "formel": "abs(elo_diff)"}],
+         "modell": logit, "standardisierung": "global", "erwartung": "Schwach, aber ueber der Basisrate."},
     ]

@@ -1,11 +1,11 @@
 """Die Selbstlern-Schleife: vorschlagen -> rechnen -> bewerten -> merken -> reflektieren.
 
 Eine Runde je Aufgabe:
-  1. Kontext bauen: Merkmalskatalog, Benchmark, die selbst geschriebenen
-     Erkenntnisse, die Rangliste bisheriger Experimente.
+  1. Kontext bauen: Merkmalskatalog, Benchmarks (Basisrate, Elo-Logit), die
+     selbst geschriebenen Erkenntnisse, die Rangliste bisheriger Experimente.
   2. Der Forscher schlaegt N Hypothesen vor.
-  3. Jede wird geprueft (rechenbar? schon bekannt?), kreuzvalidiert und ins
-     Gedaechtnis geschrieben. Schlaegt sie das bisher beste Modell, wird das
+  3. Jede wird geprueft (rechenbar? schon bekannt?), saisonweise vorwaerts
+     validiert und ins Gedaechtnis geschrieben. Schlaegt sie das bisher beste Modell, wird das
      Endmodell neu gefittet und abgelegt.
 Nach allen Aufgaben schreibt der Forscher die Erkenntnisse neu - die Fassung,
 die er in der naechsten Runde vorgelegt bekommt.
@@ -17,8 +17,8 @@ einzelnen Vorschlag ab: ein Fehler wird als Experiment mit Status notiert.
 import datetime as dt
 import traceback
 
-from .bewertung import bewerten, endmodell, lern_und_pruefmenge
-from .daten import AUFGABEN, katalog, lade
+from .aufgaben import AUFGABEN, katalog, lade
+from .bewertung import benchmarks, bewerten, endmodell, saisonplan
 from .forscher import ForscherFehler, OfflineForscher
 from .gedaechtnis import Gedaechtnis
 from .hypothese import pruefen
@@ -37,15 +37,18 @@ class Schleife:
 
     def tabelle(self, aufgabe):
         if aufgabe not in self._tabellen:
-            self._tabellen[aufgabe] = lade(aufgabe)
+            t = lade(aufgabe)
+            benchmarks(t)
+            self._tabellen[aufgabe] = t
         return self._tabellen[aufgabe]
 
     # ---------------------------------------------------------------- Kontext
     def kontext(self, aufgabe, runde):
         t = self.tabelle(aufgabe)
-        lern, _ = lern_und_pruefmenge(t)
+        tests, pruef, laufend = saisonplan(t)
         return {"aufgabe": aufgabe, "tabelle": t, "runde": runde, "anzahl": self.n,
-                "katalog": katalog(t), "benchmark": t.benchmark, "n_lern": len(lern),
+                "katalog": katalog(t), "benchmark": t.benchmark, "n_lern": len(t),
+                "testsaisons": tests, "pruefsaison": pruef, "laufend": laufend,
                 "erkenntnisse": self.ged.erkenntnisse(),
                 "rangliste": self.ged.rangliste(aufgabe),
                 "rangliste_text": self.ged.zusammenfassung(aufgabe),
