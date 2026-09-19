@@ -1,0 +1,202 @@
+[
+ {
+  "runde": 1,
+  "zeit": "2026-09-18T18:45:19+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "ergebnis": {
+    "bestes": 1.0304,
+    "verbessert": true,
+    "ok": 3,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "tore": {
+    "bestes": 0.68,
+    "verbessert": true,
+    "ok": 3,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 2,
+  "zeit": "2026-09-18T18:45:26+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "ergebnis": {
+    "bestes": 1.0296,
+    "verbessert": true,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "tore": {
+    "bestes": 0.6794,
+    "verbessert": true,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 3,
+  "zeit": "2026-09-18T18:45:31+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "ergebnis": {
+    "bestes": 1.0296,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "tore": {
+    "bestes": 0.6794,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 4,
+  "zeit": "2026-09-18T18:45:37+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "ergebnis": {
+    "bestes": 1.0296,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "tore": {
+    "bestes": 0.6794,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 5,
+  "zeit": "2026-09-18T18:45:45+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "ergebnis": {
+    "bestes": 1.0295,
+    "verbessert": true,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "tore": {
+    "bestes": 0.6789,
+    "verbessert": true,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 6,
+  "zeit": "2026-09-18T18:45:52+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "ergebnis": {
+    "bestes": 1.0295,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "tore": {
+    "bestes": 0.6787,
+    "verbessert": true,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 7,
+  "zeit": "2026-09-18T18:46:02+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "ergebnis": {
+    "bestes": 1.0293,
+    "verbessert": true,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "tore": {
+    "bestes": 0.6787,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ },
+ {
+  "runde": 8,
+  "zeit": "2026-09-18T18:46:11+00:00",
+  "forscher": "offline",
+  "je_aufgabe": {
+   "ergebnis": {
+    "bestes": 1.0293,
+    "verbessert": false,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   },
+   "tore": {
+    "bestes": 0.6784,
+    "verbessert": true,
+    "ok": 4,
+    "abgelehnt": 0,
+    "doppelt": 0,
+    "fehlgeschlagen": 0,
+    "forscher": "offline"
+   }
+  }
+ }
+]

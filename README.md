@@ -50,6 +50,7 @@ dashboard.html            in sich geschlossen, keine externen Requests — Doppe
 framework_spec.md         Methodik, Validierung, Grenzen
 ergebnisse/               gerechnete Befunde + SCHEMA.md
 skripte/                  die Pipeline
+fussball-ki/              eigenständiges Projekt: selbstlernende Fußball-KI auf offenen Spieldaten (eigenes README)
 ```
 
 ### Pipeline

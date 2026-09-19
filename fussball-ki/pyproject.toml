@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fussball-ki"
+version = "0.1.0"
+description = "Eine Fussball-KI, die sich selbst weiterbaut: LLM schlaegt vor, Rechenkern prueft, LLM schreibt sein Wissen fort."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = []
+
+[project.optional-dependencies]
+llm = ["anthropic>=1.0"]
+
+[project.scripts]
+fussball-ki = "fussballki.__main__:main"
+
+[tool.setuptools]
+packages = ["fussballki"]

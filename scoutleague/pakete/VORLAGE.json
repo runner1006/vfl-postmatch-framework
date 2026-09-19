@@ -1,0 +1,85 @@
+{
+  "_hinweis": [
+    "Vorlage fuer einen echten Case Pack. Kopieren, ausfuellen, importieren mit:",
+    "    python3 scoutleague/cli.py pack --datei scoutleague/pakete/kw35.json",
+    "",
+    "LIZENZGRENZE: hier gehoeren ausschliesslich eigene, aggregierte Indizes",
+    "hinein - nie Provider-Rohdaten.",
+    "",
+    "POSITION steuert das Attribut-Set. Erlaubt ist alles, was in",
+    "fragebogen.json unter bewertung.gruppen_zuordnung steht (CB, WB, CM, WF,",
+    "AM, CF und die deutschen Kuerzel dazu). Der Import prueft, dass die",
+    "Modellbewertungen zum Set dieser Position passen, und bricht sonst ab.",
+    "",
+    "INDIZES sind eigene Werte auf 0-100. Schluessel, die auf ein Attribut der",
+    "Position passen, werden automatisch in eine Modellerwartung auf der",
+    "1-5-Skala uebersetzt. 'profile_percentile' ist reserviert: zusammen mit",
+    "'liga_level' leitet der Import daraus das Modell-Level ab (die Bruecke aus",
+    "Kapitel 9 des Scout Rating Audit).",
+    "",
+    "LIGA_LEVEL ist das bewiesene Liga-Niveau auf der 1-10-Skala - in welcher",
+    "Liga hat der Spieler real gespielt. Das Perzentil verschiebt es dann um",
+    "hoechstens eine Stufe. Wer das Modell-Level lieber selbst setzt, traegt es",
+    "unter modell.level ein; das hat Vorrang.",
+    "",
+    "MODELL.LEVEL treibt Trennschaerfe und Konfliktliste. Ohne Modell-Level",
+    "laesst der Kalibrier-Report den Fall aus - die Bewertung funktioniert",
+    "trotzdem.",
+    "",
+    "VIDEO_URL ist Pflicht, auch wenn der Import ohne sie durchlaeuft. Die",
+    "Indizes sieht der Scout erst NACH der Abgabe - aus ihnen wird die",
+    "Modellerwartung gerechnet, wer sie vorher sieht liest die Antwort ab.",
+    "Damit ist das Video der einzige Beleg vor dem Urteil. Ein Fall ohne Video",
+    "ist nicht beurteilbar; der Import warnt entsprechend.",
+    "Der Player wird als iframe eingebettet; YouTube-, Vimeo- und direkte",
+    "mp4-Links funktionieren."
+  ],
+
+  "slug": "kw35-2026",
+  "titel": "Case Pack KW 35",
+  "status": "offen",
+  "schliesst_am": "2026-08-31T18:00:00Z",
+
+  "faelle": [
+    {
+      "ext_id": "SL-0001",
+      "name": "Vorname Nachname",
+      "position": "WB",
+      "jahrgang": 2006,
+      "verein": "Vereinsname",
+      "liga": "Liganame",
+      "fuss": "rechts",
+      "liga_level": 6,
+      "video_url": "https://www.youtube.com/embed/VIDEO_ID",
+
+      "indizes": {
+        "profile_percentile": 0,
+        "technik": 0,
+        "spielintelligenz": 0,
+        "athletik": 0,
+        "mentalitaet": 0,
+        "vorstoss": 0,
+        "flanke": 0,
+        "eins_gegen_eins_def": 0,
+        "wiederholungslauf": 0
+      },
+
+      "modell": {
+        "level": {
+          "level_heute": 0,
+          "level_ceiling": 0
+        },
+        "bewertung": {},
+        "prognose": {
+          "top5_12m": 0.0,
+          "marktwert_ueber": 0.0,
+          "minuten_1500": 0.0
+        }
+      },
+
+      "parameter": {
+        "marktwert_schwelle": "1,5 Mio. EUR"
+      }
+    }
+  ]
+}
