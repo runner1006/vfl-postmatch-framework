@@ -16,7 +16,7 @@ festen Prompt, sondern einen, den es selbst fortschreibt — aus Zahlen, die es
 nicht erfinden kann, weil der Rechenkern sie liefert. Jede Runde steht im
 Git-Verlauf: was vorgeschlagen wurde, was herauskam, was daraus geschlossen wurde.
 
-Kurzfassung mit Zielsetzung und Technologieaufbau: [`PROJEKT.md`](PROJEKT.md). Positionspapier zur Football Intelligence Layer, in der dieser Prototyp der Kern ist: [`POSITIONSPAPIER.md`](POSITIONSPAPIER.md).
+Kurzfassung mit Zielsetzung und Technologieaufbau: [`PROJEKT.md`](PROJEKT.md). Positionspapier zur Football Intelligence Layer, in der dieser Prototyp der Kern ist: [`POSITIONSPAPIER.md`](POSITIONSPAPIER.md), als gesetzte Fassung mit Grafiken [`positionspapier.html`](positionspapier.html).
 
 ## In drei Minuten
 

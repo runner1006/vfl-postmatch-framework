@@ -1,0 +1,694 @@
+<title>Die Football-Lernschleife</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#fbfbfa; --surface:#fcfcfb; --ink:#141516; --ink-2:#4f5350; --muted:#8a8d88;
+  --rule:#d9dbd7; --grid:#e6e7e4; --baseline:#c3c2b7;
+  --accent:#1f6f43; --accent-soft:#e9f2ec; --accent-ink:#165433;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --code-bg:#f1f2ef;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0f1110; --surface:#1a1a19; --ink:#f2f2ef; --ink-2:#c3c2b7; --muted:#8f918d;
+    --rule:#2e302d; --grid:#2c2c2a; --baseline:#383835;
+    --accent:#5fb27f; --accent-soft:#16281d; --accent-ink:#8fd0a8;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    --code-bg:#1f2120;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0f1110; --surface:#1a1a19; --ink:#f2f2ef; --ink-2:#c3c2b7; --muted:#8f918d;
+  --rule:#2e302d; --grid:#2c2c2a; --baseline:#383835;
+  --accent:#5fb27f; --accent-soft:#16281d; --accent-ink:#8fd0a8;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --code-bg:#1f2120;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;font-size:17px;line-height:1.6;padding-block:0 64px;padding-inline:16px}
+.paper{max-width:860px;margin:0 auto}
+.sans{font-family:"IBM Plex Sans","Segoe UI",system-ui,sans-serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+/* Masthead */
+.mast{padding-block:48px 28px;border-bottom:1.5px solid var(--ink)}
+.eyebrow{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);font-weight:600;margin:0 0 18px}
+h1{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:clamp(30px,5vw,44px);line-height:1.08;letter-spacing:-.01em;margin:0 0 12px;text-wrap:balance}
+.subtitle{font-size:clamp(18px,2.6vw,22px);line-height:1.35;color:var(--ink-2);margin:0 0 22px;text-wrap:balance;font-style:italic}
+.meta{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:6px 22px;margin:0}
+.meta b{color:var(--ink);font-weight:600}
+/* Abstract */
+.abstract{margin:28px 0 8px;padding:18px 0 20px;border-bottom:1px solid var(--rule)}
+.abstract h2{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 10px;color:var(--ink-2);font-weight:600}
+.abstract p{margin:0 0 10px;font-size:16px;line-height:1.55}
+.abstract p:last-child{margin:0}
+/* Body */
+.body{max-width:70ch}
+section{margin-top:44px}
+h2.sec{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:22px;font-weight:600;line-height:1.25;margin:0 0 14px;display:flex;gap:14px;align-items:baseline;text-wrap:balance}
+h2.sec .n{font-family:"IBM Plex Mono",monospace;font-weight:400;font-size:14px;color:var(--accent-ink);min-width:2.2em}
+h3{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:16.5px;font-weight:600;margin:24px 0 8px;text-wrap:balance}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:1.3em}
+li{margin-bottom:6px}
+li::marker{color:var(--muted)}
+strong{font-weight:600}
+code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.86em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px;line-height:1.5;background:var(--code-bg);padding:14px 16px;border-radius:4px;overflow-x:auto;margin:0 0 16px}
+pre code{background:none;padding:0;font-size:inherit}
+.formula{font-family:"IBM Plex Mono",monospace;font-size:14px;text-align:center;padding:12px;margin:12px 0 16px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.principles{list-style:none;padding:0;margin:0 0 16px;counter-reset:pr}
+.principles li{counter-increment:pr;display:grid;grid-template-columns:32px 1fr;gap:10px;margin-bottom:12px}
+.principles li::before{content:counter(pr);font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--accent-ink);border:1px solid var(--accent);border-radius:50%;width:26px;height:26px;display:inline-grid;place-items:center;margin-top:3px}
+.lead{font-size:18px}
+blockquote{margin:16px 0 18px;padding:2px 0 2px 18px;border-left:2px solid var(--accent);color:var(--ink-2);font-style:italic}
+/* Tables */
+.tablewrap{overflow-x:auto;margin:6px 0 22px}
+table.paper{border-collapse:collapse;width:100%;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13.5px;line-height:1.45;border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink)}
+table.paper th{text-align:left;font-weight:600;padding:9px 10px 8px;border-bottom:1px solid var(--ink);vertical-align:bottom;font-size:12.5px;letter-spacing:.02em}
+table.paper td{padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink)}
+table.paper tr:last-child td{border-bottom:none}
+table.paper td:first-child{font-weight:500}
+table.paper .num{font-variant-numeric:tabular-nums;text-align:right}
+.tcap{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13px;color:var(--ink-2);margin:0 0 8px}
+.tcap b{color:var(--ink);font-weight:600}
+/* Figures */
+figure{margin:26px 0 30px;max-width:860px}
+figure.wide{width:100%}
+.figbox{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:14px 12px 10px;overflow-x:auto;position:relative}
+.figbox svg{display:block;height:auto;max-width:100%}
+.figbox svg.diagram{min-width:620px;width:100%}
+figcaption{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13px;line-height:1.5;color:var(--ink-2);margin-top:10px}
+figcaption b{color:var(--ink);font-weight:600}
+.multi{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+.multi .chart h4{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13px;font-weight:600;margin:0 0 2px}
+.multi .chart .sub{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;color:var(--muted);margin:0 0 6px}
+.chart svg{width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12.5px;color:var(--ink-2);margin:2px 0 8px}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{display:inline-block;width:18px;height:2px;background:var(--c)}
+.legend i.dot{width:9px;height:9px;border-radius:50%}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;line-height:1.4;padding:7px 10px;border-radius:4px;white-space:nowrap;opacity:0;transform:translate(-50%,calc(-100% - 10px));transition:opacity .08s;z-index:3}
+.tip.on{opacity:1}
+.tip .v{font-weight:600;font-size:13px}
+.tip .k{display:inline-block;width:10px;height:2px;vertical-align:middle;margin-right:6px}
+.vis-hidden{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+details.tbl{margin:-18px 0 26px;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13px}
+details.tbl summary{cursor:pointer;color:var(--accent-ink);font-weight:500}
+details.tbl summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Sources */
+.sources{margin-top:52px;padding-top:16px;border-top:1.5px solid var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13px;color:var(--ink-2)}
+.sources h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 10px;color:var(--ink-2)}
+.sources ol{padding-left:1.4em;margin:0}
+.sources li{margin-bottom:5px}
+.colophon{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;color:var(--muted);margin-top:26px}
+a{color:var(--accent-ink)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:640px){ .mast{padding-block:32px 22px} h2.sec{display:block} h2.sec .n{display:inline-block;margin-right:8px} }
+@media print{
+  body{background:#fff;color:#000;font-size:11pt;padding:0}
+  .paper{max-width:100%}
+  .figbox{border-color:#999;overflow:visible}
+  .figbox svg.diagram{min-width:0}
+  section{break-inside:auto}
+  figure,table{break-inside:avoid}
+  .tip,details.tbl{display:none}
+  @page{margin:20mm 18mm}
+}
+@media (prefers-reduced-motion:reduce){ .tip{transition:none} }
+</style>
+
+<div class="paper">
+<header class="mast">
+  <p class="eyebrow">Positionspapier · Technische Umsetzung</p>
+  <h1>Die Football-Lernschleife</h1>
+  <p class="subtitle">Wie eine modellunabhängige Football Intelligence Layer gebaut wird: Datenstandard, Knowledge Hub, verborgener Benchmark, Expertenvalidierung und eine Schleife, in der das Sprachmodell sein eigenes Wissen fortschreibt.</p>
+  <p class="meta"><span><b>Entwurf für</b> Strykerlabs</span><span><b>Fassung</b> 1.0, September 2026</span><span><b>Grundlagen</b> Strategiememo, zwei Architekturpapiere, Prototyp <span class="mono">fussball-ki</span></span></p>
+</header>
+
+<div class="abstract">
+  <h2>Kurzfassung</h2>
+  <p>Wir bauen kein Fußball-LLM. Wir bauen die Schleife, in der Fußball-KI messbar besser wird, und besitzen alles, was darin nicht austauschbar ist: den Datenstandard, das Wissen, die Aufgaben, den Benchmark, die Expertenurteile und die Entscheidungshistorie. Das Sprachmodell ist ein Stecker und darf morgen ein anderes sein.</p>
+  <p>Drei Grundsätze bestimmen die Umsetzung. Erstens ist der Hub die Quelle der Wahrheit und das LLM Orchestrator und Reasoning-Schicht; Fakten, Daten, Dokumente und Klubwissen bleiben außerhalb des Modells, versioniert, mit Rechten und Provenienz. Zweitens wird nichts eingesetzt, was seinen Gewinn nicht auf einem verborgenen Benchmark bewiesen hat. Drittens ist jede Interaktion mit einem Experten ein Datenpunkt, aber erst nach Kuratierung ein Lernsignal; Präferenz und Ergebnis werden getrennt gemessen. Ein lauffähiger Prototyp zeigt das Prinzip im Kleinen, mit realen Zahlen.</p>
+</div>
+
+<div class="body">
+
+<section id="s1">
+<h2 class="sec"><span class="n">1</span>Position</h2>
+<p class="lead">Modellunabhängigkeit heißt nicht, alles selbst zu entwickeln. Sie heißt: Wenn ein besseres Basismodell erscheint, tauschen wir den Reasoning-Layer und behalten Millionen Fälle, Evaluationssets, Korrekturen, Outcomes, Ontologien und Spezialmodelle.</p>
+<h3>Was das Asset ist</h3>
+</div>
+<p class="tcap"><b>Tabelle 1.</b> Fünf Assets, die zusammen den Burggraben bilden.</p>
+<div class="tablewrap"><table class="paper">
+<thead><tr><th style="width:24%">Asset</th><th>Inhalt</th><th style="width:34%">Warum schwer kopierbar</th></tr></thead>
+<tbody>
+<tr><td>Football Data Standard</td><td>Kanonisches, versioniertes Modell für Events, Tracking, Video, Training, Medizin, Scouting, Taktik; jeder Provider über einen Adapter</td><td>Cross-Provider-Identität und Metrikdefinitionen sind mühsam und werden mit jedem Anbieter wertvoller</td></tr>
+<tr><td>Knowledge Hub</td><td>Dokumente, Klubdoktrin, Skills und Multimedia mit Rechten, Provenienz und Snapshots</td><td>Rechtebewusstes, zitierfähiges Wissen statt eines Vektorindex</td></tr>
+<tr><td>Football Benchmark</td><td>Private, versionierte Aufgaben mit Gold-Standard und Expertenrubrik, verborgener Testsplit</td><td>Die einzige Instanz, die „besser“ beweisen kann</td></tr>
+<tr><td>Expert Judgement</td><td>Strukturierte, blinde Bewertungen von Trainern, Scouts, Analysten mit gemessener Reliabilität</td><td>Proprietärer Maßstab dafür, was im Fußball eine gute Entscheidung ist</td></tr>
+<tr><td>Football Intelligence Data</td><td>Fälle der Form Situation → Frage → Analyse → Hypothese → Korrektur → Entscheidung → Intervention → Outcome</td><td>Entsteht nur im Produktbetrieb mit Profis und wächst mit jedem Klub</td></tr>
+</tbody></table></div>
+<div class="body">
+<h3>Was nicht gebaut wird</h3>
+<p>Kein Pretraining von null. Kein „alle Bücher in den Kontext“. Kein Multi-LLM-Frontend, das drei Modelle dieselbe Frage stellt und abstimmen lässt. Kein System, das autonom Transfer-, Vertrags- oder personenbezogene Entscheidungen trifft.</p>
+<h3>Lernen auf zwei Ebenen</h3>
+<p>Der Prototyp zeigt das Prinzip: Ein Forscher-LLM schlägt Modellhypothesen vor, ein Rechenkern prüft sie per Vorwärtsvalidierung, ein Lehrer-LLM schreibt danach die Erkenntnisse neu, die der Forscher in der nächsten Runde vorgelegt bekommt. Gelernt werden die Gewichte der Fußballmodelle und das Wissen, mit dem das LLM arbeitet. Beides liegt als Klartext im Versionsverlauf. Die Plattform skaliert genau diese Schleife: mehr Aufgaben, mehr Modalitäten, echte Experten statt eines Rechenkerns als Korrektiv.</p>
+</section>
+
+<section id="s2">
+<h2 class="sec"><span class="n">2</span>Zielarchitektur</h2>
+<p>Die Architektur ist providerunabhängig: Die Geschäftslogik hängt an keinem Modellanbieter. Ein Task-Objekt steuert, welche Daten, welches Wissen, welche Skills und welches Modell eine Fußballentscheidung bekommt; jeder Lauf ist reproduzierbar; jede Freigabe fließt als Evidenz zurück in den Benchmark.</p>
+</div>
+<figure class="wide" id="fig1">
+<div class="figbox">
+<svg class="diagram" viewBox="0 0 920 600" role="img" aria-label="Schichtenarchitektur: Arbeitsräume, Control Plane, Services, Modellrouting, Experiment- und Entscheidungsschicht; ein Rückkanal führt Outcomes in den Benchmark-Store.">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+<marker id="arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker></defs>
+<g fill="none" stroke="currentColor" stroke-width="1.2" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12.5">
+ <!-- Arbeitsräume -->
+ <rect x="20" y="16" width="880" height="46" rx="3" fill="var(--code-bg)" stroke="none"/>
+ <text x="460" y="35" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Nutzer und Arbeitsräume</text>
+ <text x="460" y="52" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11.5">Ask Football · Compare · Decision Room · Knowledge Studio · Benchmark Lab · Workflow Builder</text>
+ <line x1="160" y1="62" x2="160" y2="96" marker-end="url(#ar)"/>
+ <text x="170" y="84" fill="var(--ink-2)" stroke="none" font-size="11">Anfrage</text>
+ <!-- Control Plane -->
+ <rect x="20" y="98" width="270" height="48" rx="3"/><text x="155" y="118" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Task Resolver</text><text x="155" y="135" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Anfrage → TaskDefinition</text>
+ <line x1="290" y1="122" x2="323" y2="122" marker-end="url(#ar)"/>
+ <rect x="325" y="98" width="270" height="48" rx="3"/><text x="460" y="118" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Policy &amp; Capability Engine</text><text x="460" y="135" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Datenklasse, Rechte, Risiko, Budget</text>
+ <line x1="595" y1="122" x2="628" y2="122" marker-end="url(#ar)"/>
+ <rect x="630" y="98" width="270" height="48" rx="3"/><text x="765" y="118" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Workflow Orchestrator</text><text x="765" y="135" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Graph, Checkpoints, Human-in-the-Loop</text>
+ <!-- Services -->
+ <line x1="155" y1="146" x2="155" y2="184" marker-end="url(#ar)"/><line x1="460" y1="146" x2="460" y2="184" marker-end="url(#ar)"/><line x1="765" y1="146" x2="765" y2="184" marker-end="url(#ar)"/>
+ <rect x="20" y="186" width="270" height="62" rx="3"/><text x="155" y="207" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Knowledge Service</text><text x="155" y="224" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">hybrides Retrieval, ACL, Rights Registry</text><text x="155" y="239" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Knowledge Snapshots</text>
+ <rect x="325" y="186" width="270" height="62" rx="3"/><text x="460" y="207" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Football Data Service</text><text x="460" y="224" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">kanonische DB, Feature-Service</text><text x="460" y="239" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Event- und Tracking-Lake, Snapshots</text>
+ <rect x="630" y="186" width="270" height="62" rx="3"/><text x="765" y="207" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Skill / Tool Registry</text><text x="765" y="224" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">versionierte Fußballfunktionen als Code</text><text x="765" y="239" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">JSON-Schema, Tests, code_hash</text>
+ <!-- Task Context -> Router -->
+ <line x1="460" y1="248" x2="460" y2="286" marker-end="url(#ar)"/>
+ <text x="470" y="272" fill="var(--ink-2)" stroke="none" font-size="11">Task Context: Daten + Wissen + Skills</text>
+ <!-- Router band -->
+ <rect x="20" y="288" width="200" height="48" rx="3"/><text x="120" y="308" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Model Router</text><text x="120" y="325" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Hard Gates, dann RouteScore</text>
+ <line x1="220" y1="312" x2="253" y2="312" marker-end="url(#ar)"/>
+ <rect x="255" y="288" width="200" height="48" rx="3"/><text x="355" y="308" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Provider-neutraler Gateway</text><text x="355" y="325" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">eine API, Adapter je Anbieter</text>
+ <line x1="455" y1="312" x2="488" y2="312" marker-end="url(#ar)"/>
+ <rect x="490" y="288" width="125" height="48" rx="3"/><text x="552" y="308" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Frontier</text><text x="552" y="325" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Cloud, austauschbar</text>
+ <rect x="633" y="288" width="125" height="48" rx="3"/><text x="695" y="308" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Open Weights</text><text x="695" y="325" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">lokal über vLLM</text>
+ <rect x="776" y="288" width="124" height="48" rx="3"/><text x="838" y="308" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Spezialmodelle</text><text x="838" y="325" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">xG, Role Fit, Vision</text>
+ <!-- Outputs -> Experiment -->
+ <line x1="355" y1="336" x2="355" y2="374" marker-end="url(#ar)"/>
+ <text x="365" y="360" fill="var(--ink-2)" stroke="none" font-size="11">Outputs mit Run-Manifest</text>
+ <!-- Experiment row -->
+ <rect x="20" y="376" width="200" height="48" rx="3"/><text x="120" y="396" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Experiment Runner</text><text x="120" y="413" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Matrix gegen identische Fälle</text>
+ <line x1="220" y1="400" x2="253" y2="400" marker-end="url(#ar)"/>
+ <rect x="255" y="376" width="200" height="48" rx="3"/><text x="355" y="396" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Evaluation Engine</text><text x="355" y="413" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Metriken, Rubriken, Regression</text>
+ <line x1="455" y1="400" x2="488" y2="400" marker-end="url(#ar)"/>
+ <rect x="490" y="376" width="200" height="48" rx="3"/><text x="590" y="396" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Ensemble / Decision Engine</text><text x="590" y="413" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Unsicherheit, Disagreement</text>
+ <line x1="690" y1="400" x2="723" y2="400" marker-end="url(#ar)"/>
+ <rect x="725" y="376" width="175" height="48" rx="3"/><text x="812" y="396" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Human Review</text><text x="812" y="413" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Freigabe, Override, Grund</text>
+ <!-- Benchmark store + decision object -->
+ <line x1="355" y1="424" x2="355" y2="462" marker-start="url(#ar)" marker-end="url(#ar)"/>
+ <text x="365" y="448" fill="var(--ink-2)" stroke="none" font-size="11">Fälle, Gold, Rubrik</text>
+ <rect x="255" y="464" width="200" height="48" rx="3"/><text x="355" y="484" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Benchmark Store</text><text x="355" y="501" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">DEV · VALIDATION · TEST (verborgen)</text>
+ <line x1="812" y1="424" x2="812" y2="462" marker-end="url(#ar)"/>
+ <rect x="725" y="464" width="175" height="48" rx="3" stroke="var(--accent)" stroke-width="1.6"/><text x="812" y="484" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Decision Object</text><text x="812" y="501" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Empfehlung, Unsicherheit, Evidenz</text>
+ <!-- Feedback loop -->
+ <path d="M725,488 H560 a10,10 0 0 0 -10,10 V540 a10,10 0 0 1 -10,10 H365 a10,10 0 0 1 -10,-10 V514" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#arA)"/>
+ <text x="564" y="534" fill="var(--accent-ink)" stroke="none" font-size="11.5" font-weight="600">Outcome, Override, Grund → neue Evidenz</text>
+ <!-- Audit band -->
+ <rect x="20" y="566" width="880" height="22" rx="3" fill="var(--code-bg)" stroke="none"/>
+ <text x="460" y="581" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Audit · Tracing · Kosten · Versionen über alle Schichten, jede Aktion mit Run-ID</text>
+</g>
+</svg>
+</div>
+<figcaption><b>Abbildung 1.</b> Zielarchitektur. Der Task, nicht der Chat, ist das zentrale Objekt: Er bestimmt Daten, Wissen, Skills und Modellroute. Modelle sind austauschbare Engines hinter dem Gateway. Der grüne Rückkanal macht jede Freigabe zur Evidenz für den Benchmark.</figcaption>
+</figure>
+<div class="body">
+</div>
+<p class="tcap"><b>Tabelle 2.</b> Schichten, Aufgaben und Technikentscheidungen.</p>
+<div class="tablewrap"><table class="paper">
+<thead><tr><th>Schicht</th><th>Aufgabe</th><th>Technik</th><th>Leitprinzip</th></tr></thead>
+<tbody>
+<tr><td>Lakehouse</td><td>Rohdaten unveränderlich, kanonische Daten, Tracking columnar</td><td>Object Storage, Parquet, Iceberg</td><td>Bronze → Silber → Gold; jeder Snapshot reproduzierbar</td></tr>
+<tr><td>Operational Store</td><td>Tenants, Rechte, Tasks, Annotationen, Embeddings</td><td>PostgreSQL mit Row-Level Security, pgvector</td><td>Control Plane relational</td></tr>
+<tr><td>Search</td><td>Keyword plus semantisch plus Metadatenfilter, ACL beim Retrieval</td><td>Postgres Full-Text, pgvector, später OpenSearch</td><td>Fußballbegriffe brauchen exakte Treffer</td></tr>
+<tr><td>Analytics / Tools</td><td>SQL und OLAP auf Events und Tracking, Fußballfunktionen</td><td>Feature-Service, Python-Pakete mit JSON-Schema</td><td>Das LLM bekommt Funktionen, keine Millionen Zeilen</td></tr>
+<tr><td>Workflow</td><td>Persistente Entscheidungsprozesse mit Freigabepunkten</td><td>Graph-Orchestrierung mit Checkpoints</td><td>Workflow ist Version, nicht Prompt</td></tr>
+<tr><td>Model Gateway</td><td>Eine API für Frontier-, offene und eigene Modelle</td><td>Adapter je Provider, vLLM lokal</td><td>Domänenlogik hängt an keinem Anbieter</td></tr>
+<tr><td>Router</td><td>Hard Gates, dann empirischer Score</td><td>Eigene Policy Engine</td><td>Nie ein LLM fragen, welches LLM besser ist</td></tr>
+<tr><td>Experimente / Evals</td><td>Manifest, Matrix, Metriken, Regression</td><td>MLflow für Runs und Registries; eigener Benchmark-Layer</td><td>Der fußballspezifische Teil bleibt proprietär</td></tr>
+<tr><td>Observability</td><td>Jede Aktion mit Run-ID</td><td>OpenTelemetry, append-only Audit Store</td><td>Logs selbst sind sensibel</td></tr>
+<tr><td>Deployment</td><td>Multi-Tenant EU, Single Tenant, Hybrid, On-Prem</td><td>Container, Kubernetes ab Skalierung</td><td>Eine Architektur, mehrere Betriebsformen</td></tr>
+</tbody></table></div>
+<div class="body">
+</section>
+
+<section id="s3">
+<h2 class="sec"><span class="n">3</span>Kanonisches Datenmodell und Evidenz</h2>
+<p><strong>Regel eins:</strong> Kein Provider-Schema wird zum internen Standard. Jeder Anbieter bekommt einen Adapter auf das kanonische Modell. Rohwert und kanonischer Wert bleiben nebeneinander erhalten, damit sichtbar bleibt, ob ein Unterschied aus dem Fußball oder aus der Übersetzung stammt.</p>
+<p><strong>Pflichtmetadaten jedes Objekts:</strong> <code>canonical_id</code>, <code>source_system</code>, <code>source_external_id</code>, <code>schema_version</code>, <code>ontology_version</code>, <code>captured_at</code>, <code>ingested_at</code>, <code>valid_from</code>, <code>valid_to</code>, <code>confidence</code>, <code>provenance</code>, <code>rights_scope</code>, <code>tenant_id</code>, <code>data_snapshot_id</code>.</p>
+<p><strong>Zeit und Raum:</strong> Periode, Match-Uhr in Millisekunden, absoluter Video-Timecode, Pitch-Dimensionen, metrische und normalisierte Koordinaten, Angriffsrichtung. Ohne diese Synchronisationsschicht lassen sich Event, Tracking und Video nicht gemeinsam nutzen.</p>
+<p><strong>Der Standard ist modular,</strong> fünf Contracts statt einer Spezifikation: Football Core, Football Event, Football Tracking, Football Metric (Definition, Formel, Nenner, Population, Einheit, Provider, Version) und Football AI Evaluation. Jede Metrik hat eine Definition, nicht nur einen Namen: „Pressures“ oder „Progressive Pass“ bedeuten bei zwei Anbietern nicht dasselbe.</p>
+<p><strong>Domänenobjekte jenseits des Spiels:</strong> Trainingssession mit Drills und individueller Exposure (Rohmetriken plus Threshold-Version, sRPE neben externer Last), Medical Episode nach IOC-Systematik mit FHIR-inspirierter Grenze und ICD-11-Mapping, Scouting Report mit Rating-Schema-Version und Evidenz, Tactical Concept als explizite Entscheidungsregel, Knowledge Asset mit Originalquelle und Zitierfähigkeit.</p>
+<p><strong>Evidence Link als universelle Beweisschicht.</strong> Die ideale Antwort lautet nicht „der Gegner ist anfällig hinter dem linken Außenverteidiger“, sondern maschinenlesbar:</p>
+<pre><code>Claim → Match 184 → Events 4471 / 4528 / 4972 → Tracking-Fenster
+      → Clips 00:18:32–00:18:41, 00:56:04–00:56:11
+      → Tactical Concept: weak-side depth</code></pre>
+<p>Dieselbe Behauptung kann dann vom Trainer, vom Benchmark-Rater und von einem anderen Modell geprüft werden.</p>
+<p><strong>Rights Registry statt Vektorindex.</strong> Jede Quelle führt <code>copyright_owner</code>, <code>license_type</code>, <code>lawful_access_basis</code>, <code>retrieval_allowed</code>, <code>training_allowed</code>, <code>quotation_constraints</code>, <code>TDM_rights_reserved</code>, <code>territory</code>, <code>expiry_date</code>. Retrieval und Training sind getrennte Rechte.</p>
+<p><strong>Fünf Datenklassen steuern das Routing:</strong> Public, Licensed, Club Confidential, Personal Restricted, Highly Sensitive. Jeder Provider hat erlaubte Datenklassen, Regionen, Retention-, Trainings- und Vertragsstatus. Eine Anfrage wird technisch blockiert, bevor Daten den falschen Endpoint erreichen. Medizinische Daten liegen in einer eigenen Enclave; nur freigegebene Aggregate verlassen sie.</p>
+</section>
+
+<section id="s4">
+<h2 class="sec"><span class="n">4</span>Task-Objekt und Workflow-Engine</h2>
+<p>Das zentrale Produktobjekt ist nicht der Chat, sondern der Task. Jede Anfrage wird zuerst in eine <code>TaskDefinition</code> übersetzt:</p>
+<pre><code>{
+  "task_type": "player_market_value",
+  "decision_type": "recruitment",
+  "target": "expected_transfer_fee",
+  "as_of_date": "2026-08-13",
+  "player_id": "hub_player_123",
+  "club_context": "hub_club_456",
+  "required_modalities": ["structured_data", "text"],
+  "required_knowledge_packs": ["transfer_economics", "club_recruitment_policy"],
+  "required_skills": ["market_value_model", "comparables_search", "uncertainty_analysis"],
+  "risk_level": "high",
+  "output_schema": "player_valuation_v2"
+}</code></pre>
+<p>Damit werden „Bewerte Spieler X“ und „Wie viel zahlen wir maximal für X?“ zwei verschiedene Aufgaben mit verschiedenen Zielen, Daten und Metriken.</p>
+<p><strong>Task Context</strong> entsteht additiv: allgemeines Modellwissen plus kanonische Daten plus aufgabenspezifisches Knowledge Pack plus klubspezifisches Knowledge Pack plus Skill plus aktuelle Daten. Knowledge Packs sind kuratiert und versioniert; jeder Run referenziert einen <code>knowledge_snapshot_id</code>.</p>
+<p><strong>Fünf Wissensarten, fünf Zugriffswege.</strong> Strukturierte Fakten über SQL und Feature-Service. Dokumente über RAG. Klubdoktrin über privates RAG plus Regeln. Multimedia über Media- und Vision-Tools. Ausführbares Wissen (xG, Role Fit, Marktwertmodell) als Skill. „Wie viele progressive Läufe in den letzten zehn Spielen?“ ist eine Abfrage, keine Retrieval-Frage.</p>
+<p><strong>Skills sind Code, nicht Prompts:</strong> versionierte Python-Pakete mit JSON-Schema, Unit- und Integrationstests, <code>code_hash</code> in der Registry.</p>
+<p><strong>Output ist ein Entscheidungsobjekt mit Unsicherheit,</strong> nicht eine Zahl: Referenzwert mit Intervall, erwartete Ablöse mit Intervall, klubspezifischer Fair Value, empfohlenes Maximalgebot, Confidence, Modell-Disagreement, Treiber, Annahmen, Evidenz, <code>human_approval_required</code>. Das Synthese-LLM ersetzt die Einzeloutputs nicht; Modell A, B, C und die quantitativen Anker bleiben sichtbar.</p>
+<p><strong>Das Experiment-Manifest</strong> friert jeden Run ein: Task-, Case-, Daten-, Knowledge-, Prompt-, Skill-, Workflow-, Retriever-, Reranker- und Schema-Versionen, Provider und exakte Modell-ID mit Konfiguration, Code-Commit, Container, Zeitpunkt, Region, Roh- und normalisierter Output, Latenz, Tokens, Kosten, Evaluationsergebnisse. Reproduzierbarkeit bedeutet bei generativen Modellen nicht byte-identischen Text, sondern identische dokumentierte Inputs und statistisch wiederholbare Bewertung.</p>
+</section>
+
+<section id="s5">
+<h2 class="sec"><span class="n">5</span>Model Router</h2>
+<p>Der Gateway vereinheitlicht APIs. Die Intelligenz sitzt im Router, in zwei Stufen: Erst scheiden harte Gates Kandidaten aus, dann entscheidet ein empirischer Score über die verbleibenden.</p>
+</div>
+<figure class="wide" id="fig2">
+<div class="figbox">
+<svg class="diagram" viewBox="0 0 920 210" role="img" aria-label="Vier Hard Gates filtern die Modellkandidaten, danach wählt der RouteScore unter den verbleibenden Modellen; ausgeschlossene Kandidaten fallen an jedem Gate heraus.">
+<g fill="none" stroke="currentColor" stroke-width="1.2" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12.5">
+ <rect x="10" y="60" width="120" height="56" rx="3"/><text x="70" y="84" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Kandidaten</text><text x="70" y="101" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Model Registry</text>
+ <line x1="130" y1="88" x2="158" y2="88" marker-end="url(#ar)"/>
+ <rect x="160" y="60" width="138" height="56" rx="3"/><text x="229" y="78" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Gate 1</text><text x="229" y="95" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Modalität</text><text x="229" y="109" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">unterstützt?</text>
+ <line x1="298" y1="88" x2="326" y2="88" marker-end="url(#ar)"/>
+ <rect x="328" y="60" width="138" height="56" rx="3"/><text x="397" y="78" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Gate 2</text><text x="397" y="95" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Datenklasse an</text><text x="397" y="109" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">diesen Provider?</text>
+ <line x1="466" y1="88" x2="494" y2="88" marker-end="url(#ar)"/>
+ <rect x="496" y="60" width="138" height="56" rx="3"/><text x="565" y="78" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Gate 3</text><text x="565" y="95" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Output-Schema</text><text x="565" y="109" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">und Tools?</text>
+ <line x1="634" y1="88" x2="662" y2="88" marker-end="url(#ar)"/>
+ <rect x="664" y="60" width="138" height="56" rx="3"/><text x="733" y="78" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Gate 4</text><text x="733" y="95" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Latenz- und</text><text x="733" y="109" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Budgetgrenze?</text>
+ <line x1="802" y1="88" x2="830" y2="88" marker-end="url(#ar)"/>
+ <rect x="832" y="52" width="80" height="72" rx="3" stroke="var(--accent)" stroke-width="1.6"/><text x="872" y="78" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Route</text><text x="872" y="95" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Score</text><text x="872" y="110" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">empirisch</text>
+ <!-- rejections -->
+ <line x1="229" y1="116" x2="229" y2="150" marker-end="url(#ar)"/><line x1="397" y1="116" x2="397" y2="150" marker-end="url(#ar)"/><line x1="565" y1="116" x2="565" y2="150" marker-end="url(#ar)"/><line x1="733" y1="116" x2="733" y2="150" marker-end="url(#ar)"/>
+ <text x="229" y="168" text-anchor="middle" fill="var(--muted)" stroke="none" font-size="11">ausgeschlossen</text><text x="397" y="168" text-anchor="middle" fill="var(--muted)" stroke="none" font-size="11">blockiert vor dem Endpoint</text><text x="565" y="168" text-anchor="middle" fill="var(--muted)" stroke="none" font-size="11">ausgeschlossen</text><text x="733" y="168" text-anchor="middle" fill="var(--muted)" stroke="none" font-size="11">ausgeschlossen</text>
+ <text x="460" y="30" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11.5">Stufe 1: Hard Gates, keine Abwägung</text>
+ <text x="872" y="30" text-anchor="middle" fill="var(--accent-ink)" stroke="none" font-size="11.5" font-weight="600">Stufe 2</text>
+ <text x="460" y="200" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Q aus Benchmark-Aufgaben ähnlicher Art; Gewichte je Persona und Risiko, nicht global</text>
+</g>
+</svg>
+</div>
+<figcaption><b>Abbildung 2.</b> Zweistufiges Routing. Ein Modell, das die Datenklasse nicht empfangen darf, wird nie nach Qualität bewertet. Erst unter den verbleibenden Kandidaten entscheidet der empirische Score.</figcaption>
+</figure>
+<div class="body">
+<p class="formula">RouteScore(m, t) = Q(m, t) − λ<sub>c</sub>·Cost − λ<sub>l</sub>·Latency − λ<sub>r</sub>·Risk + λ<sub>p</sub>·PrivacyFit</p>
+<p>Q ist die erwartete Qualität auf ähnlichen Benchmark-Aufgaben. Die Gewichte sind nicht global: Ein Trainer mit zehn Sekunden priorisiert anders als ein Sportdirektor vor einem Transfer. D1-Faktenfragen gehen an strukturierte Abfragen plus kleines Modell, D4-Taktikfragen an ein starkes multimodales Modell.</p>
+<p><strong>Die Registry enthält nicht nur LLMs.</strong> Marktwertmodell, Rollenklassifikator, Ähnlichkeitsmodell, Ligaübersetzung, Verfügbarkeitsmodell, xG, Possession Value, Pass Choice, physisches Modell aus Tracking, Embedding-Modell, Reranker, Vision-Modell. Für numerische Fußballprobleme sind diese Modelle wichtiger als das LLM.</p>
+<p><strong>Hybrides Zielbild nach Datenklasse:</strong> öffentliches Fußballwissen an Cloud-Modelle, lizenzierte Daten nur an freigegebene Provider, interne Taktik an ausgewählte Enterprise-Endpoints, Verträge auf eine eingeschränkte Route, Medizin lokal. Offene Modelle laufen über vLLM hinter derselben Hub-API.</p>
+</section>
+
+<section id="s6">
+<h2 class="sec"><span class="n">6</span>Benchmark und Validierung</h2>
+<p>Ein Fußball-Benchmark ist kein Trivia-Test. Er misst ein Profil, nicht eine Zahl: Fußballwissen, taktisches Reasoning, Matchanalyse, Spielerbewertung, Recruitment-Logik, quantitative Analyse, Marktbewertung, Trainingsdesign, Evidence Grounding, Unsicherheit, multimodales Reasoning, Klubadaption.</p>
+</div>
+<figure class="wide" id="fig3">
+<div class="figbox">
+<div class="multi">
+  <div class="chart"><h4>Schwierigkeitsstufen</h4><p class="sub">Zielverteilung der Aufgaben, Anteil in Prozent</p><div id="c-diff"></div></div>
+  <div class="chart"><h4>Rubrik für offene Antworten</h4><p class="sub">Gewicht von 100 Punkten; Safety ist ein Hard Gate</p><div id="c-rubric"></div></div>
+  <div class="chart"><h4>Aufbau der Suite</h4><p class="sub">Anzahl Aufgaben je Ausbaustufe</p><div id="c-size"></div></div>
+</div>
+<div class="tip" id="tip3"></div>
+</div>
+<figcaption><b>Abbildung 3.</b> Der Benchmark als Messapparat. D4-Fälle (unvollständig, widersprüchlich, „nicht genug Evidenz“ als richtige Antwort) sind selten, aber entscheidend; die Rubrik gewichtet Korrektheit am höchsten; die Suite wächst erst, wenn die Rubrik kalibriert ist.</figcaption>
+</figure>
+<details class="tbl"><summary>Werte als Tabelle</summary>
+<div class="tablewrap"><table class="paper"><thead><tr><th>Reihe</th><th>Kategorie</th><th class="num">Wert</th></tr></thead><tbody>
+<tr><td>Stufen</td><td>D1 Retrieval und Messung</td><td class="num">25 %</td></tr><tr><td>Stufen</td><td>D2 Interpretation</td><td class="num">35 %</td></tr><tr><td>Stufen</td><td>D3 Integration</td><td class="num">30 %</td></tr><tr><td>Stufen</td><td>D4 Elite und adversarial</td><td class="num">10 %</td></tr>
+<tr><td>Rubrik</td><td>Fachliche Korrektheit</td><td class="num">30</td></tr><tr><td>Rubrik</td><td>Evidenz</td><td class="num">20</td></tr><tr><td>Rubrik</td><td>Fußball-Reasoning</td><td class="num">20</td></tr><tr><td>Rubrik</td><td>Umsetzbarkeit</td><td class="num">20</td></tr><tr><td>Rubrik</td><td>Kalibrierung</td><td class="num">10</td></tr>
+<tr><td>Suite</td><td>Pilot</td><td class="num">150</td></tr><tr><td>Suite</td><td>v1</td><td class="num">500</td></tr><tr><td>Suite</td><td>v2</td><td class="num">2.500</td></tr><tr><td>Suite</td><td>v3</td><td class="num">5.000</td></tr>
+</tbody></table></div></details>
+<div class="body">
+<p><strong>Gold-Standard.</strong> Jede Aufgabe hat einen Autor und einen unabhängigen Verifier. Deterministische Aufgaben bekommen einen aus dem Snapshot berechneten Goldwert. Offene Aufgaben bekommen ein Acceptable Answer Set: mehrere gültige Lösungspfade, notwendige Evidenzen, verbotene Behauptungen, detaillierte Rubrik. Domänen: Matchanalyse, Scouting, Trainingsplanung, Taktik, Verletzungsrisiko.</p>
+<p><strong>Reliabilität als Quality Gate.</strong> Routineaufgaben von zwei Experten, strittige von drei, Dissens in eine Adjudication Queue. Krippendorffs Alpha ab 0,80 akzeptiert Gold, zwischen 0,67 und 0,80 wird adjudiziert, darunter wird die Aufgabe neu entworfen. So wird schlechte Benchmarkqualität nicht dem Modell angelastet.</p>
+<p><strong>Blind.</strong> Rater sehen weder Anbieter noch Modellname, Reihenfolge randomisiert, Positionen gespiegelt. LLM-as-Judge skaliert Vorbewertungen, ist aber nie der primäre Gold-Rater.</p>
+<p><strong>Drei Splits.</strong> DEV intern, VALIDATION privat, TEST verborgen. Der Hidden Test wird nie für Prompt-Tuning, Fine-Tuning oder Fehleranalyse geöffnet; er wächst quartalsweise und rotiert halbjährlich teilweise. Saisonale und zeitliche Splits verhindern, dass dasselbe Spiel Training und Test prägt.</p>
+<p><strong>Zwei Scores statt eines Leaderboards.</strong> Der Football Quality Score misst nur Qualität. Der Operational Utility Score verrechnet Qualität mit Kosten, Latenz, Risiko und Privacy-Fit. So kann Modell A qualitativ das beste und Modell B operativ die bessere Wahl sein. Gewichte, Benchmark- und Modellversion werden immer mitveröffentlicht.</p>
+<p><strong>Statistik.</strong> Gepaarte Fallanalyse, Bootstrap-Konfidenzintervalle auf Fallebene, ein Holdout getrennt vom täglichen Prompt Engineering. Die belastbare Aussage lautet nicht „30 Prozent besser“, sondern: Benchmark-Version, Score, Anzahl privater Fälle, paarweise Win Rate, Konfidenzintervall.</p>
+<p><strong>Benchmark-CI.</strong> Jeder Merge, der Prompt, Policy, Retriever, Ontologie oder Modell ändert, löst aus: Unit-Tests → Schema-Tests → Retrieval-Tests → 50-Aufgaben-Smoke-Benchmark → Safety-Tests → volle Regression → Freigabe.</p>
+</section>
+
+<section id="s7">
+<h2 class="sec"><span class="n">7</span>Die Lernschleife</h2>
+<p>Ein Fall ist eine Sequenz, nicht ein Prompt-Antwort-Paar. Beispiel: Die KI schlägt 4-gegen-4 Small-Sided Games vor. Der Trainer lehnt ab, weil drei Spieler über 700 Meter Hochgeschwindigkeitsläufe aus dem Spiel tragen und in 72 Stunden das nächste Spiel ansteht. Das ist ein Signal mit Kontext, Empfehlung, Korrektur, Begründung und, am Samstag, einem Outcome.</p>
+</div>
+<figure class="wide" id="fig4">
+<div class="figbox">
+<svg class="diagram" viewBox="0 0 920 250" role="img" aria-label="Fallsequenz aus acht Schritten von Situation bis Outcome; an der Expertenkorrektur entsteht der Preference Reward, am Outcome der Outcome Reward, Causal Evidence verlangt gestaltete Variation über viele Fälle.">
+<g fill="none" stroke="currentColor" stroke-width="1.2" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12">
+ <g id="chain">
+  <rect x="14" y="70" width="98" height="44" rx="3"/><text x="63" y="96" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Situation</text>
+  <line x1="112" y1="92" x2="126" y2="92" marker-end="url(#ar)"/>
+  <rect x="128" y="70" width="98" height="44" rx="3"/><text x="177" y="96" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Frage</text>
+  <line x1="226" y1="92" x2="240" y2="92" marker-end="url(#ar)"/>
+  <rect x="242" y="70" width="98" height="44" rx="3"/><text x="291" y="96" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Analyse</text>
+  <line x1="340" y1="92" x2="354" y2="92" marker-end="url(#ar)"/>
+  <rect x="356" y="70" width="98" height="44" rx="3"/><text x="405" y="96" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Hypothese</text>
+  <line x1="454" y1="92" x2="468" y2="92" marker-end="url(#ar)"/>
+  <rect x="470" y="70" width="98" height="44" rx="3" stroke="var(--accent)" stroke-width="1.6"/><text x="519" y="88" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Experten-</text><text x="519" y="103" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">korrektur</text>
+  <line x1="568" y1="92" x2="582" y2="92" marker-end="url(#ar)"/>
+  <rect x="584" y="70" width="98" height="44" rx="3"/><text x="633" y="96" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Entscheidung</text>
+  <line x1="682" y1="92" x2="696" y2="92" marker-end="url(#ar)"/>
+  <rect x="698" y="70" width="98" height="44" rx="3"/><text x="747" y="96" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Intervention</text>
+  <line x1="796" y1="92" x2="810" y2="92" marker-end="url(#ar)"/>
+  <rect x="812" y="70" width="98" height="44" rx="3" stroke="var(--accent)" stroke-width="1.6"/><text x="861" y="96" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Outcome</text>
+ </g>
+ <!-- Signals -->
+ <line x1="519" y1="114" x2="519" y2="146" stroke="var(--accent)" marker-end="url(#arA)"/>
+ <rect x="440" y="148" width="158" height="40" rx="3" fill="var(--accent-soft)" stroke="none"/><text x="519" y="165" text-anchor="middle" fill="var(--accent-ink)" stroke="none" font-weight="600">Preference Reward</text><text x="519" y="180" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">Was akzeptieren Profis?</text>
+ <line x1="861" y1="114" x2="861" y2="146" stroke="var(--accent)" marker-end="url(#arA)"/>
+ <rect x="752" y="148" width="158" height="40" rx="3" fill="var(--accent-soft)" stroke="none"/><text x="831" y="165" text-anchor="middle" fill="var(--accent-ink)" stroke="none" font-weight="600">Outcome Reward</text><text x="831" y="180" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">gilt der Entscheidung, nicht der Empfehlung</text>
+ <!-- causal bracket -->
+ <path d="M584,206 V216 H910 V206" stroke="var(--muted)"/>
+ <text x="747" y="238" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11.5"><tspan font-weight="600" fill="var(--ink)">Causal Evidence</tspan> nur mit gestalteter Variation über viele Klubs; das Kontrafaktische der abgelehnten Empfehlung bleibt unbeobachtet</text>
+ <!-- loop back -->
+ <path d="M861,70 V40 H63 V68" marker-end="url(#ar)"/>
+ <text x="460" y="34" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">nächster Fall; die Erkenntnisse des Vorlaufs sind Teil der neuen Situation</text>
+</g>
+</svg>
+</div>
+<figcaption><b>Abbildung 4.</b> Football Intelligence Data. Drei Signale, streng getrennt: Präferenz ist nicht Richtigkeit; Outcome bewertet die getroffene Entscheidung; Kausalität entsteht nicht aus Beobachtung allein.</figcaption>
+</figure>
+<div class="body">
+<p><strong>Kuratierte Pipeline.</strong> Nur menschlich verifiziertes Feedback wird Gold oder Trainingsmaterial. Modelloutputs werden nie als Wahrheit zurücktrainiert.</p>
+</div>
+<figure class="wide" id="fig5">
+<div class="figbox">
+<svg class="diagram" viewBox="0 0 920 120" role="img" aria-label="Kuratierte Lernpipeline in zehn Schritten von der Produktionsinteraktion über Expertenannotation, unabhängige QA und Benchmark-Regression bis Shadow, Canary und Produktion.">
+<g fill="none" stroke="currentColor" stroke-width="1.2" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="11">
+ <rect x="8" y="30" width="82" height="46" rx="3"/><text x="49" y="50" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Produktion</text><text x="49" y="64" text-anchor="middle" fill="var(--ink-2)" stroke="none">Interaktion</text>
+ <line x1="90" y1="53" x2="98" y2="53" marker-end="url(#ar)"/>
+ <rect x="100" y="30" width="82" height="46" rx="3"/><text x="141" y="50" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Feedback</text><text x="141" y="64" text-anchor="middle" fill="var(--ink-2)" stroke="none">Nutzer</text>
+ <line x1="182" y1="53" x2="190" y2="53" marker-end="url(#ar)"/>
+ <rect x="192" y="30" width="82" height="46" rx="3"/><text x="233" y="50" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Triage</text><text x="233" y="64" text-anchor="middle" fill="var(--ink-2)" stroke="none">Fehlerklasse</text>
+ <line x1="274" y1="53" x2="282" y2="53" marker-end="url(#ar)"/>
+ <rect x="284" y="30" width="82" height="46" rx="3" stroke="var(--accent)" stroke-width="1.6"/><text x="325" y="50" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Experten-</text><text x="325" y="64" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">annotation</text>
+ <line x1="366" y1="53" x2="374" y2="53" marker-end="url(#ar)"/>
+ <rect x="376" y="30" width="82" height="46" rx="3"/><text x="417" y="50" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Kandidat</text><text x="417" y="64" text-anchor="middle" fill="var(--ink-2)" stroke="none">Gold / Training</text>
+ <line x1="458" y1="53" x2="466" y2="53" marker-end="url(#ar)"/>
+ <rect x="468" y="30" width="82" height="46" rx="3" stroke="var(--accent)" stroke-width="1.6"/><text x="509" y="50" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Unabhängige</text><text x="509" y="64" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">QA</text>
+ <line x1="550" y1="53" x2="558" y2="53" marker-end="url(#ar)"/>
+ <rect x="560" y="30" width="82" height="46" rx="3" stroke="var(--accent)" stroke-width="1.6"/><text x="601" y="50" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Benchmark-</text><text x="601" y="64" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Regression</text>
+ <line x1="642" y1="53" x2="650" y2="53" marker-end="url(#ar)"/>
+ <rect x="652" y="30" width="82" height="46" rx="3"/><text x="693" y="50" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Shadow</text><text x="693" y="64" text-anchor="middle" fill="var(--ink-2)" stroke="none">parallel, unsichtbar</text>
+ <line x1="734" y1="53" x2="742" y2="53" marker-end="url(#ar)"/>
+ <rect x="744" y="30" width="82" height="46" rx="3"/><text x="785" y="50" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Canary</text><text x="785" y="64" text-anchor="middle" fill="var(--ink-2)" stroke="none">kleiner Anteil</text>
+ <line x1="826" y1="53" x2="834" y2="53" marker-end="url(#ar)"/>
+ <rect x="836" y="30" width="76" height="46" rx="3"/><text x="874" y="50" text-anchor="middle" fill="var(--ink)" stroke="none" font-weight="600">Produktion</text><text x="874" y="64" text-anchor="middle" fill="var(--ink-2)" stroke="none">freigegeben</text>
+ <text x="460" y="104" text-anchor="middle" fill="var(--ink-2)" stroke="none" font-size="11">grün umrandet: Gates, an denen ein Mensch oder der verborgene Benchmark entscheidet</text>
+</g>
+</svg>
+</div>
+<figcaption><b>Abbildung 5.</b> Continuous Learning heißt nicht, dass das Modell aus seinen eigenen Antworten lernt. Jede Änderung trägt die volle Versionskette und muss gegen den unveränderten Hidden Benchmark bestehen.</figcaption>
+</figure>
+<div class="body">
+<p><strong>Bias-Kontrolle.</strong> Wer korrigiert, ist nicht zufällig. Gewichtung nach Ergebnisqualität des Experten, Vereins-Adapter über einem gemeinsamen Kern statt eines globalen Modells, damit die Spielidee von Klub A nie bei Klub B erscheint, und Tiefe vor Breite: zweihundert Profitrainer mit verknüpften Fällen sind mehr wert als fünftausend flache Interaktionen.</p>
+<h3>Was der Prototyp bereits leistet</h3>
+<p>Der Prototyp <span class="mono">fussball-ki</span> läuft auf offenen Ergebnisdaten der Bundesliga und 2. Bundesliga seit 2010/11 (9.000 gespielte Spiele) und prognostiziert Spiele vor dem Anpfiff. Er ist die Referenzimplementierung der Schleife.</p>
+</div>
+<figure class="wide" id="fig6">
+<div class="figbox">
+<div class="multi">
+  <div class="chart"><h4>Lernkurve über acht Runden</h4><p class="sub">Log-Loss des jeweils besten Modells, Vorwärtsvalidierung 2015/16 bis 2024/25 (kleiner ist besser)</p>
+   <div class="legend"><span><i style="--c:var(--s1)"></i>bestes Modell der Schleife</span><span><i style="--c:var(--s2)"></i>Elo-Logit (Benchmark)</span></div><div id="c-curve"></div></div>
+  <div class="chart"><h4>Je Testsaison</h4><p class="sub">Log-Loss des besten Modells gegen den Elo-Benchmark, gleiche Falten</p>
+   <div class="legend"><span><i class="dot" style="--c:var(--s1)"></i>bestes Modell</span><span><i class="dot" style="--c:var(--s2)"></i>Elo-Logit</span></div><div id="c-season"></div></div>
+</div>
+<div class="tip" id="tip6"></div>
+</div>
+<figcaption><b>Abbildung 6.</b> Reale Zahlen des Prototyps nach acht Offline-Runden. Die Basisrate liegt bei 1,075, Elo bei 1,030, das beste Modell bei 1,029: Der Gewinn ist klein und wird so ausgewiesen. Die Achsen beginnen nicht bei null; sie zeigen den Bereich, in dem sich Modelle aus nackten Ergebnissen bewegen.</figcaption>
+</figure>
+<details class="tbl"><summary>Werte als Tabelle</summary>
+<div class="tablewrap"><table class="paper"><thead><tr><th>Runde</th><th class="num">bestes Modell</th><th class="num">Elo-Logit</th></tr></thead><tbody id="t-curve"></tbody></table></div>
+<div class="tablewrap"><table class="paper"><thead><tr><th>Testsaison</th><th class="num">bestes Modell</th><th class="num">Elo-Logit</th></tr></thead><tbody id="t-season"></tbody></table></div></details>
+<div class="body">
+</div>
+<p class="tcap"><b>Tabelle 3.</b> Plattformprinzipien und ihre Umsetzung im Prototyp.</p>
+<div class="tablewrap"><table class="paper">
+<thead><tr><th style="width:38%">Prinzip der Plattform</th><th>Umsetzung im Prototyp</th></tr></thead>
+<tbody>
+<tr><td>Modellunabhängiger Reasoning-Layer</td><td>Forscher und Lehrer haben eine Schnittstelle; Claude und Offline-Suche sind austauschbar, Ersatz bei Ausfall</td></tr>
+<tr><td>Hypothese als strukturiertes Objekt</td><td>JSON nach Schema; Formeln werden als Syntaxbaum geprüft, das LLM führt nichts aus</td></tr>
+<tr><td>Eingefrorene Validierung</td><td>Vorwärtsvalidierung über Saisons, feste Falten, Basisrate- und Elo-Benchmark</td></tr>
+<tr><td>Verborgener Test</td><td>Prüfsaison wird mitgerechnet und dem Forscher nie gezeigt</td></tr>
+<tr><td>Gedächtnis als Klartext</td><td>Experimente, Erkenntnisse, bestes Modell, Lernkurve im Versionsverlauf</td></tr>
+<tr><td>LLM lernt sein eigenes Wissen</td><td>Erkenntnisse werden nach jeder Runde vom LLM neu geschrieben und ihm wieder vorgelegt</td></tr>
+<tr><td>Fehlt noch</td><td>Der Expertenkanal: Annahme, Korrektur, Ablehnung mit Begründung als Präferenzpaar</td></tr>
+</tbody></table></div>
+<div class="body">
+<p>Der nächste Schritt im Prototyp ist genau dieser Kanal: ein Befehl für Korrekturen, Präferenzpaare im Kontext des Lehrers und getrennte Kennzahlen für Übereinstimmung mit Experten und mit Outcomes.</p>
+</section>
+
+<section id="s8">
+<h2 class="sec"><span class="n">8</span>Modellstrategie in vier Stufen</h2>
+<p>Das erste eigene Modell ist kein Sprachmodell. Spielerrepräsentationen aus Event- und Trackingdaten, ein Reward-Modell aus Präferenzpaaren und ein Klassifikator für taktische Spielzustände sind billig, verteidigbar und sofort benchmarkbar. LoRA formt Terminologie, Analyseabläufe, Tool-Aufrufe, Antwortformat und Abstention. RAFT kommt, sobald RAG und Benchmark stabil sind. Continued Pretraining erst, wenn ein besserer Datensatz nachweislich nicht mehr hilft.</p>
+</div>
+<p class="tcap"><b>Tabelle 4.</b> Vier Stufen mit Eintrittskriterien.</p>
+<div class="tablewrap"><table class="paper">
+<thead><tr><th style="width:18%">Stufe</th><th>Was läuft</th><th>Was uns gehört</th><th style="width:30%">Eintrittskriterium</th></tr></thead>
+<tbody>
+<tr><td>1 Modellunabhängig</td><td>Frontier- und offene Modelle austauschbar hinter Gateway und Router</td><td>Daten, MCP/API, Skills, Memory, Evals</td><td>jetzt</td></tr>
+<tr><td>2 Self-hosted</td><td>Open-Weights-Modell auf eigener oder gemieteter GPU-Infrastruktur, vLLM</td><td>Fine-Tunes, Adapter, Football-Embeddings, Reranker, Reward-Modelle</td><td>Benchmark v1 mit 500 Aufgaben stabil; Kernaufgaben mit lokalem Modell im Quality/Cost-Vergleich belegt</td></tr>
+<tr><td>3 Football Models</td><td>Spezialisierte Modelle, die zusammenarbeiten: Text, Video, Spielerrepräsentation, taktischer Zustand, Trainerpräferenz, Entscheidung</td><td>die Modellfamilie</td><td>Genügend kuratierte Fälle je Modell; jedes Modell schlägt seinen Vorgänger auf dem Hidden Test</td></tr>
+<tr><td>4 Foundation Model</td><td>Wesentlicher Teil des Basismodells selbst trainiert</td><td>das Basismodell</td><td>Millionen hochwertige, multimodale, rechtlich saubere Beispiele; nachgewiesene Grenze der Stufen 2 und 3</td></tr>
+</tbody></table></div>
+<div class="body">
+<p><strong>Alle Wirkungsannahmen sind Hypothesen,</strong> keine Versprechen: RAG plus fünf bis fünfzehn Punkte auf Grounding-Aufgaben, strukturierte Tools plus zehn bis fünfundzwanzig auf datenintensiven, multimodales Retrieval plus fünf bis zwanzig auf Taktik, LoRA plus drei bis zehn auf Workflow-Rubriken. Basismodell, RAG, RAG plus Tools und RAG plus LoRA werden auf demselben Hidden Test gemessen. Keine Architekturentscheidung aus Hype.</p>
+<p><strong>Forschungskorpus und kommerzieller Korpus bleiben getrennt.</strong> SoccerNet und lizenzkompatible offene Datensätze dienen Experimenten, Architektur und Benchmarks. Kommerzielles Training läuft nur auf Klubs mit Rechten, eigenen Videoquellen, eigenen Daten und zulässigen Interaktionen.</p>
+</section>
+
+<section id="s9">
+<h2 class="sec"><span class="n">9</span>Governance und Sicherheit ab Version eins</h2>
+<ul>
+<li><strong>Tenant-Isolation</strong> auf Datenbank- und Storage-Ebene, Row-Level Security, Least Privilege für Menschen, Dienste und Skills.</li>
+<li><strong>ACL-bewusstes Retrieval:</strong> Ein Modell erhält nie ein Dokument, das der Nutzer nicht sehen darf.</li>
+<li><strong>Tool-Allowlisting und Output-Schema-Validierung,</strong> bevor ein Ergebnis in einen Folgeprozess gelangt.</li>
+<li><strong>Redaktion sensibler Felder</strong> vor externen Aufrufen, Verschlüsselung, Key-Management.</li>
+<li><strong>Unveränderliche Audit-IDs,</strong> die Modellaufruf, Retrieval, Tool Calls und Entscheidung verbinden; Logs selbst sind geschützt.</li>
+<li><strong>Human-in-the-Loop als Gate:</strong> Niedriges Risiko liefert automatisch, hohes Risiko stoppt für Freigabe, Ablehnung oder Änderung. Jede Freigabe wird Benchmark-Datenpunkt.</li>
+<li><strong>Keine autonome Aktion</strong> bei Transfers, Verträgen oder personenbezogenen Entscheidungen.</li>
+<li><strong>Regulatorik als Produktfeature:</strong> Audit-Logging, Datenprovenienz, Human Oversight, Accuracy-Monitoring, Risikomanagement, Zugriffskontrolle, Entscheidungs-Traceability und Modellversionierung sind ohnehin nötig. Wird ein Recruitment-Use-Case später als High-Risk im Sinne des AI Act eingestuft, steht die Grundlage. Gesundheitsdaten verlangen DPIA und Medical Enclave. Ein Player Data Ledger macht Herkunft, Zweck, Zugriff und Freigabe für Spieler sichtbar.</li>
+</ul>
+</section>
+
+<section id="s10">
+<h2 class="sec"><span class="n">10</span>Umsetzungsplan</h2>
+<p>Der MVP beweist den vertikalen Loop an wenigen Aufgaben, nicht die Breite. Drei Startworkflows decken alle Personas: Player Evaluation und Role Fit, Market Value und Transferentscheidung, Opponent und Match Analysis.</p>
+</div>
+<figure class="wide" id="fig7">
+<div class="figbox">
+<svg class="diagram" viewBox="0 0 920 226" role="img" aria-label="Zeitplan in sechs Phasen über vierzig Wochen: Foundation, Hub MVP, Validation Beta, Enterprise Layer, Football Standard, danach Learning Platform.">
+<g font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12">
+ <!-- grid: x = 200 + weeks*15 -->
+ <g stroke="var(--grid)" stroke-width="1">
+  <line x1="200" y1="28" x2="200" y2="212"/><line x1="260" y1="28" x2="260" y2="212"/><line x1="320" y1="28" x2="320" y2="212"/><line x1="380" y1="28" x2="380" y2="212"/><line x1="440" y1="28" x2="440" y2="212"/><line x1="500" y1="28" x2="500" y2="212"/><line x1="560" y1="28" x2="560" y2="212"/><line x1="620" y1="28" x2="620" y2="212"/><line x1="680" y1="28" x2="680" y2="212"/><line x1="740" y1="28" x2="740" y2="212"/><line x1="800" y1="28" x2="800" y2="212"/>
+ </g>
+ <g fill="var(--muted)" font-size="11" text-anchor="middle">
+  <text x="200" y="20">0</text><text x="260" y="20">4</text><text x="320" y="20">8</text><text x="380" y="20">12</text><text x="440" y="20">16</text><text x="500" y="20">20</text><text x="560" y="20">24</text><text x="620" y="20">28</text><text x="680" y="20">32</text><text x="740" y="20">36</text><text x="800" y="20">40</text><text x="870" y="20">Wochen</text>
+ </g>
+ <line x1="200" y1="212" x2="910" y2="212" stroke="var(--baseline)" stroke-width="1"/>
+ <g fill="var(--s1)">
+  <path d="M200,36 H286 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 H200 z"/>
+  <path d="M292,66 H376 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 H292 z"/>
+  <path d="M382,96 H496 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 H382 z"/>
+  <path d="M502,126 H616 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 H502 z"/>
+  <path d="M622,156 H796 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 H622 z"/>
+  <path d="M802,186 H880 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 H802 z"/>
+ </g>
+ <path d="M884,196 h18" stroke="var(--s1)" stroke-width="2" marker-end="url(#ar)" fill="none"/>
+ <g fill="var(--ink)" font-weight="600" text-anchor="end">
+  <text x="188" y="50">Foundation</text><text x="188" y="80">Hub MVP</text><text x="188" y="110">Validation Beta</text><text x="188" y="140">Enterprise Layer</text><text x="188" y="170">Football Standard</text><text x="188" y="200">Learning Platform</text>
+ </g>
+ <g fill="var(--ink-2)" font-size="11">
+  <text x="300" y="50">Schema v0.1, Auth, Adapter, Manifest, Audit</text>
+  <text x="390" y="80">RAG, Skills, Registries, Compare, Snapshots</text>
+  <text x="510" y="110">Benchmark, Rubrik, blindes Rating, Router v1</text>
+  <text x="630" y="140">RBAC/ABAC, Datenklassen, private Deployments</text>
+  <text x="614" y="170" text-anchor="end">öffentliche Schemas, Contracts, SDK</text>
+  <text x="794" y="200" text-anchor="end">Outcome-Feedback, Meta-Router, gelernte Ensembles</text>
+ </g>
+</g>
+</svg>
+</div>
+<figcaption><b>Abbildung 7.</b> Umsetzungsplan mit Richtwerten. Die Phasen folgen den Prioritäten A bis E: erst Standard und Reproduzierbarkeit, dann Benchmark und Expertenvalidierung, dann Workflow-Engine, dann Router und Ensemble, zuletzt weitere Modelle.</figcaption>
+</figure>
+<p class="tcap"><b>Tabelle 5.</b> Exit-Kriterien je Phase.</p>
+<div class="tablewrap"><table class="paper">
+<thead><tr><th>Phase</th><th>Richtwert</th><th>Exit-Kriterium</th></tr></thead>
+<tbody>
+<tr><td>Foundation</td><td>Woche 0 bis 6</td><td>Derselbe Case läuft reproduzierbar über mehrere Modelle</td></tr>
+<tr><td>Hub MVP</td><td>Woche 6 bis 12</td><td>Skills laufen als sauberes Experiment mit identischen Daten und Prompts</td></tr>
+<tr><td>Validation Beta</td><td>Woche 12 bis 20</td><td>Das System zeigt empirisch, welches Modell je Task besser ist</td></tr>
+<tr><td>Enterprise Layer</td><td>Woche 20 bis 28</td><td>Ein Profiklub nutzt vertrauliche Daten kontrolliert</td></tr>
+<tr><td>Football Standard</td><td>Woche 28 bis 40</td><td>Externe Teams integrieren nach unserem Standard</td></tr>
+<tr><td>Learning Platform</td><td>danach</td><td>Der Hub optimiert anhand realer Outcomes, nicht nur statischer Fälle</td></tr>
+</tbody></table></div>
+<div class="body">
+<p><strong>Team</strong> für eine produktionsreife erste Generation: sieben bis zehn Vollzeitäquivalente im Kern (Football Domain Lead, AI und Platform Lead, Backend und AI Engineers, Data Engineer, ML und Data Scientist, Frontend, MLOps und Security, Evaluation Research Lead), Privacy und Legal anteilig, dazu ein Pool von zehn bis fünfundzwanzig Teilzeit-Fußballexperten für Gold Labels und Adjudication. Das größere Zielbild mit Video, Tracking und Medizin liegt bei elf bis siebzehn. Zu Beginn dominieren Ontologie, Data Engineering und Fußballmethodik; sobald der Benchmark steht, verschiebt sich der Bedarf zu Expertenrating, ML und Integrationen.</p>
+<p><strong>Kosten</strong> für Datenrechte, Video, Tracking, GPU und LLM-APIs bleiben unspezifiziert, bis Ligen, Nutzerzahlen, Latenz-SLA und Betriebsform feststehen. Sie sind der größte Hebel der Kostenstruktur.</p>
+</section>
+
+<section id="s11">
+<h2 class="sec"><span class="n">11</span>Risiken</h2>
+</div>
+<p class="tcap"><b>Tabelle 6.</b> Risiken und Gegenmaßnahmen.</p>
+<div class="tablewrap"><table class="paper">
+<thead><tr><th style="width:38%">Risiko</th><th>Gegenmaßnahme</th></tr></thead>
+<tbody>
+<tr><td>Benchmark-Leakage und Overfitting auf eigene Tests</td><td>Hidden Test, zeitliche Splits, Canary-Aufgaben, Rotation</td></tr>
+<tr><td>Schlechter Gold-Standard</td><td>Mehrere Experten, Reliabilitätsmessung, Adjudication, Acceptable Answer Sets</td></tr>
+<tr><td>Provider-Lock-in</td><td>Kanonisches Schema, Adapter, Contract Tests</td></tr>
+<tr><td>Ontology Drift</td><td>Versionierte Definitionen mit Beispielen, Football Methodology Board</td></tr>
+<tr><td>Halluzinationen</td><td>Evidenzpflichtige Antworten, Grounding Score, Abstention</td></tr>
+<tr><td>Medizinisches Overclaiming</td><td>Enclave, Clinician-in-the-Loop, Kalibrierung, Safety Gates; „Decision Support“, nie „Vorhersage mit Sicherheit X“</td></tr>
+<tr><td>Datenschutz und Spielerrechte</td><td>Purpose Limitation, Zugriff, Audit, DPIA, Rights Ledger</td></tr>
+<tr><td>Urheberrecht</td><td>Rechte für Retrieval und Training getrennt in der Registry</td></tr>
+<tr><td>Feedback-Selbstkontamination</td><td>Nur menschlich verifiziertes Feedback wird Gold oder Training</td></tr>
+<tr><td>Kosten und Latenz</td><td>Routing, Caching, Precomputation, kleine Modelle für D1 und D2</td></tr>
+<tr><td>Trainer-Adoption</td><td>Utility und Umsetzbarkeit messen, Antworten mit Clips und Evidenz</td></tr>
+<tr><td>Interaktionsrechte fehlen im Vertrag</td><td>Klausel zur anonymisierten Nutzung für Modellverbesserung ab dem ersten Klub</td></tr>
+</tbody></table></div>
+<div class="body">
+</section>
+
+<section id="s12">
+<h2 class="sec"><span class="n">12</span>Das Versprechen</h2>
+<p>Nicht: „Unsere KI weiß am meisten über Fußball.“</p>
+<blockquote>Wir können beweisen, wie gut Fußball-KI ist. Wir definieren Daten, Aufgaben, Gold-Standards und Messverfahren, und unser eigener Agent muss sich denselben Tests stellen wie jedes andere Modell.</blockquote>
+<p>Daraus folgt der Weg: Football Data Standard → Football Knowledge Standard → Football Workflow Standard → Football Benchmark Standard → Football AI Standard. Der Moat ist nicht „wir haben auch ein LLM“. Der Moat ist: Wir besitzen die Football-Lernschleife.</p>
+</section>
+
+</div>
+
+<div class="sources">
+<h2>Quellen</h2>
+<ol>
+<li>Internes Strategiememo: Football Foundation Model, Modellunabhängigkeit, Football Intelligence Data, Flywheel. September 2026.</li>
+<li>Architektur für einen Football AI Hub: Modelle, Wissen, Benchmarks und Entscheidungs-Workflows. August 2026.</li>
+<li>Produktionsreifer Knowledge Hub und Benchmark-Ökosystem für eine Top-Fußball-KI. 2026.</li>
+<li>Prototyp <span class="mono">fussball-ki</span>: selbstlernende Fußball-KI auf offenen Spieldaten (openfootball, CC0); Zahlen in Abbildung 6 aus <span class="mono">wissen/</span> nach acht Offline-Runden.</li>
+</ol>
+<p class="colophon">Aussagen zu Modellversionen, Kontextfenstern und Regulierungsterminen stammen aus den Quellen mit Stand August 2026 und sind hier bewusst allgemein gehalten.</p>
+</div>
+</div>
+
+<script>
+(function(){
+  var NS='http://www.w3.org/2000/svg';
+  function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+  function txt(p,x,y,s,a){var t=el('text',a||{},p);t.setAttribute('x',x);t.setAttribute('y',y);t.textContent=s;return t;}
+  var font='IBM Plex Sans, system-ui, sans-serif';
+  function tipFor(id){var t=document.getElementById(id);return {show:function(html,x,y){t.innerHTML=html;t.style.left=x+'px';t.style.top=y+'px';t.classList.add('on');},hide:function(){t.classList.remove('on');}};}
+  function pos(box,ev){var r=box.getBoundingClientRect();return [ev.clientX-r.left+box.scrollLeft, ev.clientY-r.top];}
+
+  // ---- horizontal bar chart (single series)
+  function hbar(id,items,max,unit,tip){
+    var W=300,rowH=34,L=118,R=44,H=items.length*rowH+8;
+    var host=document.getElementById(id);
+    var svg=el('svg',{viewBox:'0 0 '+W+' '+H,role:'img','aria-label':items.map(function(d){return d.l+' '+d.v+unit;}).join(', ')},host);
+    svg.style.fontFamily=font;
+    var box=host.closest('.figbox');
+    items.forEach(function(d,i){
+      var y=i*rowH+6, w=(W-L-R)*d.v/max, h=20;
+      txt(svg,L-8,y+14,d.l,{'text-anchor':'end','font-size':'12','fill':'var(--ink-2)'});
+      var path='M'+L+','+y+' h'+Math.max(w-4,0)+' a4,4 0 0 1 4,4 v'+(h-8)+' a4,4 0 0 1 -4,4 H'+L+' z';
+      var bar=el('path',{d:path,fill:'var(--s1)'},svg);
+      txt(svg,L+w+7,y+14,d.v.toLocaleString('de-DE')+unit,{'font-size':'12','fill':'var(--ink)','font-weight':'600','font-variant-numeric':'tabular-nums'});
+      var hit=el('rect',{x:0,y:y-6,width:W,height:rowH,fill:'transparent',tabindex:'0',role:'button','aria-label':d.l+': '+d.v+unit},svg);
+      function on(ev){bar.setAttribute('opacity','.8');var p=ev&&ev.clientX!==undefined?pos(box,ev):[host.getBoundingClientRect().left-box.getBoundingClientRect().left+L+w/2, host.getBoundingClientRect().top-box.getBoundingClientRect().top+y];tip.show('<span class="v">'+d.v.toLocaleString('de-DE')+unit+'</span> '+d.l,p[0],p[1]);}
+      function off(){bar.setAttribute('opacity','1');tip.hide();}
+      hit.addEventListener('pointermove',on);hit.addEventListener('pointerleave',off);hit.addEventListener('focus',on);hit.addEventListener('blur',off);
+    });
+  }
+  var tip3=tipFor('tip3');
+  hbar('c-diff',[{l:'D1 Messung',v:25},{l:'D2 Interpretation',v:35},{l:'D3 Integration',v:30},{l:'D4 Adversarial',v:10}],40,' %',tip3);
+  hbar('c-rubric',[{l:'Korrektheit',v:30},{l:'Evidenz',v:20},{l:'Reasoning',v:20},{l:'Umsetzbarkeit',v:20},{l:'Kalibrierung',v:10}],35,'',tip3);
+  hbar('c-size',[{l:'Pilot',v:150},{l:'Benchmark v1',v:500},{l:'Benchmark v2',v:2500},{l:'Benchmark v3',v:5000}],5500,'',tip3);
+
+  // ---- prototype data (wissen/verlauf.json, bestes_ergebnis.json, benchmarks)
+  var rounds=[1.0304,1.0296,1.0296,1.0296,1.0295,1.0295,1.0293,1.0293], elo=1.0304;
+  var seasons=['2015-16','2016-17','2017-18','2018-19','2019-20','2020-21','2021-22','2022-23','2023-24','2024-25'];
+  var mSeason=[1.0284,1.0221,1.0584,1.0276,1.0377,1.0230,1.0331,1.0160,0.9996,1.0473];
+  var eSeason=[1.0300,1.0298,1.0596,1.0295,1.0375,1.0233,1.0341,1.0133,1.0004,1.0465];
+  var fmt=function(v){return v.toFixed(4).replace('.',',');};
+  var tip6=tipFor('tip6');
+
+  // line chart
+  (function(){
+    var host=document.getElementById('c-curve'),box=host.closest('.figbox');
+    var W=400,H=230,L=52,R=104,T=14,B=34;
+    var y0=1.0285,y1=1.0310;
+    var svg=el('svg',{viewBox:'0 0 '+W+' '+H,role:'img','aria-label':'Lernkurve: bestes Modell von 1,0304 in Runde 1 auf 1,0293 in Runde 8; Elo-Benchmark konstant 1,0304.'},host);
+    svg.style.fontFamily=font;
+    var X=function(i){return L+(W-L-R)*i/7;}, Y=function(v){return T+(H-T-B)*(y1-v)/(y1-y0);};
+    [1.0285,1.029,1.0295,1.03,1.0305,1.031].forEach(function(v){el('line',{x1:L,x2:W-R,y1:Y(v),y2:Y(v),stroke:'var(--grid)','stroke-width':'1'},svg);txt(svg,L-8,Y(v)+4,fmt(v).slice(0,6),{'text-anchor':'end','font-size':'11','fill':'var(--muted)','font-variant-numeric':'tabular-nums'});});
+    el('line',{x1:L,x2:W-R,y1:H-B,y2:H-B,stroke:'var(--baseline)'},svg);
+    rounds.forEach(function(v,i){txt(svg,X(i),H-B+16,String(i+1),{'text-anchor':'middle','font-size':'11','fill':'var(--muted)'});});
+    txt(svg,(L+W-R)/2,H-4,'Runde',{'text-anchor':'middle','font-size':'11','fill':'var(--muted)'});
+    // elo line
+    el('line',{x1:L,x2:W-R,y1:Y(elo),y2:Y(elo),stroke:'var(--s2)','stroke-width':'2','stroke-linecap':'round'},svg);
+    txt(svg,W-R+8,Y(elo)+4,'Elo '+fmt(elo),{'font-size':'11','fill':'var(--ink-2)'});
+    // model line
+    var d=rounds.map(function(v,i){return (i?'L':'M')+X(i)+','+Y(v);}).join(' ');
+    el('path',{d:d,fill:'none',stroke:'var(--s1)','stroke-width':'2','stroke-linejoin':'round','stroke-linecap':'round'},svg);
+    rounds.forEach(function(v,i){el('circle',{cx:X(i),cy:Y(v),r:'5',fill:'var(--s1)',stroke:'var(--surface)','stroke-width':'2'},svg);});
+    txt(svg,W-R+8,Y(rounds[7])+4,'Modell '+fmt(rounds[7]),{'font-size':'11','fill':'var(--ink)','font-weight':'600'});
+    var cross=el('line',{x1:0,x2:0,y1:T,y2:H-B,stroke:'var(--ink-2)','stroke-width':'1',opacity:'0'},svg);
+    var hit=el('rect',{x:L,y:T,width:W-L-R,height:H-T-B,fill:'transparent'},svg);
+    hit.addEventListener('pointermove',function(ev){var r=svg.getBoundingClientRect();var xs=(ev.clientX-r.left)*W/r.width;var i=Math.max(0,Math.min(7,Math.round((xs-L)/((W-L-R)/7))));cross.setAttribute('x1',X(i));cross.setAttribute('x2',X(i));cross.setAttribute('opacity','1');var p=pos(box,ev);tip6.show('Runde '+(i+1)+'<br><span class="k" style="background:var(--s1)"></span><span class="v">'+fmt(rounds[i])+'</span> bestes Modell<br><span class="k" style="background:var(--s2)"></span><span class="v">'+fmt(elo)+'</span> Elo-Logit',p[0],p[1]);});
+    hit.addEventListener('pointerleave',function(){cross.setAttribute('opacity','0');tip6.hide();});
+    var tb=document.getElementById('t-curve');rounds.forEach(function(v,i){var tr=document.createElement('tr');tr.innerHTML='<td>'+(i+1)+'</td><td class="num">'+fmt(v)+'</td><td class="num">'+fmt(elo)+'</td>';tb.appendChild(tr);});
+  })();
+
+  // dot plot per season
+  (function(){
+    var host=document.getElementById('c-season'),box=host.closest('.figbox');
+    var W=400,rowH=20,L=64,R=16,T=10,B=30,H=T+seasons.length*rowH+B;
+    var x0=0.99,x1=1.07;
+    var svg=el('svg',{viewBox:'0 0 '+W+' '+H,role:'img','aria-label':'Log-Loss je Testsaison, bestes Modell gegen Elo-Logit; die Werte liegen in jeder Saison nahe beieinander, in 2015/16, 2016/17 und 2021/22 liegt das Modell vorn, in 2022/23 und 2024/25 der Benchmark.'},host);
+    svg.style.fontFamily=font;
+    var X=function(v){return L+(W-L-R)*(v-x0)/(x1-x0);};
+    [0.99,1.00,1.01,1.02,1.03,1.04,1.05,1.06,1.07].forEach(function(v){el('line',{x1:X(v),x2:X(v),y1:T,y2:H-B,stroke:'var(--grid)'},svg);if(v!==0.99)txt(svg,X(v),H-B+15,v.toFixed(2).replace('.',','),{'text-anchor':'middle','font-size':'11','fill':'var(--muted)','font-variant-numeric':'tabular-nums'});});
+    el('line',{x1:L,x2:W-R,y1:H-B,y2:H-B,stroke:'var(--baseline)'},svg);
+    txt(svg,(L+W-R)/2,H-3,'Log-Loss (kleiner ist besser)',{'text-anchor':'middle','font-size':'11','fill':'var(--muted)'});
+    var tb=document.getElementById('t-season');
+    seasons.forEach(function(s,i){
+      var y=T+i*rowH+rowH/2;
+      txt(svg,L-8,y+4,s.replace('-','/'),{'text-anchor':'end','font-size':'11','fill':'var(--ink-2)','font-variant-numeric':'tabular-nums'});
+      el('line',{x1:X(Math.min(mSeason[i],eSeason[i])),x2:X(Math.max(mSeason[i],eSeason[i])),y1:y,y2:y,stroke:'var(--baseline)','stroke-width':'1.5'},svg);
+      var c2=el('circle',{cx:X(eSeason[i]),cy:y,r:'5',fill:'var(--s2)',stroke:'var(--surface)','stroke-width':'2'},svg);
+      var c1=el('circle',{cx:X(mSeason[i]),cy:y,r:'5',fill:'var(--s1)',stroke:'var(--surface)','stroke-width':'2'},svg);
+      var hit=el('rect',{x:L,y:y-rowH/2,width:W-L-R,height:rowH,fill:'transparent',tabindex:'0',role:'button','aria-label':s+': Modell '+fmt(mSeason[i])+', Elo '+fmt(eSeason[i])},svg);
+      function on(ev){c1.setAttribute('r','6');c2.setAttribute('r','6');var p=ev&&ev.clientX!==undefined?pos(box,ev):[host.getBoundingClientRect().left-box.getBoundingClientRect().left+X(mSeason[i]),host.getBoundingClientRect().top-box.getBoundingClientRect().top+y];tip6.show(s.replace('-','/')+'<br><span class="k" style="background:var(--s1)"></span><span class="v">'+fmt(mSeason[i])+'</span> bestes Modell<br><span class="k" style="background:var(--s2)"></span><span class="v">'+fmt(eSeason[i])+'</span> Elo-Logit',p[0],p[1]);}
+      function off(){c1.setAttribute('r','5');c2.setAttribute('r','5');tip6.hide();}
+      hit.addEventListener('pointermove',on);hit.addEventListener('pointerleave',off);hit.addEventListener('focus',on);hit.addEventListener('blur',off);
+      var tr=document.createElement('tr');tr.innerHTML='<td>'+s.replace('-','/')+'</td><td class="num">'+fmt(mSeason[i])+'</td><td class="num">'+fmt(eSeason[i])+'</td>';tb.appendChild(tr);
+    });
+  })();
+})();
+</script>
