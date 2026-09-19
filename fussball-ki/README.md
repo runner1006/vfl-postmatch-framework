@@ -16,6 +16,8 @@ festen Prompt, sondern einen, den es selbst fortschreibt — aus Zahlen, die es
 nicht erfinden kann, weil der Rechenkern sie liefert. Jede Runde steht im
 Git-Verlauf: was vorgeschlagen wurde, was herauskam, was daraus geschlossen wurde.
 
+Kurzfassung mit Zielsetzung und Technologieaufbau: [`PROJEKT.md`](PROJEKT.md).
+
 ## In drei Minuten
 
 ```bash
